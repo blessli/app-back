@@ -30,6 +30,8 @@ public class BackApplicationTests {
             ZSetOperations.TypedTuple<Object> typedTuple = (ZSetOperations.TypedTuple<Object>) iterator.next();
             System.out.println(typedTuple.getValue());
         }
+        System.out.println("hello world!!!");
     }
+    
 
 }
