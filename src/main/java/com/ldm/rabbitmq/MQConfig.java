@@ -1,18 +1,18 @@
-package com.ldm.config;
+package com.ldm.rabbitmq;
 import org.springframework.amqp.core.Queue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class MQConfig {
-    public static final String QUEUE = "hello";
+    public static final String QUEUE = "SMS";
     /**
      * Direct 模式
      *
      */
 
-//    @Bean
-//    public Queue queue() {
-//        return new Queue(MQConfig.QUEUE, true);
-//    }
+    @Bean
+    public Queue queue() {
+        return new Queue(MQConfig.QUEUE, true);
+    }
 }
