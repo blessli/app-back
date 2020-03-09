@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class MQSender {
-    @Autowired
-    private AmqpTemplate amqpTemplate;
-    public void send(ActivityDetail activityDetail){
-        String message=MQUtil.beanToString(activityDetail);
-        amqpTemplate.convertAndSend(MQConfig.QUEUE,message);
-    }
+//    @Autowired
+//    private AmqpTemplate amqpTemplate;
+//    public void send(ActivityDetail activityDetail){
+//        String message=MQUtil.beanToString(activityDetail);
+//        amqpTemplate.convertAndSend(MQConfig.QUEUE,message);
+//    }
 }

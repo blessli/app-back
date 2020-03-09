@@ -24,14 +24,14 @@ public class ActivityController {
     }
     @ApiOperation(value = "获取所有活动")
     @GetMapping("/activities")
-    public JSONResult getActivityList(){
+    public JSONResult getActivityList() throws Exception{
         return JSONResult.success(activityService.selectActivityList());
     }
     @ApiOperation(value = "获取活动详情")
     @GetMapping("/activity")
     public JSONResult getActivityDetail(int activityId){
         ActivityDetail activityDetail=activityService.selectActivityDetail(activityId);
-        mqSender.send(activityDetail);
+//        mqSender.send(activityDetail);
         return JSONResult.success(activityService.selectActivityDetail(activityId));
     }
     @ApiOperation(value = "获取评论回复详情")

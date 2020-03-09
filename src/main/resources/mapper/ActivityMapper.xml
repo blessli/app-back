@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.ActivityDao">
     <insert id="publish" parameterType="com.ldm.request.PublishActivityRequest">
-        insert into t_activity values(null,#{activityName},#{locationName},#{userId},#{activityType},#{locationName},#{longitude},#{latitude},#{beginTime},#{endTime},#{genderLimit},#{totalCount},#{remark},0,#{publishTime},#{images})
+        insert into t_activity values(null,#{activityName},#{locationName},#{userId},#{activityType},#{longitude},#{latitude},#{beginTime},#{endTime},#{genderLimit},#{totalCount},#{remark},0,#{publishTime},#{images})
     </insert>
 
     <select id="selectActivityList" resultType="com.ldm.entity.activity.Activity">

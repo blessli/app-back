@@ -11,8 +11,8 @@ public class MQConfig {
      *
      */
 
-    @Bean
-    public Queue queue() {
-        return new Queue(MQConfig.QUEUE, true);
-    }
+//    @Bean
+//    public Queue queue() {
+//        return new Queue(MQConfig.QUEUE, true);
+//    }
 }
