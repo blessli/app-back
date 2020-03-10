@@ -77,6 +77,19 @@ spring:
       retry:
         enabled: true
         initial-interval: 2s
+  # mail
+  mail:
+    host: smtp.163.com
+    username: ldm112358@163.com
+    password: 258692bb
+    from: ldm112358@163.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 
 mybatis:
   mapper-locations: classpath:mapper/*.xml  #注意：一定要对应mapper映射xml文件的所在路径

@@ -2,6 +2,7 @@ package com.ldm.service.activity.impl;
 
 import com.ldm.dao.ActivityDao;
 import com.ldm.entity.activity.*;
+import com.ldm.entity.user.UserInfo;
 import com.ldm.request.PublishActivityRequest;
 import com.ldm.service.activity.ActivityService;
 import com.ldm.util.DateHandle;
@@ -14,40 +15,99 @@ import java.util.List;
 public class ActivityServiceImpl implements ActivityService {
     @Autowired
     private ActivityDao activityDao;
-    @Override
-    public void publish(PublishActivityRequest publishActivityRequest) {
 
-        publishActivityRequest.setPublishTime(DateHandle.currentDate());
-        activityDao.publish(publishActivityRequest);
+    @Override
+    public boolean publish(PublishActivityRequest publishActivityRequest) {
+        return false;
     }
 
     @Override
-    public List<Activity> selectActivityList() {
-        List<Activity> activityList=activityDao.selectActivityList();
-        for (Activity activity: activityList){
-            activity.setImageList(Arrays.asList(activity.getImages().split(",")));
-        }
-        return activityList;
+    public boolean deleteActivity(int activityId) {
+        return false;
+    }
+
+    @Override
+    public boolean updateActivity(int activityId) {
+        return false;
+    }
+
+    @Override
+    public List<Activity> selectActivityListByTime() {
+        return null;
+    }
+
+    @Override
+    public List<Activity> selectActivityListByActivityType(List<String> activityTypeList) {
+        return null;
+    }
+
+    @Override
+    public List<Activity> selectActivityListByFollowedUserList(List<Integer> followedUserList) {
+        return null;
+    }
+
+    @Override
+    public List<Activity> selectActivityListByHot(int userId) {
+        return null;
     }
 
     @Override
     public ActivityDetail selectActivityDetail(int activityId) {
-        ActivityDetail activityDetail=new ActivityDetail();
-        Activity activity=activityDao.selectActivity(activityId);
-        activity.setImageList(Arrays.asList(activity.getImages().split(",")));
-        activityDetail.setActivity(activity);
-        activityDetail.setActivityMemberList(activityDao.selectActivityMemberList(activityId));
-        activityDetail.setActivityCommentList(activityDao.selectActivityCommentList(activityId));
-        return activityDetail;
+        return null;
     }
 
     @Override
     public List<ActivityReply> selectActivityReplyList(int commentId) {
-        return activityDao.selectActivityReplyList(commentId);
+        return null;
     }
 
     @Override
-    public void clickActivityDetail(int activityId) {
-        activityDao.clickActivityDetail(activityId);
+    public List<UserInfo> selectJoinedUserList(int activityId) {
+        return null;
+    }
+
+    @Override
+    public boolean publishComment(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean publishReply(int commentId, int fromUserId, int toUserId) {
+        return false;
+    }
+
+    @Override
+    public void clickActivityDetail(int activityId, int userId) {
+
+    }
+
+    @Override
+    public boolean tryJoinActivity(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean cancelJoinActivity(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean agreeJoinActiviy(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean disagreeJoinActiviy(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean deleteJoinedActivity(int activityId, int userId) {
+        return false;
+    }
+
+    @Override
+    public boolean inviteJoinActivity(int activityId, int userId) {
+        return false;
     }
 }

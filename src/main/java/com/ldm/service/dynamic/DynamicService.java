@@ -8,4 +8,5 @@ import java.util.List;
 public interface DynamicService {
     void publish(PublishDynamicRequest publishDynamicRequest);
     List<Dynamic> selectDynamicList(String userId);
+
 }

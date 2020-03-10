@@ -10,7 +10,8 @@ import org.springframework.stereotype.Component;
 public class AdvanceNotice {
     /**
      * 启动时执行一次，之后每隔一个小时秒执行一次
-     * 向相关用户发送短信
+     * 向相关用户发送短信或者推送
+     * spring task默认是单线程，warning，需要使用线程池异步处理
      */
     @Scheduled(fixedRate = 1000*3600)
     public void send() {

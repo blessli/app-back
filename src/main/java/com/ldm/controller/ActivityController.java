@@ -1,5 +1,4 @@
 package com.ldm.controller;
-import com.ldm.entity.activity.ActivityDetail;
 import com.ldm.rabbitmq.MQSender;
 import com.ldm.service.activity.ActivityService;
 import com.ldm.util.JSONResult;
@@ -22,16 +21,14 @@ public class ActivityController {
         activityService.publish(publishActivityRequest);
         return JSONResult.success();
     }
-    @ApiOperation(value = "获取所有活动")
-    @GetMapping("/activities")
-    public JSONResult getActivityList() throws Exception{
-        return JSONResult.success(activityService.selectActivityList());
+    @ApiOperation(value = "获取最新活动")
+    @GetMapping("/activities/byTime")
+    public JSONResult getActivityList(){
+        return JSONResult.success(activityService.selectActivityListByTime());
     }
     @ApiOperation(value = "获取活动详情")
     @GetMapping("/activity")
     public JSONResult getActivityDetail(int activityId){
-        ActivityDetail activityDetail=activityService.selectActivityDetail(activityId);
-//        mqSender.send(activityDetail);
         return JSONResult.success(activityService.selectActivityDetail(activityId));
     }
     @ApiOperation(value = "获取评论回复详情")

@@ -6,6 +6,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.ldm.api.SearchService;
 import com.ldm.config.EsConfig;
+import com.ldm.dao.LogDao;
 import com.ldm.dao.SearchDao;
 import com.ldm.domain.LogDomain;
 import com.ldm.domain.SearchActivityDomain;
@@ -28,7 +29,7 @@ public class SearchServiceImpl implements SearchService {
     @Autowired
     private SearchDao searchDao;
     @Autowired
-    private SearchLogDao searchLogDao;
+    private LogDao logDao;
     @Autowired
     private EsConfig esConfig;
     @Override
@@ -101,17 +102,6 @@ public class SearchServiceImpl implements SearchService {
     public void updateLog(LogDomain log) {
         searchLogDao.delete(SearchLogDomain.transform(log));
         searchLogDao.save(SearchLogDomain.transform(log));
-    }
-    @Test
-    public void test(){
-        SearchDomain searchDomain=new SearchDomain();
-        searchDomain.setLocationName("test");
-        searchDomain.setActivityName("test");
-        searchDomain.setActivityType("test");
-        searchDomain.setUserId(1);
-        searchDomain.setActivityId(1);
-        searchDomain.setPublishTime("test");
-        searchDao.save(searchDomain);
     }
 }
 

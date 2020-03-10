@@ -1,5 +1,9 @@
 package com.ldm.service.cache;
 
+import redis.clients.jedis.Jedis;
+
+import java.util.List;
+
 public interface CacheService {
     /**
      * redis 的get操作，通过key获取存储在redis中的对象
@@ -52,6 +56,8 @@ public interface CacheService {
      * @return
      */
     long decr(String key);
+    long lpush(String key,String value);
+    List<String> brpop(int timeout, String key);
 
 
     /**

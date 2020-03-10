@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -98,6 +99,27 @@ public class CacheServiceImpl implements CacheService {
         } finally {
             returnToPool(jedis);
         }
+    }
+    @Override
+    public long lpush(String key, String value) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            return jedis.lpush(key, value);
+        }finally {
+            returnToPool(jedis);
+        }
+    }
+    @Override
+    public List<String> brpop(int timeout, String key) {
+        Jedis jedis = null;
+        try {
+            jedis = jedisPool.getResource();
+            return jedis.brpop(timeout, key);
+        } finally {
+            returnToPool(jedis);
+        }
+        return null;
     }
 
     @Override
