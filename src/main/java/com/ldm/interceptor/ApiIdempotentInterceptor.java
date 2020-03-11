@@ -1,7 +1,6 @@
 package com.ldm.interceptor;
 
-import com.wangzaiplus.test.annotation.ApiIdempotent;
-import com.wangzaiplus.test.service.TokenService;
+import com.ldm.annotation.ApiIdempotent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;

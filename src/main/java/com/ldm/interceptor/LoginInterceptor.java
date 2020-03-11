@@ -1,5 +1,7 @@
 package com.ldm.interceptor;
 
+import com.ldm.holder.User;
+import com.ldm.holder.UserHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 

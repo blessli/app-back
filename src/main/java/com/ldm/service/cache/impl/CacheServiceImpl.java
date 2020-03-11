@@ -119,7 +119,6 @@ public class CacheServiceImpl implements CacheService {
         } finally {
             returnToPool(jedis);
         }
-        return null;
     }
 
     @Override

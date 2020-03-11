@@ -1,30 +1,28 @@
 package com.ldm.service.search.impl;
 
-package com.ldm.search;
-
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.ldm.api.SearchService;
 import com.ldm.config.EsConfig;
 import com.ldm.dao.LogDao;
 import com.ldm.dao.SearchDao;
-import com.ldm.domain.LogDomain;
-import com.ldm.domain.SearchActivityDomain;
+import com.ldm.entity.search.LogDomain;
 import com.ldm.entity.search.SearchDomain;
+import com.ldm.service.search.SearchService;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+@Service
 public class SearchServiceImpl implements SearchService {
     @Autowired
     private SearchDao searchDao;
@@ -32,8 +30,24 @@ public class SearchServiceImpl implements SearchService {
     private LogDao logDao;
     @Autowired
     private EsConfig esConfig;
+
     @Override
-    public PageInfo<SearchActivityDomain> searchActivity(int pageNum, int pageSize, String key) {
+    public List<String> selectHistorySearchList(String userId, String type) {
+        return null;
+    }
+
+    @Override
+    public List<String> selectHotSearchList(String type) {
+        return null;
+    }
+
+    @Override
+    public void updateHistorySearch(String userId, String keyword, String type) {
+
+    }
+
+    @Override
+    public PageInfo<SearchDomain> searchActivity(int pageNum, int pageSize, String key) {
         System.out.println(pageNum+" "+pageSize+" "+key);
         PageHelper.startPage(pageNum, pageSize);
         Client client = esConfig.esTemplate();
@@ -84,24 +98,24 @@ public class SearchServiceImpl implements SearchService {
     }
 
     @Override
-    public void saveActivity(SearchActivityDomain searchActivityDomain) {
-        searchDao.save(SearchDomain.transform(searchActivityDomain));
+    public void saveActivity(SearchDomain searchDomain) {
+        searchDao.save(searchDomain);
     }
 
     @Override
-    public void deleteActivity(SearchActivityDomain searchActivityDomain) {
-        searchDao.delete(SearchDomain.transform(searchActivityDomain));
+    public void deleteActivity(SearchDomain searchDomain) {
+        searchDao.delete(searchDomain);
     }
 
     @Override
     public void createLog(LogDomain log) {
-        searchLogDao.save(SearchLogDomain.transform(log));
+        logDao.save(log);
     }
 
     @Override
     public void updateLog(LogDomain log) {
-        searchLogDao.delete(SearchLogDomain.transform(log));
-        searchLogDao.save(SearchLogDomain.transform(log));
+        logDao.delete(log);
+        logDao.save(log);
     }
 }
 

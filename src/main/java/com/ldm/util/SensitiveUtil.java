@@ -18,7 +18,7 @@ public class SensitiveUtil implements InitializingBean {
     /**
      * 默认敏感词替换符
      */
-    private static final String DEFAULT_REPLACEMENT = "敏感词";
+    private static final String DEFAULT_REPLACEMENT = "***";
 
     private class TrieNode {
 
