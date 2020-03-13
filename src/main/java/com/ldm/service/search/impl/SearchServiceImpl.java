@@ -3,8 +3,8 @@ package com.ldm.service.search.impl;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.ldm.config.EsConfig;
-import com.ldm.dao.LogDao;
-import com.ldm.dao.SearchDao;
+import com.ldm.dao.SearchLogDao;
+import com.ldm.dao.SearchActivityDao;
 import com.ldm.entity.search.LogDomain;
 import com.ldm.entity.search.SearchDomain;
 import com.ldm.service.search.SearchService;
@@ -25,9 +25,9 @@ import java.util.Map;
 @Service
 public class SearchServiceImpl implements SearchService {
     @Autowired
-    private SearchDao searchDao;
+    private SearchActivityDao searchActivityDao;
     @Autowired
-    private LogDao logDao;
+    private SearchLogDao searchLogDao;
     @Autowired
     private EsConfig esConfig;
 
@@ -99,23 +99,23 @@ public class SearchServiceImpl implements SearchService {
 
     @Override
     public void saveActivity(SearchDomain searchDomain) {
-        searchDao.save(searchDomain);
+        searchActivityDao.save(searchDomain);
     }
 
     @Override
     public void deleteActivity(SearchDomain searchDomain) {
-        searchDao.delete(searchDomain);
+        searchActivityDao.delete(searchDomain);
     }
 
     @Override
     public void createLog(LogDomain log) {
-        logDao.save(log);
+        searchLogDao.save(log);
     }
 
     @Override
     public void updateLog(LogDomain log) {
-        logDao.delete(log);
-        logDao.save(log);
+        searchLogDao.delete(log);
+        searchLogDao.save(log);
     }
 }
 

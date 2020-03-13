@@ -1,7 +1,4 @@
 package com.ldm.service.cache;
-
-import redis.clients.jedis.Jedis;
-
 import java.util.List;
 
 public interface CacheService {

@@ -3,11 +3,7 @@ package com.ldm.service.search;
 import com.github.pagehelper.PageInfo;
 import com.ldm.entity.search.LogDomain;
 import com.ldm.entity.search.SearchDomain;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-
 import java.util.List;
 
 public interface SearchService {

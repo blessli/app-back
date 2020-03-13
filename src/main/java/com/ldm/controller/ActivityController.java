@@ -39,7 +39,6 @@ public class ActivityController {
     @ApiOperation(value = "点击进入活动详情")
     @PutMapping("/activity/click")
     public JSONResult clickActivityDetail(int activityId){
-        activityService.clickActivityDetail(activityId);
         return JSONResult.success();
     }
 }

@@ -11,6 +11,7 @@ import java.lang.reflect.Method;
 
 /**
  * AnnotationLogAspect: 注解式日志切面
+ * 特定 JoinPoint 处的 Aspect 所采取的动作称为Advice
  */
 @Aspect
 @Component
@@ -24,7 +25,7 @@ public class AnnotationLogAspect {
     }
 
     /**
-     * 声明前置建言，复用了@Pointcut注解定义的切点
+     * 声明前置通知，复用了@Pointcut注解定义的切点
      */
     @Before("annotationPointcut()")
     public void before(JoinPoint joinPoint) {
@@ -35,7 +36,7 @@ public class AnnotationLogAspect {
     }
 
     /**
-     * 声明后继建言，复用了@Pointcut注解定义的切点
+     * 声明后继通知，复用了@Pointcut注解定义的切点
      */
     @After("annotationPointcut()")
     public void after(JoinPoint joinPoint) {

@@ -23,5 +23,4 @@ public interface ActivityDao {
     List<ActivityReply> selectActivityReplyList(int commentId);
     // 浏览量递增
     void clickActivityDetail(int activityId);
-
 }
