@@ -1,6 +1,4 @@
 package com.ldm.controller;
-
-import com.ldm.request.PublishActivityRequest;
 import com.ldm.request.PublishDynamicRequest;
 import com.ldm.service.dynamic.DynamicService;
 import com.ldm.util.JSONResult;

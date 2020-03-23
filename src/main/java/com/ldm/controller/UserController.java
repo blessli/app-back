@@ -21,7 +21,7 @@ public class UserController {
     @ApiOperation(value = "个人中心")
     @GetMapping("/user/center")
     public JSONResult getUserCenter(String userId){
-        return JSONResult.success(userService.selectUserCenter(userId));
+        return JSONResult.success();
     }
 
 }

@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.ActivityDao">
+<!--    根据活动类型列表进行筛选活动-->
+    <select id="selectActivityListByActivityType" resultType="com.ldm.entity.activity">
+        SELECT *
+        FROM t_activity
+        WHERE activity_type in
+        <foreach item="item" index="index" collection="list"
+                 open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        ORDER BY create_time limit 0,10
+    </select>
     <insert id="publish" parameterType="com.ldm.request.PublishActivityRequest">
         insert into t_activity values(null,#{activityName},#{locationName},#{userId},#{activityType},#{longitude},#{latitude},#{beginTime},#{endTime},#{genderLimit},#{totalCount},#{remark},0,#{publishTime},#{images})
     </insert>

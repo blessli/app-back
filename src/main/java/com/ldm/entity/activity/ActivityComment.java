@@ -7,7 +7,7 @@ public class ActivityComment {
     private int commentId;
     private String userId;
     private String userNickname;
-    private int replyCount;
+    private int commentReplyCount;
     private String content;
     private String commentTime;
     private int activityId;
