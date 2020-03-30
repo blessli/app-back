@@ -1,6 +1,6 @@
 package com.ldm.service.user;
 
-import com.ldm.entity.user.UserInfo;
+import com.ldm.entity.UserInfo;
 
 import java.util.List;
 

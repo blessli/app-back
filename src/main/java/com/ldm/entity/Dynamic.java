@@ -1,8 +1,9 @@
-package com.ldm.entity.dynamic;
+package com.ldm.entity;
 
 import lombok.Data;
 
 import java.util.List;
+
 @Data
 public class Dynamic {
     private int dynamicId;

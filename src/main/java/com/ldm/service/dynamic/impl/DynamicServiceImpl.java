@@ -1,7 +1,7 @@
 package com.ldm.service.dynamic.impl;
 
 import com.ldm.dao.DynamicDao;
-import com.ldm.entity.dynamic.Dynamic;
+import com.ldm.entity.Dynamic;
 import com.ldm.request.PublishDynamicRequest;
 import com.ldm.service.dynamic.DynamicService;
 import com.ldm.util.DateHandle;

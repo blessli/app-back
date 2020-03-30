@@ -2,37 +2,59 @@ package com.ldm.service.cache.impl;
 
 import com.ldm.service.cache.CacheService;
 import com.ldm.util.JsonUtil;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisPool;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-@RestController
+@Service(value = "/cacheService")
 public class CacheServiceImpl implements CacheService {
     private static final String SET_IF_NOT_EXIST = "NX";
     private static final String SET_WITH_EXPIRE_TIME = "PX";
-    private JedisCluster jedisCluster;
+    /**
+     * 通过连接池对象可以获得对redis的连接
+     */
+    @Autowired
+    JedisPool jedisPool;
 
     @Override
     public <T> T get(String key, Class<T> clazz) {
-
-        // 通过key获取存储于redis中的对象（这个对象是以json格式存储的，所以是字符串）
-        String strValue = jedisCluster.get(key);
-        // 将json字符串转换为对应的对象
-        T objValue = JsonUtil.stringToBean(strValue, clazz);
-        return objValue;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            // 通过key获取存储于redis中的对象（这个对象是以json格式存储的，所以是字符串）
+            String strValue = jedis.get(key);
+            // 将json字符串转换为对应的对象
+            T objValue = JsonUtil.stringToBean(strValue, clazz);
+            return objValue;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+        
     }
 
     @Override
     public <T> boolean set(String key, T value) {
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
         // 将对象转换为json字符串
         String strValue = JsonUtil.beanToString(value);
         if (strValue == null || strValue.length() <= 0)
             return false;
-        jedisCluster.set(key, strValue);
+        jedis.set(key, strValue);
         return true;
     }
 
@@ -48,41 +70,97 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public <T> boolean set(String key, T value, String nxxx, String expx, int expireSeconds) {
-        // 将对象转换为json字符串
-        String strValue = JsonUtil.beanToString(value);
-        if (strValue == null || strValue.length() <= 0)
-            return false;
-        jedisCluster.set(key,strValue,nxxx,expx,expireSeconds);
-        return true;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            // 将对象转换为json字符串
+            String strValue = JsonUtil.beanToString(value);
+            if (strValue == null || strValue.length() <= 0)
+                return false;
+            jedis.set(key,strValue,nxxx,expx,expireSeconds);
+            return true;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public boolean exists(String key) {
-        return jedisCluster.exists(key);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.exists(key);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public long incr(String key) {
-        return jedisCluster.incr(key);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.incr(key);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public long decr(String key) {
-        return jedisCluster.decr(key);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.decr(key);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
     @Override
     public long lpush(String key, String value) {
-        return jedisCluster.lpush(key, value);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.lpush(key, value);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
     @Override
     public List<String> brpop(int timeout, String key) {
-        return jedisCluster.brpop(timeout, key);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.brpop(timeout, key);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public boolean delete(String key) {
-        Long del = jedisCluster.del(key);
-        return del > 0;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            Long del = jedis.del(key);
+            return del > 0;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -93,9 +171,17 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public void likeDynamic(int dynamicId,int userId){
-        String key="like:dynamic:"+dynamicId;
-        if(jedisCluster.sismember(key,""+userId)) jedisCluster.srem(key,""+userId);
-        else jedisCluster.sadd(key,""+userId);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String key="like:dynamic:"+dynamicId;
+            if(jedis.sismember(key,""+userId)) jedis.srem(key,""+userId);
+            else jedis.sadd(key,""+userId);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -105,12 +191,20 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public boolean limitFrequency(int userId){
-        long nowTs=System.currentTimeMillis();
-        int period=60,maxCount=5;
-        String key="frequency:limit:"+userId;
-        jedisCluster.zadd(key,nowTs,""+nowTs);
-        jedisCluster.zremrangeByScore(key,0,nowTs-period*1000);
-        return jedisCluster.zcard(key)>maxCount;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            long nowTs=System.currentTimeMillis();
+            int period=60,maxCount=5;
+            String key="frequency:limit:"+userId;
+            jedis.zadd(key,nowTs,""+nowTs);
+            jedis.zremrangeByScore(key,0,nowTs-period*1000);
+            return jedis.zcard(key)>maxCount;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -119,8 +213,16 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public void rank(){
-        String key="rank:activity";
-        Set<String> set=jedisCluster.zrevrange(key,0,49);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String key="rank:activity";
+            Set<String> set=jedis.zrevrange(key,0,49);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -129,8 +231,16 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public void recentScanHistory(int userId){
-        String key="activity:detail:page:"+userId;
-        jedisCluster.lrange(key,0,10);
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String key="activity:detail:page:"+userId;
+            jedis.lrange(key,0,10);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -141,10 +251,18 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public boolean enterDetailPage(int activityId, int userId) {
-        String key="activity:detail:page:"+userId;
-        jedisCluster.lrem(key,0,String.valueOf(activityId));
-        jedisCluster.lpush(key,String.valueOf(activityId));
-        return true;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String key="activity:detail:page:"+userId;
+            jedis.lrem(key,0,String.valueOf(activityId));
+            jedis.lpush(key,String.valueOf(activityId));
+            return true;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     /**
@@ -154,28 +272,77 @@ public class CacheServiceImpl implements CacheService {
      */
     @Override
     public boolean recentSearchHistory(int userId) {
-        String key="activity:detail:page:"+userId;
-        return false;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String key="activity:detail:page:"+userId;
+            return false;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public boolean addFollowsFansById(int fromId, int toId) {
-        return false;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return false;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
 
     @Override
     public boolean deleteFollowsFansById(int fromId, int toId) {
-        return false;
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return false;
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
     public String testLock(){
-        String result=jedisCluster.set("lock-token","lidongming","NX","EX",60*2);
-        return result;// "OK"为成功
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            String result=jedis.set("lock-token","lidongming","NX","EX",60*2);
+            return result;// "OK"为成功
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
     }
     public Object testUnLock(){
-        //lua script
-        String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-        String request= UUID.randomUUID().toString();
-        Object result=jedisCluster.eval(script, Collections.singletonList("lock-token"),Collections.singletonList("lidongming"));
-        return result;// 1为成功
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            //lua script
+            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+            String request= UUID.randomUUID().toString();
+            Object result=jedis.eval(script, Collections.singletonList("lock-token"),Collections.singletonList("lidongming"));
+            return result;// 1为成功
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+
+    }
+    /**
+     * 将redis连接对象归还到redis连接池
+     *
+     * @param jedis
+     */
+    private void returnToPool(Jedis jedis) {
+        if (jedis != null)
+            jedis.close();
     }
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.ActivityDao">
 <!--    根据活动类型列表进行筛选活动-->
-    <select id="selectActivityListByActivityType" resultType="com.ldm.entity.activity">
+    <select id="selectActivityListByActivityType" resultType="com.ldm.entity.Activity">
         SELECT *
         FROM t_activity
         WHERE activity_type in
@@ -12,46 +12,4 @@
         </foreach>
         ORDER BY create_time limit 0,10
     </select>
-    <insert id="publish" parameterType="com.ldm.request.PublishActivityRequest">
-        insert into t_activity values(null,#{activityName},#{locationName},#{userId},#{activityType},#{longitude},#{latitude},#{beginTime},#{endTime},#{genderLimit},#{totalCount},#{remark},0,#{publishTime},#{images})
-    </insert>
-
-    <select id="selectActivityList" resultType="com.ldm.entity.activity.Activity">
-SELECT t_activity.*,user_nickname,avatar,IFNULL(comment_count,0) AS comment_count FROM t_activity
-LEFT JOIN t_user ON t_user.user_id=t_activity.user_id
-LEFT JOIN (SELECT activity_id,COUNT(activity_id) AS comment_count
-FROM t_activity_comment GROUP BY activity_id) as t
-ON t_activity.activity_id=t.activity_id
-    </select>
-
-    <select id="selectActivityMemberList" resultType="com.ldm.entity.activity.ActivityMember">
-        SELECT t_activity_member.user_id,join_time,user_nickname,avatar FROM t_activity_member
-LEFT JOIN t_user ON t_user.user_id=t_activity_member.user_id WHERE activity_id=#{activityId}
-ORDER BY t_activity_member.join_time
-    </select>
-
-    <select id="selectActivity" resultType="com.ldm.entity.activity.Activity">
-SELECT t_activity.*,user_nickname,avatar,IFNULL(comment_count,0) AS comment_count FROM t_activity
-LEFT JOIN t_user ON t_user.user_id=t_activity.user_id
-LEFT JOIN (SELECT activity_id,COUNT(activity_id) AS comment_count
-FROM t_activity_comment GROUP BY activity_id) as t
-ON t_activity.activity_id=t.activity_id where t_activity.activity_id=#{activityId}
-    </select>
-
-    <select id="selectActivityCommentList" resultType="com.ldm.entity.activity.ActivityComment">
-        SELECT t_activity_comment.*,user_nickname,avatar,IFNULL(reply_count,0) AS reply_count FROM t_activity_comment
-LEFT JOIN t_user ON t_user.user_id=t_activity_comment.user_id
-LEFT JOIN (SELECT comment_id,COUNT(comment_id) AS reply_count
-FROM t_activity_reply GROUP BY comment_id) as t
-ON t.comment_id=t_activity_comment.comment_id WHERE activity_id=#{activityId} ORDER BY t_activity_comment.comment_time
-    </select>
-
-    <select id="selectActivityReplyList" resultType="com.ldm.entity.activity.ActivityReply">
-        SELECT t_activity_reply.*,avatar FROM t_activity_reply
-LEFT JOIN t_user ON t_user.user_id=t_activity_reply.from_user_id WHERE t_activity_reply.comment_id=#{commentId}
-    </select>
-
-    <update id="clickActivityDetail">
-        UPDATE t_activity SET look_count=look_count+1 WHERE activity_id=#{activityId}
-    </update>
 </mapper>

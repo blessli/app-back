@@ -13,6 +13,11 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     @Autowired
     private UserService userService;
+    @ApiOperation(value = "个人中心")
+    @GetMapping("/user/login")
+    public JSONResult login(){
+        return JSONResult.success();
+    }
     @ApiOperation(value = "编辑个人资料")
     @PutMapping("/user/userInfo")
     public JSONResult editProfile(@RequestBody EditUserInfoRequest editUserInfoRequest) {
@@ -21,7 +26,7 @@ public class UserController {
     @ApiOperation(value = "个人中心")
     @GetMapping("/user/center")
     public JSONResult getUserCenter(String userId){
-        return JSONResult.success();
+        return JSONResult.success("登录成功");
     }
 
 }

@@ -1,25 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.DynamicDao">
-    <insert id="publish">
-        insert into t_dynamic values(null,#{content},#{images},#{publishTime},#{publishLocation},#{userId},#{dynamicType})
-    </insert>
-    <select id="selectDynamicList" resultType="com.ldm.entity.dynamic.Dynamic">
-        SELECT t_dynamic.*,user_nickname,avatar,IFNULL(comment_count,0) AS comment_count,IFNULL(like_count,0) AS like_count,
-IFNULL(is_like,0) AS is_like FROM t_dynamic
-LEFT JOIN t_user ON t_user.user_id=t_dynamic.user_id
-LEFT JOIN (SELECT dynamic_id,COUNT(dynamic_id) AS comment_count
-FROM t_dynamic_comment GROUP BY dynamic_id) as t
-ON t_dynamic.dynamic_id=t.dynamic_id
-LEFT JOIN (SELECT dynamic_id,COUNT(dynamic_id) AS like_count
-FROM t_like GROUP BY dynamic_id) as tt
-ON t_dynamic.dynamic_id=tt.dynamic_id
-LEFT JOIN (SELECT dynamic_id,COUNT(dynamic_id) AS is_like
-FROM t_like WHERE user_id=#{userId} GROUP BY dynamic_id) as ttt
-ON t_dynamic.dynamic_id=ttt.dynamic_id
-LEFT JOIN (SELECT focus_user_id,COUNT(focus_user_id) AS is_focus
-FROM t_focus WHERE user_id=#{userId} GROUP BY focus_user_id) as tttt
-ON t_dynamic.user_id=tttt.focus_user_id
-ORDER BY publish_time
-    </select>
+
 </mapper>

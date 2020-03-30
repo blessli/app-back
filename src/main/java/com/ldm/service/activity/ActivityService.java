@@ -1,7 +1,9 @@
 package com.ldm.service.activity;
 
-import com.ldm.entity.activity.*;
-import com.ldm.entity.user.UserInfo;
+import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityDetail;
+import com.ldm.entity.ActivityReply;
+import com.ldm.entity.UserInfo;
 import com.ldm.request.PublishActivityRequest;
 
 import java.util.List;

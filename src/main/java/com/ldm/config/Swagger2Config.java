@@ -27,7 +27,7 @@ public class Swagger2Config {
         return new ApiInfoBuilder()
                 .title("app Backend RESTful APIs")
                 .description("此服务提供Backend服务")
-                .termsOfServiceUrl("http://www.baidu.com/")
+                .termsOfServiceUrl("http://8.129.63.242:8888")
                 .version("1.0")
                 .build();
     }

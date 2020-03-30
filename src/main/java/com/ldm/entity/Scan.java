@@ -1,4 +1,4 @@
-package com.ldm.entity.user;
+package com.ldm.entity;
 
 import lombok.Data;
 

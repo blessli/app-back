@@ -1,6 +1,6 @@
 package com.ldm.dao;
 
-import com.ldm.entity.dynamic.Dynamic;
+import com.ldm.entity.Dynamic;
 import com.ldm.request.PublishDynamicRequest;
 
 import java.util.List;

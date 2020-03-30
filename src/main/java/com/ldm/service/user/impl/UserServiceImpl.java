@@ -1,8 +1,7 @@
 package com.ldm.service.user.impl;
 
 import com.ldm.dao.UserDao;
-import com.ldm.entity.user.UserInfo;
-import com.ldm.rabbitmq.MQSender;
+import com.ldm.entity.UserInfo;
 import com.ldm.service.cache.CacheService;
 import com.ldm.service.user.UserService;
 import com.ldm.util.MD5Util;
@@ -19,8 +18,6 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
     @Autowired
     private CacheService cacheService;
-    @Autowired
-    private MQSender mqSender;
     /**
      * 通过连接池对象可以获得对redis的连接
      */
@@ -33,7 +30,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean register(String phone) {
-        mqSender.sendSMS(phone);
         return true;
     }
 

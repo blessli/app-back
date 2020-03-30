@@ -1,24 +1,19 @@
 package com.ldm.dao;
 
-import com.ldm.entity.activity.Activity;
-import com.ldm.entity.activity.ActivityComment;
-import com.ldm.entity.activity.ActivityDetail;
-import com.ldm.entity.activity.ActivityReply;
-import com.ldm.entity.user.UserInfo;
+import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityComment;
+import com.ldm.entity.ActivityDetail;
+import com.ldm.entity.ActivityReply;
+import com.ldm.entity.UserInfo;
 import com.ldm.request.PublishActivityRequest;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.*;
 
 import java.util.List;
-@Mapper
 public interface ActivityDao {
     /**
      * 用户发布活动
      * @param publishActivityRequest
      */
-    @Insert("")
     boolean publish(PublishActivityRequest publishActivityRequest);
 
     /**
@@ -44,7 +39,7 @@ public interface ActivityDao {
     List<Activity> selectActivityListByTime();
 
     /**
-     * 根据活动类型列表进行筛选活动
+     * 根据活动类型列表进行筛选活动-sql写在xml里
      * @param activityTypeList
      * @return
      */
@@ -142,6 +137,7 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Update("UPDATE t_activity_join_request SET `status`=2,update_time=NOW() WHERE activity_id=#{activityId} AND user_id=#{userId}")
     boolean agreeJoinActiviy(int activityId,int userId);
 
     /**
@@ -150,6 +146,7 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Update("UPDATE t_activity_join_request SET `status`=1,update_time=NOW() WHERE activity_id=#{activityId} AND user_id=#{userId}")
     boolean disagreeJoinActiviy(int activityId,int userId);
 
     /**
@@ -158,6 +155,7 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Update("UPDATE t_activity_join_request SET `status`=3,update_time=NOW() WHERE activity_id=#{activityId} AND user_id=#{userId}")
     boolean deleteJoinedActivity(int activityId,int userId);
 
     /**

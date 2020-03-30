@@ -1,4 +1,4 @@
-package com.ldm.entity.activity;
+package com.ldm.entity;
 
 import lombok.Data;
 
@@ -21,7 +21,7 @@ public class Activity {
     private String remark;// 备注
     private int activityViewCount;// 浏览量
     private int activityCommentCount;// 评论量
-    private int activityMemberCount;// 评论量
+    private int activityMemberCount;// 已加入人数
     private String images;// 图片地址
     private String publishTime;// 发表时间
     private String userNickname;// 用户昵称

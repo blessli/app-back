@@ -11,11 +11,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class SocketIoConfig {
 
-    @Value("${netty.socket.io.host}")
-    private String host;
+//    @Value("${netty.socket.io.host}")
+    private String host="127.0.0.1";
 
-    @Value("${netty.socket.io.port}")
-    private int port;
+//    @Value("${netty.socket.io.port}")
+    private int port=9999;
 
     /**
      * 创建socketIOServer实例

@@ -1,0 +1,93 @@
+server:
+  port: 8888
+spring:
+  datasource:
+    name: mysql_test
+    type: com.alibaba.druid.pool.DruidDataSource
+    #druid相关配置
+    druid:
+      #监控统计拦截的filters
+      filters: stat
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://rm-wz9b75yo746sc35so6o.mysql.rds.aliyuncs.com:3306/app?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT&useSSL=false
+      username: mytest
+      password: zxc++123
+      #配置初始化大小/最小/最大
+      initial-size: 1
+      min-idle: 1
+      max-active: 20
+      #获取连接等待超时时间
+      max-wait: 60000
+      #间隔多久进行一次检测，检测需要关闭的空闲连接
+      time-between-eviction-runs-millis: 60000
+      #一个连接在池中最小生存的时间
+      min-evictable-idle-time-millis: 300000
+      validation-query: SELECT 'x'
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      #打开PSCache，并指定每个连接上PSCache的大小。oracle设为true，mysql设为false。分库分表较多推荐设置为false
+      pool-prepared-statements: false
+      max-pool-prepared-statement-per-connection-size: 20
+  redis:
+    database: 0
+    host: 127.0.0.1
+    password: zxc++123
+    port: 6379
+    timeout: 1000
+    poolMaxTotal: 1000
+    poolMaxIdle: 500
+    poolMaxWait: 500
+  main:
+    allow-bean-definition-overriding: true
+#  data:
+#    elasticsearch:
+#      # 集群名
+#      cluster-name: elasticsearch
+#      # 连接节点,注意在集群中通信都是9300端口，否则会报错无法连接上！
+#      cluster-nodes: localhost:9300,119.29.38.169:9300
+#      repositories:
+#        # 仓库中数据存储
+#        enabled: true
+#  rabbitmq:
+#    host: 127.0.0.1
+#    port: 5672
+#    username: guest
+#    password: guest
+#    virtual-host: /
+#    publisher-confirms: true
+#    publisher-returns: true
+#    listener:
+#      direct:
+#        default-requeue-rejected: true
+#      simple:
+#        prefetch: 1
+#        auto-startup: true
+#    template:
+#      retry:
+#        enabled: true
+#        initial-interval: 2s
+#      mandatory: true
+  # mail
+  mail:
+    host: smtp.163.com
+    username: ldm112358@163.com
+    password: 258692bb
+    from: ldm112358@163.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+mybatis:
+  mapper-locations: classpath:mapper/*.xml  #注意：一定要对应mapper映射xml文件的所在路径
+  type-aliases-package: com.ldm.entity  # 注意：对应实体类的路径
+  configuration:
+    map-underscore-to-camel-case: true
+#netty:
+#  socket:
+#    io:
+#      host: 8.129.63.242
+#      port: 9999

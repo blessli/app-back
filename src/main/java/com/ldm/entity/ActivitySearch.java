@@ -1,4 +1,4 @@
-package com.ldm.entity.search;
+package com.ldm.entity;
 
 import lombok.Data;
 
