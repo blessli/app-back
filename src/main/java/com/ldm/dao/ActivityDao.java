@@ -14,6 +14,14 @@ public interface ActivityDao {
      * 用户发布活动
      * @param publishActivityRequest
      */
+    @Insert("INSERT INTO `t_activity`(`activity_name`, `user_id`, " +
+            "`activity_type`, `location_name`, `longitude`, `latitude`," +
+            " `begin_time`, `end_time`, `gender_limit`, `total_count`, `remark`," +
+            " `activity_view_count`, `activity_comment_count`, `activity_member_count`, " +
+            "`create_time`, `update_time`, `images`) VALUES (#{activityName},#{userId}," +
+            "#{activityType},#{locationName},#{longitude},#{latitude},#{beginTime}," +
+            "#{endTime},#{genderLimit},#{totalCount},#{remark},0,0,0,#{publishTime}," +
+            "#{publishTime},#{images})")
     boolean publish(PublishActivityRequest publishActivityRequest);
 
     /**
@@ -59,12 +67,15 @@ public interface ActivityDao {
      * @return
      */
     List<Activity> selectActivityListByHot(int userId);
+
     /**
      * 获取该活动的详情内容
      * @param activityId
      * @return
      */
-    ActivityDetail selectActivityDetail(int activityId,int userId);
+//    ActivityDetail selectActivityDetail(int activityId,int userId);
+    @Select("SELECT * FROM `t_activity` WHERE activity_id = #{activityId}")
+    ActivityDetail selectActivityDetail(int activityId);
 
     /**
      * 获取该活动的评论列表，并判断当前用户是否点赞，未点赞返回-1
@@ -83,12 +94,14 @@ public interface ActivityDao {
      * @param commentId
      * @return
      */
+    @Select("SELECT t2.*, t1.avatar FROM t_user t1 RIGHT JOIN (SELECT * FROM " +
+            "t_activity_reply WHERE comment_id=1) t2 ON t1.user_id = t2.from_user_id;")
     List<ActivityReply> selectActivityReplyList(int commentId);
 
     /**
      * 获取成功加入活动的用户列表
      * @param activityId
-     * @return
+     * @return 在xml实现了
      */
     List<UserInfo> selectJoinedUserList(int activityId);
 
@@ -112,7 +125,11 @@ public interface ActivityDao {
     /**
      * 用户首次进入活动详情页，浏览量+1
      * @param activityId
+     * 更新t_activity表和t_scan_history表
+     * 待改进
      */
+    @Update({"UPDATE t_activity SET activity_view_count=activity_view_count+1 WHERE activity_id=#{activityId}"
+    })
     void clickActivityDetail(int activityId,int userId);
 
     /**
@@ -121,6 +138,8 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Insert("INSERT INTO t_activity_join_request(`user_id`, `activity_id`, " +
+            "`create_time`, `status`, `update_time`) VALUES(#{userId},#{activityId},NOW(),1,NOW());")
     boolean tryJoinActivity(int activityId,int userId);
 
     /**
@@ -128,7 +147,10 @@ public interface ActivityDao {
      * @param activityId
      * @param userId
      * @return
+     *删除t_activity_join_request表的请求记录和t_activity_member成员记录
      */
+    @Delete({"DELETE FROM t_activity_join_request WHERE user_id=1 AND activity_id=122",
+    "DELETE FROM t_activity_member WHERE user_id='1' AND activity_id='122'"})
     boolean cancelJoinActivity(int activityId,int userId);
 
     /**

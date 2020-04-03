@@ -12,4 +12,58 @@
         </foreach>
         ORDER BY create_time limit 0,10
     </select>
+    
+    <resultMap id="userInfoMap" type="com.ldm.entity.UserInfo">
+        <id property="userId" column="user_id" jdbcType="VARCHAR"></id>
+        <result property="userNickname" column="user_nickname" jdbcType="VARCHAR"></result>
+        <result property="signature" column="signature" jdbcType="VARCHAR"></result>
+        <result property="focusCount" column="focus_count" jdbcType="INTEGER"></result>
+        <result property="fanCount" column="fan_count" jdbcType="INTEGER"></result>
+        <result property="friendCount" column="friend_count" jdbcType="INTEGER"></result>
+        <result property="gender" column="gender" jdbcType="CHAR"></result>
+        <result property="avatar" column="avatar" jdbcType="VARCHAR"></result>
+        <result property="address" column="address" jdbcType="VARCHAR"></result>
+        <result property="birthday" column="birthday" jdbcType="CHAR"></result>
+        <result property="userName" column="user_name" jdbcType="VARCHAR"></result>
+
+        <collection property="scanList" ofType="com.ldm.entity.Scan">
+            <result column="activity_id" jdbcType="VARCHAR" property="activityId" />
+            <result column="image" jdbcType="VARCHAR" property="image" />
+        </collection>
+    </resultMap>
+
+    <select id="selectJoinedUserList" parameterType="Integer" resultMap="userInfoMap">
+        SELECT t1.*,
+		       t2.activity_id,
+		       t2.image
+        FROM
+        (
+            (
+            SELECT user_id,user_nickname,signature,focus_count,fan_count,friend_count,gender,avatar,address,birthday,user_name
+            FROM t_user
+            WHERE user_id
+            in (
+                SELECT
+                DISTINCT user_id
+                FROM t_activity_member
+                WHERE activity_id = #{activityId}
+                )
+            ) t1
+            LEFT JOIN
+            (
+            SELECT user_id,
+                   activity_id,
+                   image
+            FROM t_scan_history
+            WHERE user_id
+            in (
+                SELECT DISTINCT user_id FROM t_activity_member WHERE activity_id = '2'
+                )
+            GROUP BY user_id
+            ) t2
+            ON t1.user_id = t2.user_id
+        )
+    </select>
+
+
 </mapper>

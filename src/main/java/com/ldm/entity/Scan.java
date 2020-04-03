@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class Scan {
     private int activityId;
-    private String images;
+    private String image;
 }
