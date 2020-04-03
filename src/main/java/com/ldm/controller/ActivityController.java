@@ -1,12 +1,12 @@
 package com.ldm.controller;
 import com.ldm.entity.Activity;
-import com.ldm.service.activity.ActivityService;
+import com.ldm.request.PublishActivity;
+import com.ldm.service.ActivityService;
 import com.ldm.util.JSONResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import com.ldm.request.PublishActivityRequest;
 
 @Api(tags = "活动相关接口",description = "提供活动相关的REST API")
 @RestController
@@ -22,7 +22,7 @@ public class ActivityController {
      */
     @ApiOperation(value = "发表活动")
     @PostMapping("/activity/add")
-    public JSONResult publishActivity(@RequestBody PublishActivityRequest request){
+    public JSONResult publishActivity(@RequestBody PublishActivity request){
         return JSONResult.success();
     }
 
@@ -46,7 +46,7 @@ public class ActivityController {
      */
     @ApiOperation(value = "编辑活动")
     @PutMapping("/activity/edit")
-    public JSONResult editActivity(@RequestBody PublishActivityRequest publishActivityRequest){
+    public JSONResult editActivity(@RequestBody PublishActivity publishActivityRequest){
         return JSONResult.success();
     }
 
@@ -141,7 +141,7 @@ public class ActivityController {
      */
     @ApiOperation(value = "发表评论")
     @PostMapping("/activity/comment/add")
-    public JSONResult publishComment(@RequestBody PublishActivityRequest publishActivityRequest){
+    public JSONResult publishComment(@RequestBody PublishActivity publishActivityRequest){
         return JSONResult.success();
     }
 
@@ -165,7 +165,7 @@ public class ActivityController {
      */
     @ApiOperation(value = "发表回复")
     @PostMapping("/activity/reply/add")
-    public JSONResult publishReply(@RequestBody PublishActivityRequest publishActivityRequest){
+    public JSONResult publishReply(@RequestBody PublishActivity publishActivityRequest){
         return JSONResult.success();
     }
 
@@ -179,29 +179,5 @@ public class ActivityController {
     @DeleteMapping("/activity/reply/delete")
     public JSONResult deleteReply(int replyId){
         return JSONResult.success();
-    }
-
-    /**
-     * @title 收藏活动
-     * @description 用户在活动详情页收藏该活动
-     * @author lidongming
-     * @updateTime 2020/3/29 0:19
-     */
-    @ApiOperation(value = "收藏活动")
-    @PostMapping("/activity/collect")
-    public JSONResult collectActivity(int userId,int activityId){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 取消收藏活动
-     * @description 用户在活动详情页取消收藏该活动
-     * @author lidongming
-     * @updateTime 2020/3/29 0:19
-     */
-    @ApiOperation(value = "取消收藏活动")
-    @DeleteMapping("/activity/cancelCollect")
-    public JSONResult cancelCollectActivity(int userId, int activityId){
-        return JSONResult.success(new Activity());
     }
 }

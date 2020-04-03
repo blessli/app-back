@@ -7,5 +7,5 @@ import java.util.List;
 public class ActivityDetail {
     private Activity activity;
     private List<ActivityMember> activityMemberList;
-    private List<ActivityComment> activityCommentList;
+    private List<Comment> activityCommentList;
 }

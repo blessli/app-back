@@ -1,21 +1,23 @@
-package com.ldm.service.cache.impl;
+package com.ldm.service;
 
-import com.ldm.service.cache.CacheService;
 import com.ldm.util.JsonUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RestController;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-
-@Service(value = "/cacheService")
-public class CacheServiceImpl implements CacheService {
+/**
+ * @author lidongming
+ * @ClassName CacheService.java
+ * @Description 缓存服务
+ * @createTime 2020年04月04日 05:05:00
+ */
+@Service
+public class CacheService{
     private static final String SET_IF_NOT_EXIST = "NX";
     private static final String SET_WITH_EXPIRE_TIME = "PX";
     /**
@@ -24,7 +26,6 @@ public class CacheServiceImpl implements CacheService {
     @Autowired
     JedisPool jedisPool;
 
-    @Override
     public <T> T get(String key, Class<T> clazz) {
         Jedis jedis = null;// redis连接
         try {
@@ -41,7 +42,6 @@ public class CacheServiceImpl implements CacheService {
         
     }
 
-    @Override
     public <T> boolean set(String key, T value) {
         Jedis jedis = null;// redis连接
         try {
@@ -52,8 +52,9 @@ public class CacheServiceImpl implements CacheService {
         }
         // 将对象转换为json字符串
         String strValue = JsonUtil.beanToString(value);
-        if (strValue == null || strValue.length() <= 0)
+        if (strValue == null || strValue.length() <= 0){
             return false;
+        }
         jedis.set(key, strValue);
         return true;
     }
@@ -68,15 +69,15 @@ public class CacheServiceImpl implements CacheService {
      * @param <T>
      * @return
      */
-    @Override
     public <T> boolean set(String key, T value, String nxxx, String expx, int expireSeconds) {
         Jedis jedis = null;// redis连接
         try {
             jedis=jedisPool.getResource();
             // 将对象转换为json字符串
             String strValue = JsonUtil.beanToString(value);
-            if (strValue == null || strValue.length() <= 0)
+            if (strValue == null || strValue.length() <= 0){
                 return false;
+            }
             jedis.set(key,strValue,nxxx,expx,expireSeconds);
             return true;
         }finally {
@@ -86,7 +87,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public boolean exists(String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -99,7 +99,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public long incr(String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -112,7 +111,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public long decr(String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -124,7 +122,6 @@ public class CacheServiceImpl implements CacheService {
         }
 
     }
-    @Override
     public long lpush(String key, String value) {
         Jedis jedis = null;// redis连接
         try {
@@ -136,7 +133,6 @@ public class CacheServiceImpl implements CacheService {
         }
 
     }
-    @Override
     public List<String> brpop(int timeout, String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -149,7 +145,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public boolean delete(String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -169,14 +164,17 @@ public class CacheServiceImpl implements CacheService {
      * @param userId
      * @return
      */
-    @Override
     public void likeDynamic(int dynamicId,int userId){
         Jedis jedis = null;// redis连接
         try {
             jedis=jedisPool.getResource();
             String key="like:dynamic:"+dynamicId;
-            if(jedis.sismember(key,""+userId)) jedis.srem(key,""+userId);
-            else jedis.sadd(key,""+userId);
+            if(jedis.sismember(key,""+userId)) {
+                jedis.srem(key,""+userId);
+            }
+            else {
+                jedis.sadd(key,""+userId);
+            }
         }finally {
             // 归还redis连接到连接池
             returnToPool(jedis);
@@ -189,7 +187,6 @@ public class CacheServiceImpl implements CacheService {
      * @param userId
      * @return
      */
-    @Override
     public boolean limitFrequency(int userId){
         Jedis jedis = null;// redis连接
         try {
@@ -211,7 +208,6 @@ public class CacheServiceImpl implements CacheService {
      * 排行榜功能
      * @param
      */
-    @Override
     public void rank(){
         Jedis jedis = null;// redis连接
         try {
@@ -229,7 +225,6 @@ public class CacheServiceImpl implements CacheService {
      * 某个用户最近的浏览记录
      * @param userId
      */
-    @Override
     public void recentScanHistory(int userId){
         Jedis jedis = null;// redis连接
         try {
@@ -249,7 +244,6 @@ public class CacheServiceImpl implements CacheService {
      * @param userId
      * @return
      */
-    @Override
     public boolean enterDetailPage(int activityId, int userId) {
         Jedis jedis = null;// redis连接
         try {
@@ -270,7 +264,6 @@ public class CacheServiceImpl implements CacheService {
      * @param userId
      * @return
      */
-    @Override
     public boolean recentSearchHistory(int userId) {
         Jedis jedis = null;// redis连接
         try {
@@ -284,7 +277,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public boolean addFollowsFansById(int fromId, int toId) {
         Jedis jedis = null;// redis连接
         try {
@@ -297,7 +289,6 @@ public class CacheServiceImpl implements CacheService {
 
     }
 
-    @Override
     public boolean deleteFollowsFansById(int fromId, int toId) {
         Jedis jedis = null;// redis连接
         try {
@@ -342,7 +333,8 @@ public class CacheServiceImpl implements CacheService {
      * @param jedis
      */
     private void returnToPool(Jedis jedis) {
-        if (jedis != null)
+        if (jedis != null){
             jedis.close();
+        }
     }
 }

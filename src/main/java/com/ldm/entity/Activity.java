@@ -16,14 +16,13 @@ public class Activity {
     private double latitude;// 纬度
     private String beginTime;// 活动开始时间
     private String endTime;// 活动结束时间
-    private String genderLimit;// 性别限制
-    private int totalCount;// 活动可加入名额
+    private String require;// 要求
     private String remark;// 备注
-    private int activityViewCount;// 浏览量
-    private int activityCommentCount;// 评论量
-    private int activityMemberCount;// 已加入人数
-    private String images;// 图片地址
+    private int viewCount;// 浏览量
+    private int commentCount;// 评论量
+    private int memberCount;// 已加入人数
+    private String images;// 图片列表，数据库中以逗号分开
     private String publishTime;// 发表时间
     private String userNickname;// 用户昵称
-    private List<String> imageList;
+    private List<String> imageList;// 返回给前端的图片列表是一个list
 }

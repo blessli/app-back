@@ -1,6 +1,4 @@
 package com.ldm.controller;
-
-import com.ldm.request.EditUserInfoRequest;
 import com.ldm.service.user.UserService;
 import com.ldm.util.JSONResult;
 import io.swagger.annotations.Api;
@@ -17,11 +15,6 @@ public class UserController {
     @GetMapping("/user/login")
     public JSONResult login(){
         return JSONResult.success();
-    }
-    @ApiOperation(value = "编辑个人资料")
-    @PutMapping("/user/userInfo")
-    public JSONResult editProfile(@RequestBody EditUserInfoRequest editUserInfoRequest) {
-        return null;
     }
     @ApiOperation(value = "个人中心")
     @GetMapping("/user/center")

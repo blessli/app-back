@@ -1,5 +1,5 @@
 package com.ldm.controller;
-import com.ldm.request.PublishDynamicRequest;
+import com.ldm.request.PublishDynamic;
 import com.ldm.service.dynamic.DynamicService;
 import com.ldm.util.JSONResult;
 import io.swagger.annotations.Api;
@@ -14,7 +14,7 @@ public class DynamicController {
     private DynamicService dynamicService;
     @ApiOperation(value = "发布动态")
     @PostMapping("/dynamic/publish")
-    public JSONResult publishDynamic(@RequestBody PublishDynamicRequest publishDynamicRequest){
+    public JSONResult publishDynamic(@RequestBody PublishDynamic request){
         return JSONResult.success();
     }
     @ApiOperation(value = "删除动态")

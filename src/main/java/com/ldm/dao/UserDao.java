@@ -3,7 +3,9 @@ package com.ldm.dao;
 import com.ldm.entity.UserInfo;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Service;
 
+@Service
 @Mapper
 public interface UserDao {
     UserInfo selectUserBase(int userId);

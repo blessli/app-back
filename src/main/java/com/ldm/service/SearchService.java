@@ -1,4 +1,4 @@
-package com.ldm.service.search.impl;
+package com.ldm.service;
 
 //import com.github.pagehelper.PageHelper;
 //import com.github.pagehelper.PageInfo;
@@ -23,7 +23,7 @@ package com.ldm.service.search.impl;
 //import java.util.List;
 //import java.util.Map;
 //@Service
-//public class SearchServiceImpl implements SearchService {
+//public class SearchService {
 //    @Autowired
 //    private SearchActivityDao searchActivityDao;
 //    @Autowired
@@ -31,22 +31,18 @@ package com.ldm.service.search.impl;
 //    @Autowired
 //    private EsConfig esConfig;
 //
-//    @Override
 //    public List<String> selectHistorySearchList(String userId, String type) {
 //        return null;
 //    }
 //
-//    @Override
 //    public List<String> selectHotSearchList(String type) {
 //        return null;
 //    }
 //
-//    @Override
 //    public void updateHistorySearch(String userId, String keyword, String type) {
 //
 //    }
 //
-//    @Override
 //    public PageInfo<SearchDomain> searchActivity(int pageNum, int pageSize, String key) {
 //        System.out.println(pageNum+" "+pageSize+" "+key);
 //        PageHelper.startPage(pageNum, pageSize);
@@ -97,22 +93,18 @@ package com.ldm.service.search.impl;
 //        return result;
 //    }
 //
-//    @Override
 //    public void saveActivity(SearchDomain searchDomain) {
 //        searchActivityDao.save(searchDomain);
 //    }
 //
-//    @Override
 //    public void deleteActivity(SearchDomain searchDomain) {
 //        searchActivityDao.delete(searchDomain);
 //    }
 //
-//    @Override
 //    public void createLog(LogDomain log) {
 //        searchLogDao.save(log);
 //    }
 //
-//    @Override
 //    public void updateLog(LogDomain log) {
 //        searchLogDao.delete(log);
 //        searchLogDao.save(log);
