@@ -9,7 +9,12 @@ import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
 import java.util.List;
-
+/**
+ * @author lidongming
+ * @ClassName DynamicService.java
+ * @Description 动态服务
+ * @createTime 2020年04月04日 05:05:00
+ */
 @Service
 public class DynamicService{
 

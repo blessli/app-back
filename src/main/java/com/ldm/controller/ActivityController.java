@@ -2,6 +2,7 @@ package com.ldm.controller;
 import com.ldm.entity.Activity;
 import com.ldm.request.PublishActivity;
 import com.ldm.service.ActivityService;
+import com.ldm.service.CacheService;
 import com.ldm.util.JSONResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -13,16 +14,21 @@ import org.springframework.web.bind.annotation.*;
 public class ActivityController {
     @Autowired
     private ActivityService activityService;
+    @Autowired
+    private CacheService cacheService;
 
     /**
      * @title 发布活动
-     * @description 直接写入mysql
+     * @description 直接写入mysql；redis限流
      * @author lidongming
      * @updateTime 2020/3/28 23:57
      */
     @ApiOperation(value = "发表活动")
     @PostMapping("/activity/add")
     public JSONResult publishActivity(@RequestBody PublishActivity request){
+        if (!cacheService.limitFrequency(request.getUserId())){
+            return JSONResult.fail("操作过于频繁，请稍后再试！！！");
+        }
         return JSONResult.success();
     }
 
@@ -109,75 +115,5 @@ public class ActivityController {
         return JSONResult.success();
     }
 
-    /**
-     * @title 获取评论详情
-     * @description 活动详情页中只实现评论列表
-     * @author lidongming
-     * @updateTime 2020/3/29 0:09
-     */
-    @ApiOperation(value = "获取评论详情")
-    @GetMapping("/activity/comment")
-    public JSONResult getActivityCommentList(int activityId){
-        return JSONResult.success();
-    }
 
-    /**
-     * @title 获取评论的回复列表
-     * @description 活动详情页中点击某个评论展示回复列表
-     * @author lidongming
-     * @updateTime 2020/3/29 0:14
-     */
-    @ApiOperation(value = "获取评论的回复列表")
-    @GetMapping("/activity/reply")
-    public JSONResult getActivityReplyList(int commentId){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 发表评论
-     * @description 在活动详情页发表评论
-     * @author lidongming
-     * @updateTime 2020/3/29 0:23
-     */
-    @ApiOperation(value = "发表评论")
-    @PostMapping("/activity/comment/add")
-    public JSONResult publishComment(@RequestBody PublishActivity publishActivityRequest){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 删除评论
-     * @description 在活动详情页中的评论列表里删除
-     * @author lidongming
-     * @updateTime 2020/3/29 0:29
-     */
-    @ApiOperation(value = "删除评论")
-    @DeleteMapping("/activity/comment/delete")
-    public JSONResult deleteComment(int commentId){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 发表回复
-     * @description 在评论的回复列表中发表回复
-     * @author lidongming
-     * @updateTime 2020/3/29 0:23
-     */
-    @ApiOperation(value = "发表回复")
-    @PostMapping("/activity/reply/add")
-    public JSONResult publishReply(@RequestBody PublishActivity publishActivityRequest){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 删除回复
-     * @description 在某条评论的回复列表中将其删除
-     * @author lidongming
-     * @updateTime 2020/3/29 0:28
-     */
-    @ApiOperation(value = "删除回复")
-    @DeleteMapping("/activity/reply/delete")
-    public JSONResult deleteReply(int replyId){
-        return JSONResult.success();
-    }
 }

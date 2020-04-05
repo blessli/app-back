@@ -3,7 +3,6 @@ package com.ldm.service;
 import com.ldm.dao.ActivityDao;
 import com.ldm.entity.Activity;
 import com.ldm.entity.ActivityDetail;
-import com.ldm.entity.UserInfo;
 import com.ldm.request.PublishActivity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -83,16 +82,6 @@ public class ActivityService {
      */
     ActivityDetail selectActivityDetail(int activityId,int userId){
         return activityDao.selectActivityDetail(activityId,userId);
-    }
-
-    /**
-     * @title 获取成功加入活动的用户列表
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/4 5:01 
-     */
-    List<UserInfo> selectJoinedUserList(int activityId){
-        return activityDao.selectJoinedUserList(activityId);
     }
 
     /**

@@ -2,9 +2,10 @@ package com.ldm.dao;
 
 import com.ldm.entity.Dynamic;
 import com.ldm.request.PublishDynamic;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
-
+@Mapper
 public interface DynamicDao {
     /**
      * @title 发表动态

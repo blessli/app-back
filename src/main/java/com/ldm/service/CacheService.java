@@ -5,11 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 /**
  * @author lidongming
  * @ClassName CacheService.java
@@ -259,24 +256,6 @@ public class CacheService{
 
     }
 
-    /**
-     * 某个用户最近的历史搜索记录
-     * @param userId
-     * @return
-     */
-    public boolean recentSearchHistory(int userId) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            String key="activity:detail:page:"+userId;
-            return false;
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
     public boolean addFollowsFansById(int fromId, int toId) {
         Jedis jedis = null;// redis连接
         try {
@@ -300,37 +279,11 @@ public class CacheService{
         }
 
     }
-    public String testLock(){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            String result=jedis.set("lock-token","lidongming","NX","EX",60*2);
-            return result;// "OK"为成功
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-    public Object testUnLock(){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            //lua script
-            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-            String request= UUID.randomUUID().toString();
-            Object result=jedis.eval(script, Collections.singletonList("lock-token"),Collections.singletonList("lidongming"));
-            return result;// 1为成功
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
     /**
-     * 将redis连接对象归还到redis连接池
-     *
-     * @param jedis
+     * @title 将redis连接对象归还到redis连接池
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/4 16:14
      */
     private void returnToPool(Jedis jedis) {
         if (jedis != null){

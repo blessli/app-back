@@ -1,8 +1,6 @@
 package com.ldm.controller;
-import com.ldm.service.user.UserService;
-import com.ldm.util.JSONResult;
+import com.ldm.service.UserService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,15 +9,5 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
     @Autowired
     private UserService userService;
-    @ApiOperation(value = "个人中心")
-    @GetMapping("/user/login")
-    public JSONResult login(){
-        return JSONResult.success();
-    }
-    @ApiOperation(value = "个人中心")
-    @GetMapping("/user/center")
-    public JSONResult getUserCenter(String userId){
-        return JSONResult.success("登录成功");
-    }
 
 }

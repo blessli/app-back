@@ -9,7 +9,7 @@ import java.util.Map;
 
 /**
  * socketio client 操作组件
- * @author haishui211
+ * @author lidongming
  */
 @Component
 public class SocketClientComponent {
@@ -22,7 +22,7 @@ public class SocketClientComponent {
      */
     public void storeClientId(SocketIOClient client) {
         clients.put(getKeyFromClient(client), client);
-        if(clients.size()==2){
+        if(clients.size()==1){
             Map<String,Object> map=new HashMap<>();
             map.put("test","12312给12311发消息");
             send("12311","firstPage","testEvent",map);

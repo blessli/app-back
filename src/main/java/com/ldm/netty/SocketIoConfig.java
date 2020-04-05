@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class SocketIoConfig {
 
 //    @Value("${netty.socket.io.host}")
-    private String host="127.0.0.1";
+    private String host="0.0.0.0";
 
 //    @Value("${netty.socket.io.port}")
     private int port=9999;

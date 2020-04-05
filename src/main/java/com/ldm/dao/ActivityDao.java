@@ -1,14 +1,12 @@
 package com.ldm.dao;
 
 import com.ldm.entity.Activity;
-import com.ldm.entity.Comment;
 import com.ldm.entity.ActivityDetail;
-import com.ldm.entity.Reply;
-import com.ldm.entity.UserInfo;
 import com.ldm.request.PublishActivity;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+@Mapper
 public interface ActivityDao {
     /**
      * @title 发表活动
@@ -70,49 +68,6 @@ public interface ActivityDao {
      * @return
      */
     ActivityDetail selectActivityDetail(int activityId,int userId);
-
-    /**
-     * 获取该活动的评论列表，并判断当前用户是否点赞，未点赞返回-1
-     * @param activityId
-     * @param userId
-     * @return
-     */
-    @Select("SELECT t_activity_comment.*,IFNULL(t_activity_comment_like.user_id,-1) FROM t_activity_comment \n" +
-            "LEFT JOIN t_activity_comment_like ON t_activity_comment.activity_id=#{activityId} AND\n" +
-            "t_activity_comment.comment_id=t_activity_comment_like.comment_id AND t_activity_comment.user_id=#{userId} GROUP BY t_activity_comment.comment_id\n" +
-            "LIMIT 0,10")
-    List<Comment> selectActivityCommentList(int activityId, int userId);
-
-    /**
-     * 获取该评论的回复列表
-     * @param commentId
-     * @return
-     */
-    List<Reply> selectActivityReplyList(int commentId);
-
-    /**
-     * 获取成功加入活动的用户列表
-     * @param activityId
-     * @return
-     */
-    List<UserInfo> selectJoinedUserList(int activityId);
-
-    /**
-     * 发布评论
-     * @param activityId
-     * @param userId
-     * @return
-     */
-    int publishComment(int activityId,int userId);
-
-    /**
-     * 在某条评论下回复
-     * @param commentId
-     * @param fromUserId
-     * @param toUserId
-     * @return
-     */
-    int publishReply(int commentId,int fromUserId,int toUserId);
 
     /**
      * 用户首次进入活动详情页，浏览量+1
