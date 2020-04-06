@@ -4,11 +4,10 @@ import com.ldm.entity.Dynamic;
 import com.ldm.request.PublishDynamic;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.SelectKey;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+@Component
 @Mapper
 public interface DynamicDao {
     /**
@@ -26,11 +25,16 @@ public interface DynamicDao {
 
     /**
      * @title 获取已关注者发表的动态
-     * @description 
+     * @description 最新发表
      * @author lidongming 
      * @updateTime 2020/4/4 4:34
-     * dynamic_score字段没有，参数不够
      */
-    @Select("")
-    List<Dynamic> selectDynamicList(int userId);
+    List<Dynamic> selectDynamicList(List<Integer> followedUserList);
+    /**
+     * @title 删除动态
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/6 15:37 
+     */
+    int deleteDynamic(int dynamicId);
 }

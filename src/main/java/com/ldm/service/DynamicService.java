@@ -22,15 +22,14 @@ public class DynamicService{
     private DynamicDao dynamicDao;
     public void publish(PublishDynamic request) {
         request.setPublishTime(DateHandle.currentDate());
-        System.out.println(request.toString());
         dynamicDao.publishDynamic(request);
     }
 
     public List<Dynamic> selectDynamicList(int userId) {
-        List<Dynamic> dynamicList=dynamicDao.selectDynamicList(userId);
-        for (Dynamic dynamic: dynamicList){
-            dynamic.setImageList(Arrays.asList(dynamic.getImages().split(",")));
-        }
-        return dynamicList;
+//        List<Dynamic> dynamicList=dynamicDao.selectDynamicList();
+//        for (Dynamic dynamic: dynamicList){
+//            dynamic.setImageList(Arrays.asList(dynamic.getImages().split(",")));
+//        }
+        return null;
     }
 }

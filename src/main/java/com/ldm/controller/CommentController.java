@@ -2,6 +2,7 @@ package com.ldm.controller;
 
 import com.ldm.request.PublishActivity;
 import com.ldm.request.PublishComment;
+import com.ldm.request.PublishReply;
 import com.ldm.service.CacheService;
 import com.ldm.service.CommentService;
 import com.ldm.util.JSONResult;
@@ -76,14 +77,14 @@ public class CommentController {
 
     /**
      * @title 发表回复
-     * @description 在评论的回复列表中发表回复，flag为0则活动，flag为1则动态；redis限流
+     * @description 在评论的回复列表中发表回复redis限流
      * @author lidongming
      * @updateTime 2020/3/29 0:23
      */
     @ApiOperation(value = "发表回复")
     @PostMapping("/reply/add")
-    public JSONResult publishReply(@RequestBody PublishActivity request){
-        if (!cacheService.limitFrequency(request.getUserId())){
+    public JSONResult publishReply(@RequestBody PublishReply request){
+        if (!cacheService.limitFrequency(request.getFromUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
         return JSONResult.success();

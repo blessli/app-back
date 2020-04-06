@@ -9,9 +9,10 @@ import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
-
+@Component
 @Mapper
 public interface CommentDao {
 
@@ -28,7 +29,7 @@ public interface CommentDao {
     /**
      * 回复评论
      * @param request
-     * @return  bean里没有flag字段
+     * @return
      */
     @Insert("INSERT INTO `t_reply`(`comment_id`, `from_user_id`, `to_user_id`," +
             " `content`, `publish_time`) " +

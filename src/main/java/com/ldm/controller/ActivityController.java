@@ -1,5 +1,4 @@
 package com.ldm.controller;
-import com.ldm.entity.Activity;
 import com.ldm.request.PublishActivity;
 import com.ldm.service.ActivityService;
 import com.ldm.service.CacheService;
@@ -13,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 public class ActivityController {
     @Autowired
-    private ActivityService activityService;
+    ActivityService activityService;
     @Autowired
     private CacheService cacheService;
 
@@ -29,30 +28,6 @@ public class ActivityController {
         if (!cacheService.limitFrequency(request.getUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 获取发表的活动列表
-     * @description 时间降序
-     * @author lidongming
-     * @updateTime 2020/3/29 0:38
-     */
-    @ApiOperation(value = "获取发表的活动列表")
-    @GetMapping("/activities/added")
-    public JSONResult getAddedActivityList(){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 编辑活动
-     * @description 对活动内容进行编辑
-     * @author lidongming
-     * @updateTime 2020/3/29 0:31
-     */
-    @ApiOperation(value = "编辑活动")
-    @PutMapping("/activity/edit")
-    public JSONResult editActivity(@RequestBody PublishActivity publishActivityRequest){
         return JSONResult.success();
     }
 
@@ -79,30 +54,6 @@ public class ActivityController {
     public JSONResult getActivityListByTime(){
         return JSONResult.success();
     }
-
-    /**
-     * @title 获取最热活动
-     * @description 按热度降序，采用Hacker News算法
-     * @author lidongming
-     * @updateTime 2020/3/29 0:03
-     */
-    @ApiOperation(value = "获取活动列表-最热")
-    @GetMapping("/activities/byHot")
-    public JSONResult getActivityListByHot(){
-        return JSONResult.success();
-    }
-
-    /**
-     * @title 获取最新回复的活动列表
-     * @description 按发布者最新回复的时间降序
-     * @author lidongming
-     * @updateTime 2020/3/29 0:11
-     */
-    @ApiOperation(value = "获取活动列表-最新回复")
-    @GetMapping("/activities/byReplyTime")
-    public JSONResult getActivityListByReplyTime(){
-        return JSONResult.success();
-    }
     /**
      * @title 获取活动详情
      * @description 用户点击活动，进入详情页，如果是首次点击则浏览量+1
@@ -111,7 +62,7 @@ public class ActivityController {
      */
     @ApiOperation(value = "获取活动详情")
     @GetMapping("/activity/detail")
-    public JSONResult getActivityDetail(int activityId){
+    public JSONResult getActivityDetail(int activityId,int userId){
         return JSONResult.success();
     }
 

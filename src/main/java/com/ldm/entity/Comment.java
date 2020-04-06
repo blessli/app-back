@@ -11,6 +11,6 @@ public class Comment {
     private String content;// 评论内容
     private String publishTime;// 发表时间
     private int itemId;// 活动/动态ID
-    private String avatar;
+    private String avatar;// 评论者头像
     private int flag;// 0为活动，1为动态
 }

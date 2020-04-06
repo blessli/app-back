@@ -15,5 +15,4 @@ public class PublishReply {
     private String content;// 回复内容
     private int fromUserId;// 回复者ID
     private int toUserId;// 被回复者ID
-    private int flag;// 0为活动，1为动态
 }
