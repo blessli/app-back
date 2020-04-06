@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ldm.dao.CommentDao">
+
+    <select id="selectReplyList" resultType="com.ldm.entity.Reply">
+        SELECT
+            t3.reply_id,
+            t3.from_user_id,
+            t3.to_user_id,
+            t3.comment_id,
+            t3.publish_time,
+            t3.content,
+            t3.from_nickname,
+            t3.avatar,
+            t4.to_nickname
+        FROM
+        (
+            SELECT
+                *
+            FROM
+            (
+                SELECT * FROM t_reply WHERE comment_id = #{commentId}
+            ) t1
+            JOIN
+            (
+                SELECT user_id, user_nickname from_nickname,avatar FROM t_user
+            ) t2
+            ON t1.from_user_id=t2.user_id
+        ) t3
+        JOIN
+        (
+            SELECT user_id, user_nickname to_nickname FROM t_user
+        ) t4
+        ON t3.to_user_id=t4.user_id
+    </select>
+</mapper>

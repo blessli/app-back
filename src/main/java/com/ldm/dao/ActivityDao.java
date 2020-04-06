@@ -14,6 +14,12 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/4 4:29
      */
+    @Insert("INSERT INTO `t_activity`(`activity_name`, `user_id`, `activity_type`, " +
+            "`location_name`, `longitude`, `latitude`, `begin_time`, `end_time`, `require`," +
+            " `remark`, `view_count`, `comment_count`, `member_count`, `publish_time`, `images`, " +
+            "`status`) VALUES (#{activityName}, #{userId}, #{activityType}, #{locationName}," +
+            " #{longitude}, #{latitude}, #{beginTime}, #{endTime}, #{require}, #{remark}," +
+            " 0, 0, 0, #{publishTime}, #{images}, 0)")
     int publishActivity(PublishActivity request);
 
     /**
@@ -61,7 +67,9 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/4 4:31
      */
+
     List<Activity> selectActivityListByHot();
+
     /**
      * 获取该活动的详情内容
      * @param activityId
@@ -81,6 +89,9 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Insert("INSERT INTO `t_activity_join_request`(`user_id`, `activity_id`," +
+            " `status`, `publish_time`) VALUES " +
+            "(#{userId}, #{activityId}, '0', NOW())")
     int tryJoinActivity(int activityId,int userId);
 
     /**
@@ -88,7 +99,10 @@ public interface ActivityDao {
      * @param activityId
      * @param userId
      * @return
+     * 从请求表和成员表删除数据
      */
+    @Delete({"DELETE FROM t_activity_join_request WHERE activity_id=#{activityId} AND user_id=#{userId}",
+    "DELETE FROM t_activity_member WHERE activity_id='#{activityId}' AND user_id='#{userId}'"})
     int cancelJoinActivity(int activityId,int userId);
 
     /**
@@ -124,6 +138,8 @@ public interface ActivityDao {
      * @param userId
      * @return
      */
+    @Insert("INSERT INTO `t_activity_join_request`(`user_id`, `activity_id`, `status`, `publish_time`) " +
+            "VALUES (#{userId}, #{activityId}, 0, NOW())")
     int inviteJoinActivity(int activityId,int userId);
 
 }
