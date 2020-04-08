@@ -31,9 +31,7 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public PageInfo<SearchDomain> searchActivity(int pageNum, int pageSize, String key) {
-        System.out.println(pageNum+" "+pageSize+" "+key);
-        PageHelper.startPage(pageNum, pageSize);
+    public List<SearchDomain> searchActivity(String key) {
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder= QueryBuilders.boolQuery();
         boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key,"activityName","locationName","userNickname"));
@@ -45,11 +43,7 @@ public class SearchService {
         SearchHits searchHits = response.getHits();
         System.out.println(searchHits.getTotalHits());
         List<SearchDomain> list = new ArrayList<>();
-        int ans=0;
         for(SearchHit hit : searchHits) {
-            ans++;
-            if(ans<=(pageNum-1)*pageSize) continue;
-            if(ans>pageNum*pageSize) break;
             SearchDomain entity = new SearchDomain();
             Map<String, Object> entityMap = hit.getSourceAsMap();
 
@@ -59,7 +53,7 @@ public class SearchService {
                     entity.setActivityId(Integer.valueOf(String.valueOf(entityMap.get("activityId"))));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("userId"))) {
-                    entity.setActivityId(Integer.valueOf(String.valueOf(entityMap.get("userId"))));
+                    entity.setUserId(Integer.valueOf(String.valueOf(entityMap.get("userId"))));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("activityName"))) {
 
@@ -75,29 +69,28 @@ public class SearchService {
                     entity.setPublishTime(String.valueOf(entityMap.get("publishTime")));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("beginTime"))) {
-                    entity.setPublishTime(String.valueOf(entityMap.get("beginTime")));
+                    entity.setBeginTime(String.valueOf(entityMap.get("beginTime")));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("endTime"))) {
-                    entity.setPublishTime(String.valueOf(entityMap.get("endTime")));
+                    entity.setEndTime(String.valueOf(entityMap.get("endTime")));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("avatar"))) {
-                    entity.setPublishTime(String.valueOf(entityMap.get("avatar")));
+                    entity.setAvatar(String.valueOf(entityMap.get("avatar")));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("userNickname"))) {
-                    entity.setPublishTime(String.valueOf(entityMap.get("userNickname")));
+                    entity.setUserNickname(String.valueOf(entityMap.get("userNickname")));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("viewCount"))) {
-                    entity.setActivityId(Integer.valueOf(String.valueOf(entityMap.get("viewCount"))));
+                    entity.setViewCount(Integer.valueOf(String.valueOf(entityMap.get("viewCount"))));
                 }
                 if(!StringUtils.isEmpty(entityMap.get("commentCount"))) {
-                    entity.setActivityId(Integer.valueOf(String.valueOf(entityMap.get("commentCount"))));
+                    entity.setCommentCount(Integer.valueOf(String.valueOf(entityMap.get("commentCount"))));
                 }
 
             }
             list.add(entity);
         }
-        PageInfo result = new PageInfo(list);
-        return result;
+        return list;
     }
     /**
      * @title 保存活动到es

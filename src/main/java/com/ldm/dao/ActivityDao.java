@@ -30,7 +30,7 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/4 4:30
      */
-    @Delete("delete from t_activity where activityId=#{activityId}")
+    @Delete("delete from t_activity where activity_id=#{activityId}")
     int deleteActivity(int activityId);
 
     /**
@@ -39,6 +39,8 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/6 14:40
      */
+    @Select("SELECT t_activity.*,t_user.avatar,t_user.user_nickname FROM t_activity\n" +
+            "LEFT JOIN t_user ON t_activity.user_id=t_user.user_id ORDER BY publish_time DESC")
     List<Activity> selectActivityListByTime();
 
 
@@ -48,15 +50,19 @@ public interface ActivityDao {
      * @author lidongming 
      * @updateTime 2020/4/6 14:40 
      */
+    @Select("SELECT t_activity.*,avatar,user_nickname,IFNULL((SELECT t.`status` FROM t_activity_join_request t\n" +
+            "WHERE t.activity_id=#{activityId} AND t.user_id=#{userId}),-1) AS is_joined FROM t_activity,t_user\n" +
+            "WHERE t_activity.activity_id=#{activityId} AND t_user.user_id=#{userId}")
     ActivityDetail selectActivityDetail(int activityId,int userId);
 
     /**
-     * @title 用户进入活动详情页，首次的话，则浏览量+1
+     * @title 用户进入活动详情页，redis如果不存在{activityId:userId}，则浏览量+1
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/6 14:40 
      */
-    int clickActivity(int activityId,int userId);
+    @Insert("INSERT INTO t_activity_view VALUES(NULL,#{activityId},#{userId})")
+    int addViewCount(int activityId,int userId);
 
     /**
      * 用户申请加入活动

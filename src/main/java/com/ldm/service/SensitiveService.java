@@ -1,4 +1,4 @@
-package com.ldm.util;
+package com.ldm.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.CharUtils;
@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 @Service
 @Slf4j
-public class SensitiveUtil implements InitializingBean {
+public class SensitiveService implements InitializingBean {
 
     /**
      * 默认敏感词替换符
@@ -174,13 +174,9 @@ public class SensitiveUtil implements InitializingBean {
         } catch (Exception e) {
             log.error("读取敏感词文件失败" + e.getMessage());
         }
+//        SensitiveService s = new SensitiveService();
+//        s.addWord("色情");
+//        s.addWord("好色");
+//        System.out.print(s.filter("你好X色**情XX"));
     }
-
-    /*
-    public static void main(String[] argv) {
-        SensitiveService s = new SensitiveService();
-        s.addWord("色情");
-        s.addWord("好色");
-        System.out.print(s.filter("你好X色**情XX"));
-    }*/
 }

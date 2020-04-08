@@ -180,17 +180,18 @@ public class CacheService{
     }
 
     /**
-     * 用户操作频率限制,如发帖
-     * @param userId
-     * @return
+     * @title 用户操作频率限制
+     * @description 用于控制用户行为,如发布活动/动态/评论/回复/聊天
+     * @author lidongming
+     * @updateTime 2020/4/8 1:57
      */
-    public boolean limitFrequency(int userId){
+    public boolean limitFrequency(String type,int userId){
         Jedis jedis = null;// redis连接
         try {
             jedis=jedisPool.getResource();
             long nowTs=System.currentTimeMillis();
-            int period=60,maxCount=5;
-            String key="frequency:limit:"+userId;
+            int period=60,maxCount=10;
+            String key="limit:frequency:"+type+":"+userId;
             jedis.zadd(key,nowTs,""+nowTs);
             jedis.zremrangeByScore(key,0,nowTs-period*1000);
             return jedis.zcard(key)>maxCount;

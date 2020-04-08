@@ -7,6 +7,7 @@ import com.ldm.request.PublishActivity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Arrays;
 import java.util.List;
 /**
  * @author lidongming
@@ -18,13 +19,15 @@ import java.util.List;
 public class ActivityService {
     @Autowired
     private ActivityDao activityDao;
+    @Autowired
+    private CommentService commentService;
     /**
      * @title 用户发布活动
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/4 4:52 
      */
-    int publishActivity(PublishActivity request){
+    public int publishActivity(PublishActivity request){
         return activityDao.publishActivity(request);
     }
 
@@ -34,7 +37,7 @@ public class ActivityService {
      * @author lidongming 
      * @updateTime 2020/4/4 4:52 
      */
-    int deleteActivity(int activityId){
+    public int deleteActivity(int activityId){
         return activityDao.deleteActivity(activityId);
     }
 
@@ -42,8 +45,13 @@ public class ActivityService {
      * 获取最新发布的活动
      * @return
      */
-    List<Activity> selectActivityListByTime(){
-        return activityDao.selectActivityListByTime();
+    public List<Activity> selectActivityListByTime(){
+        List<Activity> activityList=activityDao.selectActivityListByTime();
+        for(Activity activity:activityList){
+            List<String> list= Arrays.asList(activity.getImages().split(","));
+            activity.setImageList(list);
+        }
+        return activityList;
     }
 
     /**
@@ -52,15 +60,17 @@ public class ActivityService {
      * @author lidongming 
      * @updateTime 2020/4/4 5:01 
      */
-    ActivityDetail selectActivityDetail(int activityId,int userId){
-        return activityDao.selectActivityDetail(activityId,userId);
+    public ActivityDetail selectActivityDetail(int activityId,int userId){
+        ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId, userId);
+        activityDetail.setActivityCommentList(commentService.getActivityCommentList(activityId,0));
+        return activityDetail;
     }
 
     /**
-     * 用户首次进入活动详情页，浏览量+1
+     * 用户首次进入活动详情页，浏览量+1(先从redis判断)
      * @param activityId
      */
-    void clickActivityDetail(int activityId,int userId){
+    public void clickActivityDetail(int activityId,int userId){
         
     }
 
@@ -70,7 +80,7 @@ public class ActivityService {
      * @param userId
      * @return
      */
-    int tryJoinActivity(int activityId,int userId){
+    public int tryJoinActivity(int activityId,int userId){
         return activityDao.tryJoinActivity(activityId, userId);
     }
 
@@ -80,7 +90,7 @@ public class ActivityService {
      * @param userId
      * @return
      */
-    int cancelJoinActivity(int activityId,int userId){
+    public int cancelJoinActivity(int activityId,int userId){
         return activityDao.cancelJoinActivity(activityId, userId);
     }
 
@@ -90,7 +100,7 @@ public class ActivityService {
      * @param userId
      * @return
      */
-    int agreeJoinActivity(int activityId,int userId){
+    public int agreeJoinActivity(int activityId,int userId){
         return activityDao.agreeJoinActivity(activityId, userId);
     }
 
@@ -100,7 +110,7 @@ public class ActivityService {
      * @param userId
      * @return
      */
-    int disagreeJoinActiviy(int activityId,int userId){
+    public int disagreeJoinActiviy(int activityId,int userId){
         return activityDao.disagreeJoinActivity(activityId, userId);
     }
 

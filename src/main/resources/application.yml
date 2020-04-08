@@ -43,8 +43,8 @@ spring:
   data:
     elasticsearch:
       cluster-name: my-application
-      # 连接节点,注意在集群中通信都是9300端口，否则会报错无法连接上！
-      cluster-nodes: localhost:9300,119.29.38.169:9300
+#      # 连接节点,注意在集群中通信都是9300端口，否则会报错无法连接上！
+      cluster-nodes: localhost:9300
       repositories:
         # 仓库中数据存储
         enabled: true

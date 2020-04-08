@@ -22,12 +22,6 @@ public class SocketClientComponent {
      */
     public void storeClientId(SocketIOClient client) {
         clients.put(getKeyFromClient(client), client);
-        if(clients.size()==1){
-            Map<String,Object> map=new HashMap<>();
-            map.put("test","12312给12311发消息");
-            send("12311","firstPage","testEvent",map);
-            System.out.println("发出");
-        }
     }
 
     /**
@@ -43,6 +37,17 @@ public class SocketClientComponent {
      * @param data
      */
     public void send(String userId, String pageSign, String businessName, Map<String, Object> data) {
+        SocketIOClient client = clients.get(getKey(userId, pageSign));
+        if(client != null) {
+            client.sendEvent(businessName, data);
+        }
+    }
+    /**
+     * 给指定client发送指定事件的数据
+     * @param businessName
+     * @param data
+     */
+    public void sendList(String userId, String pageSign, String businessName, Object data) {
         SocketIOClient client = clients.get(getKey(userId, pageSign));
         if(client != null) {
             client.sendEvent(businessName, data);

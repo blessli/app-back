@@ -1,12 +1,11 @@
 package com.ldm.controller;
 
-import com.ldm.request.PublishActivity;
+import com.ldm.aop.Action;
 import com.ldm.request.PublishComment;
 import com.ldm.request.PublishReply;
 import com.ldm.service.CacheService;
 import com.ldm.service.CommentService;
 import com.ldm.util.JSONResult;
-import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
  * @Description TODO
  * @createTime 2020年04月04日 04:37:00
  */
-@Api(tags = "评论相关接口",description = "提供评论相关的REST API")
 @RestController
 public class CommentController {
     @Autowired
@@ -30,10 +28,11 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:09
      */
+    @Action(name = "获取评论列表")
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
     public JSONResult getActivityCommentList(int itemId,int flag){
-        return JSONResult.success();
+        return JSONResult.success(commentService.getActivityCommentList(itemId, flag));
     }
 
     /**
@@ -42,10 +41,10 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:14
      */
-    @ApiOperation(value = "获取回复列表")
+    @Action(name = "获取回复列表")
     @GetMapping("/replies")
     public JSONResult getActivityReplyList(int commentId){
-        return JSONResult.success();
+        return JSONResult.success(commentService.getActivityReplyList(commentId));
     }
 
     /**
@@ -54,13 +53,13 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:23
      */
-    @ApiOperation(value = "发表评论")
-    @PostMapping("/comment/add")
+    @Action(name = "发表评论")
+    @RequestMapping(value = "/comment/add",method = RequestMethod.POST,consumes = "application/json;charset=utf-8")
     public JSONResult publishComment(@RequestBody PublishComment request){
-        if (!cacheService.limitFrequency(request.getUserId())){
+        if (!cacheService.limitFrequency("comment",request.getUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return JSONResult.success();
+        return commentService.publishComment(request)>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -69,10 +68,10 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:29
      */
-    @ApiOperation(value = "删除评论")
+    @Action(name = "删除评论")
     @DeleteMapping("/comment/delete")
     public JSONResult deleteComment(int commentId){
-        return JSONResult.success();
+        return commentService.deleteComment(commentId)>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -81,13 +80,14 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:23
      */
-    @ApiOperation(value = "发表回复")
-    @PostMapping("/reply/add")
+    @Action(name = "发表回复")
+    @PostMapping(value = "/reply/add",consumes = "application/json")
     public JSONResult publishReply(@RequestBody PublishReply request){
-        if (!cacheService.limitFrequency(request.getFromUserId())){
+
+        if (!cacheService.limitFrequency("reply",request.getFromUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return JSONResult.success();
+        return commentService.publishReply(request)>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -96,9 +96,9 @@ public class CommentController {
      * @author lidongming
      * @updateTime 2020/3/29 0:28
      */
-    @ApiOperation(value = "删除回复")
+    @Action(name = "删除回复")
     @DeleteMapping("/reply/delete")
     public JSONResult deleteReply(int replyId){
-        return JSONResult.success();
+        return commentService.deleteReply(replyId)>0?JSONResult.success():JSONResult.fail("error");
     }
 }

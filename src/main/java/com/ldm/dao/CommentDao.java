@@ -41,7 +41,7 @@ public interface CommentDao {
      * @param commentId
      * @return
      */
-    @Delete({"DELETE FROM t_comment WHERE comment_id=#{commentId}",
+    @Delete({"DELETE FROM t_comment WHERE comment_id=#{commentId};",
     "DELETE FROM t_reply WHERE comment_id=#{commentId}"})
     int deleteComment(int commentId);
 
@@ -50,7 +50,7 @@ public interface CommentDao {
      * @param replyId
      * @return
      */
-    @Delete("DELETE FROM t_reply WHERE replyId=#{replyId}")
+    @Delete("DELETE FROM t_reply WHERE reply_id=#{replyId}")
     int deleteReply(int replyId);
 
     /**
@@ -70,5 +70,9 @@ public interface CommentDao {
      * @author lidongming 
      * @updateTime 2020/4/4 6:02
      */
+    @Select("SELECT t_reply.*,t1.avatar,t1.user_nickname fromUserNickname,t2.user_nickname toUserNickname from t_reply \n" +
+            "LEFT JOIN t_user t1 ON comment_id=#{commentId} and t1.user_id=t_reply.from_user_id \n" +
+            "LEFT JOIN t_user t2 ON comment_id=#{commentId} and t2.user_id=t_reply.to_user_id\n" +
+            "HAVING comment_id=#{commentId} ORDER BY publish_time DESC")
     List<Reply> selectReplyList(int commentId);
 }

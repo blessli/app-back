@@ -1,5 +1,6 @@
 package com.ldm.aop;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
@@ -13,10 +14,10 @@ import java.lang.reflect.Method;
  * AnnotationLogAspect: 注解式日志切面
  * 特定 JoinPoint 处的 Aspect 所采取的动作称为Advice
  */
+@Slf4j
 @Aspect
 @Component
 public class AnnotationLogAspect {
-    private static Logger logger = LogManager.getLogger(AnnotationLogAspect.class.getName());
     /**
      * 声明切点，使用了注解 @Action 的方法会拦截生效
      */
@@ -32,7 +33,7 @@ public class AnnotationLogAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Action action = method.getAnnotation(Action.class); //获取方法上定义的注解，粒度更细更精确
-        System.out.println("注解式拦截，即将执行：" + action.name()); // 反射获得注解上的属性，然后做日志相关的记录操作
+        log.info("注解式拦截，即将执行：" + action.name()); // 反射获得注解上的属性，然后做日志相关的记录操作
     }
 
     /**
@@ -43,7 +44,7 @@ public class AnnotationLogAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Action action = method.getAnnotation(Action.class);
-        System.out.println("注解式拦截，刚刚执行完：" + action.name());
+        log.info("注解式拦截，刚刚执行完：" + action.name());
     }
 
     /**
@@ -53,6 +54,6 @@ public class AnnotationLogAspect {
      */
     @AfterThrowing(value = "annotationPointcut()",throwing = "e")
     public void AfterThrowing(JoinPoint joinPoint, Throwable e){
-        logger.error("happened error");
+        log.error("happened error");
     }
 }

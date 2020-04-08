@@ -1,20 +1,22 @@
 package com.ldm.controller;
+import com.ldm.aop.Action;
 import com.ldm.request.PublishActivity;
 import com.ldm.service.ActivityService;
 import com.ldm.service.CacheService;
 import com.ldm.util.JSONResult;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import com.ldm.service.SensitiveService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
-@Api(tags = "活动相关接口",description = "提供活动相关的REST API")
+@Slf4j
 @RestController
 public class ActivityController {
     @Autowired
     ActivityService activityService;
     @Autowired
     private CacheService cacheService;
+    @Autowired
+    private SensitiveService sensitiveService;
 
     /**
      * @title 发布活动
@@ -22,13 +24,16 @@ public class ActivityController {
      * @author lidongming
      * @updateTime 2020/3/28 23:57
      */
-    @ApiOperation(value = "发表活动")
-    @PostMapping("/activity/add")
+    @Action(name = "发表活动")
+    @PostMapping(value = "/activity/add",consumes = "application/json")
     public JSONResult publishActivity(@RequestBody PublishActivity request){
-        if (!cacheService.limitFrequency(request.getUserId())){
+        log.info("发表活动");
+        if (!cacheService.limitFrequency("activity",request.getUserId())){
+            log.info("操作过于频繁，请稍后再试！！！");
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return JSONResult.success();
+        int ans=activityService.publishActivity(request);
+        return ans>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -37,10 +42,11 @@ public class ActivityController {
      * @author lidongming
      * @updateTime 2020/3/29 0:32
      */
-    @ApiOperation(value = "删除活动")
+    @Action(name = "删除活动")
     @DeleteMapping("/activity/delete")
     public JSONResult deleteActivity(int activityId){
-        return JSONResult.success();
+        int ans=activityService.deleteActivity(activityId);
+        return ans>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -49,10 +55,10 @@ public class ActivityController {
      * @author lidongming
      * @updateTime 2020/3/28 23:58
      */
-    @ApiOperation(value = "获取活动列表-最新发表")
+    @Action(name = "获取活动列表-最新发表")
     @GetMapping("/activities/byTime")
     public JSONResult getActivityListByTime(){
-        return JSONResult.success();
+        return JSONResult.success(activityService.selectActivityListByTime());
     }
     /**
      * @title 获取活动详情
@@ -60,10 +66,10 @@ public class ActivityController {
      * @author lidongming
      * @updateTime 2020/3/29 0:08
      */
-    @ApiOperation(value = "获取活动详情")
+    @Action(name = "获取活动详情")
     @GetMapping("/activity/detail")
     public JSONResult getActivityDetail(int activityId,int userId){
-        return JSONResult.success();
+        return JSONResult.success(activityService.selectActivityDetail(activityId, userId));
     }
 
 
