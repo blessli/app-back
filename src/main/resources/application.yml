@@ -31,7 +31,7 @@ spring:
       max-pool-prepared-statement-per-connection-size: 20
   redis:
     database: 0
-    host: 8.129.63.242
+    host: 127.0.0.1
     password: zxc++123
     port: 6379
     timeout: 1000
@@ -48,25 +48,25 @@ spring:
       repositories:
         # 仓库中数据存储
         enabled: true
-#  rabbitmq:
-#    host: 127.0.0.1
-#    port: 5672
-#    username: guest
-#    password: guest
-#    virtual-host: /
-#    publisher-confirms: true
-#    publisher-returns: true
-#    listener:
-#      direct:
-#        default-requeue-rejected: true
-#      simple:
-#        prefetch: 1
-#        auto-startup: true
-#    template:
-#      retry:
-#        enabled: true
-#        initial-interval: 2s
-#      mandatory: true
+  rabbitmq:
+    host: 127.0.0.1
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    publisher-confirms: true
+    publisher-returns: true
+    listener:
+      direct:
+        default-requeue-rejected: true
+      simple:
+        prefetch: 1
+        auto-startup: true
+    template:
+      retry:
+        enabled: true
+        initial-interval: 2s
+      mandatory: true
   # mail
   mail:
     host: smtp.163.com

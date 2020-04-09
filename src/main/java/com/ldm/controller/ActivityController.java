@@ -28,7 +28,7 @@ public class ActivityController {
     @PostMapping(value = "/activity/add",consumes = "application/json")
     public JSONResult publishActivity(@RequestBody PublishActivity request){
         log.info("发表活动");
-        if (!cacheService.limitFrequency("activity",request.getUserId())){
+        if (cacheService.limitFrequency("activity",request.getUserId())){
             log.info("操作过于频繁，请稍后再试！！！");
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }

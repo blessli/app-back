@@ -27,10 +27,10 @@ public interface DynamicDao {
      * @author lidongming
      * @updateTime 2020/4/7 1:31
      */
-    @Select("SELECT t_dynamic.*,t_user.avatar,t_user.user_nickname,IFNULL(t_dynamic_like.id,-1) FROM `t_follow` INNER JOIN t_dynamic \n" +
+    @Select("SELECT t_dynamic.*,t_user.avatar,t_user.user_nickname,IFNULL(t_dynamic_like.id,-1) AS is_like FROM `t_follow` INNER JOIN t_dynamic\n" +
             "ON t_follow.follower_id=#{userId} AND t_dynamic.user_id=t_follow.user_id\n" +
             "LEFT JOIN t_user ON t_user.user_id=t_follow.user_id\n" +
-            "LEFT JOIN t_dynamic_like ON t_dynamic.dynamic_id=t_dynamic_like.dynamic_id AND t_dynamic.user_id=t_dynamic_like.user_id\n" +
+            "LEFT JOIN t_dynamic_like ON t_dynamic.dynamic_id=t_dynamic_like.dynamic_id AND #{userId}=t_dynamic_like.user_id\n" +
             "ORDER BY publish_time DESC")
     List<Dynamic> selectDynamicList(int userId);
     /**

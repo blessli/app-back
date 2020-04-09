@@ -62,6 +62,8 @@ public class ActivityService {
      */
     public ActivityDetail selectActivityDetail(int activityId,int userId){
         ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId, userId);
+        List<String> list=Arrays.asList(activityDetail.getImages().split(","));
+        activityDetail.setImageList(list);
         activityDetail.setActivityCommentList(commentService.getActivityCommentList(activityId,0));
         return activityDetail;
     }

@@ -16,7 +16,7 @@ public class DynamicController {
     @Action(name = "发布动态")
     @PostMapping(value = "/dynamic/add",consumes = "application/json")
     public JSONResult publishDynamic(@RequestBody PublishDynamic request){
-        if (!cacheService.limitFrequency("dynamic",request.getUserId())){
+        if (cacheService.limitFrequency("dynamic",request.getUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
         return dynamicService.publish(request)>0?JSONResult.success():JSONResult.fail("error");

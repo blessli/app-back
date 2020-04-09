@@ -17,7 +17,15 @@ public class AdvanceNotice {
     public void send() {
         System.out.println("print method 2");
     }
-//    @Scheduled(cron = "30 10 1 * * ?")
+    /**
+     * @title Feed数据清理
+     * @description 脚本作为定时任务启动，时间间隔由功能上线后数据增长情况决定
+     * @description 脚本遍历用户的收Feed和发Feed
+     * @description 判断每组有序集的数量，对大于300条的数据，从最早的记录开始剔除，直到数量小于等于300条为止
+     * @author lidongming 
+     * @updateTime 2020/4/9 2:01 
+     */
+    @Scheduled(cron = "30 10 1 * * ?")
     public void trans(){
 
     }

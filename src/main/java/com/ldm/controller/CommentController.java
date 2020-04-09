@@ -56,7 +56,7 @@ public class CommentController {
     @Action(name = "发表评论")
     @RequestMapping(value = "/comment/add",method = RequestMethod.POST,consumes = "application/json;charset=utf-8")
     public JSONResult publishComment(@RequestBody PublishComment request){
-        if (!cacheService.limitFrequency("comment",request.getUserId())){
+        if (cacheService.limitFrequency("comment",request.getUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
         return commentService.publishComment(request)>0?JSONResult.success():JSONResult.fail("error");
@@ -84,7 +84,7 @@ public class CommentController {
     @PostMapping(value = "/reply/add",consumes = "application/json")
     public JSONResult publishReply(@RequestBody PublishReply request){
 
-        if (!cacheService.limitFrequency("reply",request.getFromUserId())){
+        if (cacheService.limitFrequency("reply",request.getFromUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
         return commentService.publishReply(request)>0?JSONResult.success():JSONResult.fail("error");
