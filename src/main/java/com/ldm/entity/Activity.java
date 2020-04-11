@@ -8,7 +8,7 @@ import java.util.List;
 public class Activity {
     private int activityId;// 活动ID
     private String activityName;// 活动名称
-    private String userId;// 用户ID
+    private int userId;// 用户ID
     private String avatar;// 头像地址
     private String activityType;// 活动类型
     private String locationName;// 活动地址

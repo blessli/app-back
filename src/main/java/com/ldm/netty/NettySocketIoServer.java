@@ -11,6 +11,7 @@ import com.ldm.dao.ChatDao;
 import com.ldm.entity.ChatHistory;
 import com.ldm.entity.ChatMsg;
 import com.ldm.service.CacheService;
+import com.ldm.util.DateHandle;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -103,7 +104,7 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
 		String userId = (String) chatData.get("userId");
 		String msg = (String) chatData.get("msg");
 		String toUserId= (String) chatData.get("toUserId");
-		String publishTime= (String) chatData.get("publishTime");
+		String publishTime= DateHandle.currentDate();
 		log.info(userId+" "+msg+" "+toUserId+" "+publishTime);
 		String msgFlag;
 		if (userId.compareTo(toUserId)<0) {

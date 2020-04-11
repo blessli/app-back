@@ -8,7 +8,9 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
+import com.ldm.entity.CommentNotice;
 import com.ldm.service.CacheService;
+import com.ldm.util.JsonUtil;
 import com.ldm.util.RandomUtil;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +43,6 @@ public class MQReceiver {
         try {
             CommonResponse response = client.getCommonResponse(request);
             System.out.println(response.getData());
-            cacheService.set("token:code:"+phone,code,"NX","EX",300);
         } catch (ServerException e) {
             e.printStackTrace();
         } catch (ClientException e) {
@@ -71,6 +72,12 @@ public class MQReceiver {
      */
     @RabbitListener(queues = MQConfig.Feed_Dynamic_Publish_QUEUE)
     public void feedFollow(String message){
+
+    }
+
+    @RabbitListener(queues = MQConfig.Comment_Notice)
+    public void commentNotice(String message){
+        CommentNotice commentNotice= JsonUtil.stringToBean(message,CommentNotice.class);
 
     }
 }

@@ -11,6 +11,8 @@ public class MQConfig {
     public static final String Feed_Dynamic_Publish_QUEUE="feedDynamicPublishQueue";
     // 关注取关处理队列
     public static final String Feed_Follow_QUEUE="feedFollowQueue";
+
+    public static final String Comment_Notice="commentNotice";
     /**
      * Direct 模式
      *
@@ -27,6 +29,10 @@ public class MQConfig {
     @Bean
     public Queue queue2(){
         return new Queue(MQConfig.Feed_Follow_QUEUE, true);
+    }
+    @Bean
+    public Queue queue3(){
+        return new Queue(MQConfig.Comment_Notice, true);
     }
 }
 

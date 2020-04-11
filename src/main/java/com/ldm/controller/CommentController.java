@@ -1,6 +1,7 @@
 package com.ldm.controller;
 
 import com.ldm.aop.Action;
+import com.ldm.entity.CommentNotice;
 import com.ldm.request.PublishComment;
 import com.ldm.request.PublishReply;
 import com.ldm.service.CacheService;
@@ -9,6 +10,8 @@ import com.ldm.util.JSONResult;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * @author lidongming
@@ -31,8 +34,8 @@ public class CommentController {
     @Action(name = "获取评论列表")
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
-    public JSONResult getActivityCommentList(int itemId,int flag){
-        return JSONResult.success(commentService.getActivityCommentList(itemId, flag));
+    public JSONResult getCommentList(int itemId,int flag){
+        return JSONResult.success(commentService.getCommentList(itemId, flag));
     }
 
     /**
@@ -43,8 +46,8 @@ public class CommentController {
      */
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
-    public JSONResult getActivityReplyList(int commentId){
-        return JSONResult.success(commentService.getActivityReplyList(commentId));
+    public JSONResult getReplyList(int commentId){
+        return JSONResult.success(commentService.getReplyList(commentId));
     }
 
     /**
@@ -70,8 +73,8 @@ public class CommentController {
      */
     @Action(name = "删除评论")
     @DeleteMapping("/comment/delete")
-    public JSONResult deleteComment(int commentId){
-        return commentService.deleteComment(commentId)>0?JSONResult.success():JSONResult.fail("error");
+    public JSONResult deleteComment(int itemId,int flag,int commentId){
+        return commentService.deleteComment(itemId, flag, commentId)>0?JSONResult.success():JSONResult.fail("error");
     }
 
     /**
@@ -98,7 +101,19 @@ public class CommentController {
      */
     @Action(name = "删除回复")
     @DeleteMapping("/reply/delete")
-    public JSONResult deleteReply(int replyId){
-        return commentService.deleteReply(replyId)>0?JSONResult.success():JSONResult.fail("error");
+    public JSONResult deleteReply(int commentId,int replyId){
+        return commentService.deleteReply(commentId, replyId)>0?JSONResult.success():JSONResult.fail("error");
+    }
+
+    /**
+     * @title 获取评论通知
+     * @description 使用redis实现
+     * @author lidongming
+     * @updateTime 2020/4/11 14:51
+     */
+    @Action(name = "获取评论通知")
+    @GetMapping("/comment/notice")
+    public JSONResult getCommentNotice(int userId){
+        return JSONResult.success(commentService.selectCommentNotice(userId));
     }
 }

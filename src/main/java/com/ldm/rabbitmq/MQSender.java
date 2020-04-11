@@ -24,4 +24,14 @@ public class MQSender {
     public void feedDynamicPublish(String message){
         amqpTemplate.convertAndSend(MQConfig.Feed_Dynamic_Publish_QUEUE,message);
     }
+
+    /**
+     * @title 发布评论/回复时,发送一个通知到消息页
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/11 14:25
+     */
+    public void commentNotice(String message){
+        amqpTemplate.convertAndSend(MQConfig.Comment_Notice,message);
+    }
 }

@@ -1,12 +1,17 @@
 package com.ldm.service;
 
+import com.ldm.entity.SimpleUserInfo;
 import com.ldm.util.JsonUtil;
+import com.ldm.util.RedisKeyUtil;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
+
 /**
  * @author lidongming
  * @ClassName CacheService.java
@@ -14,7 +19,7 @@ import java.util.Set;
  * @createTime 2020年04月04日 05:05:00
  */
 @Service
-public class CacheService{
+public class CacheService implements InitializingBean {
     private static final String SET_IF_NOT_EXIST = "NX";
     private static final String SET_WITH_EXPIRE_TIME = "PX";
     /**
@@ -22,6 +27,9 @@ public class CacheService{
      */
     @Autowired
     JedisPool jedisPool;
+
+    @Autowired
+    private UserService userService;
 
     public <T> T get(String key, Class<T> clazz) {
         Jedis jedis = null;// redis连接
@@ -43,18 +51,58 @@ public class CacheService{
         Jedis jedis = null;// redis连接
         try {
             jedis=jedisPool.getResource();
+            // 将对象转换为json字符串
+            String strValue = JsonUtil.beanToString(value);
+            if (strValue == null || strValue.length() <= 0){
+                return false;
+            }
+            jedis.set(key, strValue);
         }finally {
             // 归还redis连接到连接池
             returnToPool(jedis);
         }
-        // 将对象转换为json字符串
-        String strValue = JsonUtil.beanToString(value);
-        if (strValue == null || strValue.length() <= 0){
-            return false;
-        }
-        jedis.set(key, strValue);
         return true;
     }
+
+    public <T> boolean sadd(String key, T value) {
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            // 将对象转换为json字符串
+            String strValue = JsonUtil.beanToString(value);
+            if (strValue == null || strValue.length() <= 0){
+                return false;
+            }
+            jedis.sadd(key, strValue);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+        return true;
+    }
+
+    /**
+     * @title 当用户删除活动/动态/评论等,将所有与之相关并存储在redis中的都删除
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/9 23:08
+     */
+    public <T> boolean mdel(String key) {
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            Set<String> set=jedis.smembers(key);
+            for(String string:set){
+                jedis.del(string);
+            }
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+        return true;
+    }
+
+
 
     /**
      * 分布式锁
@@ -66,7 +114,7 @@ public class CacheService{
      * @param <T>
      * @return
      */
-    public <T> boolean set(String key, T value, String nxxx, String expx, int expireSeconds) {
+    public <T> boolean lock(String key, T value, String nxxx, String expx, int expireSeconds) {
         Jedis jedis = null;// redis连接
         try {
             jedis=jedisPool.getResource();
@@ -75,13 +123,36 @@ public class CacheService{
             if (strValue == null || strValue.length() <= 0){
                 return false;
             }
-            jedis.set(key,strValue,nxxx,expx,expireSeconds);
+            if(jedis.set(key,strValue,nxxx,expx,expireSeconds)=="OK"){
+                return true;
+            }
             return true;
         }finally {
             // 归还redis连接到连接池
             returnToPool(jedis);
         }
 
+    }
+    /**
+     * @title 解锁,使用lua脚本保证原子性
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/9 17:42
+     */
+    public Object unLock(String key){
+
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            //lua script
+            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+            String request= UUID.randomUUID().toString();
+            Object result=jedis.eval(script, Collections.singletonList("lock-token"),Collections.singletonList("key"));
+            return result;// 1为成功
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
     }
 
     public boolean exists(String key) {
@@ -142,6 +213,37 @@ public class CacheService{
 
     }
 
+    public List<String> lrange(String key){
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.lrange(key,0,-1);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+    }
+    public String hget(String key,String field){
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.hget(key,field);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+    }
+    public Long hset(String key,String field,String value){
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            return jedis.hset(key, field, value);
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
+        }
+    }
+
     public boolean delete(String key) {
         Jedis jedis = null;// redis连接
         try {
@@ -154,6 +256,8 @@ public class CacheService{
         }
 
     }
+
+
 
     /**
      * 点赞帖子
@@ -289,6 +393,23 @@ public class CacheService{
     private void returnToPool(Jedis jedis) {
         if (jedis != null){
             jedis.close();
+        }
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        List<SimpleUserInfo> simpleUserInfoList=userService.selectSimpleUserInfo();
+
+        Jedis jedis = null;// redis连接
+        try {
+            jedis=jedisPool.getResource();
+            for(SimpleUserInfo simpleUserInfo:simpleUserInfoList){
+                jedis.hset(RedisKeyUtil.getUserInfo(simpleUserInfo.getUserId()),"avatar",simpleUserInfo.getAvatar());
+                jedis.hset(RedisKeyUtil.getUserInfo(simpleUserInfo.getUserId()),"userNickname",simpleUserInfo.getUserNickname());
+            }
+        }finally {
+            // 归还redis连接到连接池
+            returnToPool(jedis);
         }
     }
 }

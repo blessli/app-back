@@ -11,8 +11,10 @@ import lombok.Data;
 @Data
 public class PublishReply {
     private int commentId;// 评论ID
-    private String publishTime;// 发表时间
     private String content;// 回复内容
     private int fromUserId;// 回复者ID
     private int toUserId;// 被回复者ID
+    private int flag;// 0为活动，1为动态
+    private int userId;// 用户ID
+    private int itemId;// 活动/动态ID
 }

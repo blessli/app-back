@@ -17,13 +17,14 @@ public class EventProducer {
     CacheService cacheService;
 
     public boolean fireEvent(EventModel eventModel) {
-        try {
-            String json = JSONObject.toJSONString(eventModel);
-            String key = RedisKeyUtil.getEventQueueKey();
-            cacheService.lpush(key, json);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+//        try {
+//            String json = JSONObject.toJSONString(eventModel);
+//            String key = RedisKeyUtil.getEventQueueKey();
+//            cacheService.lpush(key, json);
+//            return true;
+//        } catch (Exception e) {
+//            return false;
+//        }
+        return true;
     }
 }

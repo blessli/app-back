@@ -1,59 +1,51 @@
 package com.ldm.util;
 
 public class RedisKeyUtil {
-    private static String SPLIT = ":";
-    private static String BIZ_LIKE = "LIKE";
-    private static String BIZ_DISLIKE = "DISLIKE";
-    private static String BIZ_EVENT_QUEUE = "EVENT_QUEUE";
-    private static String frequency_limit="frequency:limit";
-
     /**
-     * 获取粉丝
+     * @title 获取用户个人信息:avatar,userNickname
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/10 1:51 
      */
-    private static String BIZ_FOLLOWER = "FOLLOWER";
-
-    /**
-     * 关注对象
-     */
-    private static String BIZ_FOLLOWEE = "FOLLOWEE";
-
-    private static String BIZ_TIMELINE = "TIMELINE";
-
-    public static String getLikeKey(int entityType, int entityId) {
-        return BIZ_LIKE + SPLIT + String.valueOf(entityType) + SPLIT + String.valueOf(entityId);
+    public static String getUserInfo(int userId){
+        return "userInfo:"+userId;
     }
 
-    public static String getDisLikeKey(int entityType, int entityId) {
-        return BIZ_DISLIKE + SPLIT + String.valueOf(entityType) + SPLIT + String.valueOf(entityId);
-    }
-
-    public static String getEventQueueKey() {
-        return BIZ_EVENT_QUEUE;
+    public static String getToken(int userId){
+        return "token:"+userId;
     }
 
     /**
-     * 某个实体的粉丝key
-     *
-     * @param entityType
-     * @param entityId
-     * @return
+     * @title 获取活动信息:userId
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/11 17:12 
      */
-    public static String getFollowerKey(int entityType, int entityId) {
-        return BIZ_FOLLOWER + SPLIT + String.valueOf(entityType) + SPLIT + String.valueOf(entityId);
+    public static String getActivityInfo(int activityId){
+        return "activityInfo:"+activityId;
+    }
+    
+    /**
+     * @title 获取动态信息:userId
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/11 17:16
+     */
+    public static String getDynamicInfo(int dynamicId){
+        return "dynamInfo:"+dynamicId;
+    }
+
+    public static String getCommentNotice(int userId){
+        return "comment:notice:"+userId;
     }
 
     /**
-     * 每个用户对某类实体的关注key
-     *
-     * @param userId
-     * @param entityType
-     * @return
+     * @title 获取消息页的四个通知的未读数
+     * @description flag为0:申请通知,flag为1:点赞,flag为2:评论,flag为3:关注
+     * @author lidongming
+     * @updateTime 2020/4/11 15:51
      */
-    public static String getFolloweeKey(int userId, int entityType) {
-        return BIZ_FOLLOWEE + SPLIT + String.valueOf(userId) + SPLIT + String.valueOf(entityType);
-    }
-
-    public static String getTimelineKey(int userId) {
-        return BIZ_TIMELINE + SPLIT + String.valueOf(userId);
+    public static String getCommentNoticeUnread(int flag,int userId){
+        return "comment:notice:unRead:"+flag+":"+userId;
     }
 }

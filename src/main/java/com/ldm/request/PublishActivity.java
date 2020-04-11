@@ -10,6 +10,7 @@ import lombok.Data;
  */
 @Data
 public class PublishActivity {
+    private int activityId;// 活动ID
     private String activityName;// 活动名
     private int userId;// 用户ID
     private String activityType;// 活动类型
@@ -21,5 +22,4 @@ public class PublishActivity {
     private String require;// 要求
     private String remark;// 备注
     private String images;// 图片列表
-    private String publishTime;// 发表时间
 }

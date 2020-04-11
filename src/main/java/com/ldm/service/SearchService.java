@@ -1,10 +1,11 @@
 package com.ldm.service;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.ldm.config.EsConfig;
 import com.ldm.dao.SearchActivityDao;
+import com.ldm.entity.Activity;
 import com.ldm.entity.SearchDomain;
+import com.ldm.request.PublishActivity;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -15,23 +16,32 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import redis.clients.jedis.JedisPool;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.ldm.entity.SearchResult;
+
+import java.util.*;
+@Slf4j
 @Service
 public class SearchService {
     @Autowired
     private SearchActivityDao searchActivityDao;
     @Autowired
     private EsConfig esConfig;
+
+    /**
+     * 通过连接池对象可以获得对redis的连接
+     */
+    @Autowired
+    JedisPool jedisPool;
+
     /**
      * @title 在es中搜索活动
      * @description
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<SearchDomain> searchActivity(String key) {
+    public List<SearchResult> searchActivity(String key) {
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder= QueryBuilders.boolQuery();
         boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key,"activityName","locationName","userNickname"));
@@ -42,9 +52,9 @@ public class SearchService {
                 .execute().actionGet();
         SearchHits searchHits = response.getHits();
         System.out.println(searchHits.getTotalHits());
-        List<SearchDomain> list = new ArrayList<>();
+        List<SearchResult> list = new ArrayList<>();
         for(SearchHit hit : searchHits) {
-            SearchDomain entity = new SearchDomain();
+            SearchResult entity=new SearchResult();
             Map<String, Object> entityMap = hit.getSourceAsMap();
 
             //map to object
@@ -86,6 +96,9 @@ public class SearchService {
                 if(!StringUtils.isEmpty(entityMap.get("commentCount"))) {
                     entity.setCommentCount(Integer.valueOf(String.valueOf(entityMap.get("commentCount"))));
                 }
+                if(!StringUtils.isEmpty(entityMap.get("images"))) {
+                    entity.setImageList(Arrays.asList(String.valueOf(entityMap.get("images")).split(",")));
+                }
 
             }
             list.add(entity);
@@ -98,7 +111,8 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:20
      */
-    public void saveActivity(SearchDomain searchDomain) {
+    public void saveActivity(PublishActivity publishActivity) {
+        SearchDomain searchDomain=new SearchDomain();
         searchActivityDao.save(searchDomain);
     }
     /**
@@ -109,6 +123,45 @@ public class SearchService {
      */
     public void deleteActivity(SearchDomain searchDomain) {
         searchActivityDao.delete(searchDomain);
+    }
+
+    public SearchDomain change(PublishActivity publishActivity){
+        SearchDomain searchDomain=new SearchDomain();
+        searchDomain.setCommentCount(0);
+        searchDomain.setViewCount(0);
+        searchDomain.setUserId(publishActivity.getUserId());
+        searchDomain.setBeginTime(publishActivity.getBeginTime());
+        searchDomain.setEndTime(publishActivity.getEndTime());
+        searchDomain.setActivityId(publishActivity.getActivityId());
+        searchDomain.setActivityType(publishActivity.getActivityType());
+        searchDomain.setActivityName(publishActivity.getActivityName());
+        return searchDomain;
+    }
+    public void init(List<Activity> activityList){
+        Iterable<SearchDomain> iterable=searchActivityDao.findAll();
+        Iterator it=iterable.iterator();
+        while (it.hasNext()){
+            searchActivityDao.delete((SearchDomain) it.next());
+        }
+        for (Activity activity:activityList){
+            SearchDomain searchDomain=new SearchDomain();
+            searchDomain.setActivityName(activity.getActivityName());
+            searchDomain.setActivityType(activity.getActivityType());
+            searchDomain.setActivityId(activity.getActivityId());
+            searchDomain.setAvatar(activity.getAvatar());
+            searchDomain.setEndTime(activity.getEndTime());
+            searchDomain.setBeginTime(activity.getBeginTime());
+            searchDomain.setUserId(activity.getUserId());
+            searchDomain.setViewCount(activity.getViewCount());
+            searchDomain.setCommentCount(activity.getCommentCount());
+            searchDomain.setUserNickname(activity.getUserNickname());
+            searchDomain.setLocationName(activity.getLocationName());
+            searchDomain.setImages(activity.getImages());
+            searchDomain.setPublishTime(activity.getPublishTime());
+            searchActivityDao.save(searchDomain);
+        }
+        log.info("elasticsearch初始化完成");
+
     }
 }
 

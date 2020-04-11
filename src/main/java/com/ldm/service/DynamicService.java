@@ -2,10 +2,13 @@ package com.ldm.service;
 
 import com.ldm.dao.DynamicDao;
 import com.ldm.entity.Dynamic;
+import com.ldm.entity.DynamicDetail;
+import com.ldm.entity.LikeNotice;
 import com.ldm.request.PublishDynamic;
-import com.ldm.util.DateHandle;
+import com.ldm.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,6 +23,9 @@ public class DynamicService{
 
     @Autowired
     private DynamicDao dynamicDao;
+
+    @Autowired
+    private CacheService cacheService;
     /**
      * @title 发表动态
      * @description
@@ -27,8 +33,13 @@ public class DynamicService{
      * @updateTime 2020/4/7 13:44
      */
     public int publish(PublishDynamic request) {
-        request.setPublishTime(DateHandle.currentDate());
-        return dynamicDao.publishDynamic(request);
+        int ans=dynamicDao.publishDynamic(request);
+        if (ans<=0){
+            return ans;
+        }
+        List<String> imageList= Arrays.asList(request.getImages().split(","));
+        cacheService.hset(RedisKeyUtil.getDynamicInfo(request.getDynamicId()),"image",imageList.get(0));
+        return ans;
     }
     /**
      * @title 获取已关注者发表的动态
@@ -44,13 +55,76 @@ public class DynamicService{
         }
         return dynamicList;
     }
+
+    /**
+     * @title 获取我的动态列表
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 16:49
+     */
+    public List<Dynamic> selectMyDynamicList(int userId) {
+        List<Dynamic> dynamicList=dynamicDao.selectMyDynamicList(userId);
+        for (Dynamic dynamic:dynamicList){
+            List<String> list=Arrays.asList(dynamic.getImages().split(","));
+            dynamic.setImageList(list);
+        }
+        return dynamicList;
+    }
+
+    /**
+     * @title 获取某个动态详情
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/10 20:57
+     */
+    public DynamicDetail selectDynamicDetail(int dynamicId,int userId) {
+        DynamicDetail dynamicDetail=dynamicDao.selectDynamicDetail(dynamicId, userId);
+        List<String> list=Arrays.asList(dynamicDetail.getImages().split(","));
+        dynamicDetail.setImageList(list);
+        return dynamicDetail;
+    }
     /**
      * @title 删除动态
-     * @description
+     * @description 使用分布式锁和事务
      * @author lidongming
      * @updateTime 2020/4/7 13:45
      */
+    @Transactional
     public int deleteDynamic(int dynamicId){
+        cacheService.mdel("dynamic:"+dynamicId);
         return dynamicDao.deleteDynamic(dynamicId);
+    }
+
+    /**
+     * @title 点赞动态
+     * @description 给动态点赞
+     * @author lidongming
+     * @updateTime 2020/4/8 1:48
+     */
+    public int likeDynamic(int dynamicId,int userId){
+        String key="like:dynamic:"+dynamicId+":"+userId;
+        cacheService.sadd("dynamic:"+dynamicId,key);// 为了方便清理
+        if (!cacheService.exists(key)&&dynamicDao.checkLiked(dynamicId, userId)==0){
+            dynamicDao.likeDynamic(dynamicId, userId,cacheService.hget(RedisKeyUtil.getDynamicInfo(dynamicId),"image"));
+            cacheService.set(key,0);
+        }
+        return 1;
+    }
+    /**
+     * @title 取消点赞动态
+     * @description 取消给动态点赞
+     * @author lidongming
+     * @updateTime 2020/4/8 1:48
+     */
+    public int cancelLikeDynamic(int dynamicId,int userId){
+        String key="like:dynamic:"+dynamicId+":"+userId;
+        if (cacheService.exists(key)||dynamicDao.checkLiked(dynamicId, userId)>0){
+            dynamicDao.cancelLikeDynamic(dynamicId, userId);
+            cacheService.delete(key);
+        }
+        return 1;
+    }
+    public List<LikeNotice> selectLikeNotice(int userId){
+        return dynamicDao.selectLikeNotice(userId);
     }
 }

@@ -1,6 +1,8 @@
 package com.ldm.controller;
 
 import com.ldm.aop.Action;
+import com.ldm.entity.Activity;
+import com.ldm.service.ActivityService;
 import com.ldm.service.SearchService;
 import com.ldm.util.JSONResult;
 import org.springframework.beans.factory.InitializingBean;
@@ -8,10 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 public class SearchController implements InitializingBean {
     @Autowired
     private SearchService searchService;
+
+    @Autowired
+    private ActivityService activityService;
 
     /**
      * @title 搜索活动
@@ -26,7 +33,7 @@ public class SearchController implements InitializingBean {
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
-
+    public void afterPropertiesSet(){
+        searchService.init(activityService.selectActivityListByTime());
     }
 }

@@ -9,9 +9,9 @@ import lombok.Data;
  */
 @Data
 public class PublishDynamic {
+    private int dynamicId;// 动态ID
     private String content;// 动态内容
     private String images;// 图片列表
-    private String publishTime;// 发表时间
     private String publishLocation;// 发布地点
     private int userId;// 用户ID
 }

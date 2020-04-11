@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.ldm.dao.UserDao;
 import com.ldm.entity.AccessToken;
 import com.ldm.entity.LoginCredential;
+import com.ldm.entity.SimpleUserInfo;
 import com.ldm.request.UserInfo;
 import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.List;
 
 /**
  * @author lidongming
@@ -96,5 +98,27 @@ public class UserService{
     }
     public int addUserInfo(UserInfo userInfo){
         return 0;
+    }
+    /**
+     * @title 获取该用户关注的用户列表
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 17:12
+     */
+    public List<SimpleUserInfo> getFollowedUserList(int userId){
+        return userDao.getFollowedUserList(userId);
+    }
+
+    /**
+     * @title 获取关注该用户的用户列表
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 17:15
+     */
+    public List<SimpleUserInfo> getFollowMeUserList(int userId){
+        return userDao.getFollowMeUserList(userId);
+    }
+    public List<SimpleUserInfo> selectSimpleUserInfo(){
+        return userDao.selectSimpleUserInfo();
     }
 }

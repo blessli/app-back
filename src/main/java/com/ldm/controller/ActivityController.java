@@ -8,6 +8,7 @@ import com.ldm.service.SensitiveService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 @Slf4j
 @RestController
 public class ActivityController {
@@ -60,6 +61,24 @@ public class ActivityController {
     public JSONResult getActivityListByTime(){
         return JSONResult.success(activityService.selectActivityListByTime());
     }
+
+    @Action(name = "获取我申请加入的活动")
+    @GetMapping("/activities/tryJoined")
+    public JSONResult getMyActivityList(int userId){
+        return JSONResult.success(activityService.selectMyActivityList(userId));
+    }
+
+    /**
+     * @title 获取我发表的活动列表
+     * @description 按时间降序
+     * @author lidongming
+     * @updateTime 2020/3/28 23:58
+     */
+    @Action(name = "获取我发表的活动列表")
+    @GetMapping("/activities/createdByMe")
+    public JSONResult getActivityCreatedByMe(int userId){
+        return JSONResult.success(activityService.selectActivityCreatedByMe(userId));
+    }
     /**
      * @title 获取活动详情
      * @description 用户点击活动，进入详情页，如果是首次点击则浏览量+1
@@ -71,6 +90,27 @@ public class ActivityController {
     public JSONResult getActivityDetail(int activityId,int userId){
         return JSONResult.success(activityService.selectActivityDetail(activityId, userId));
     }
+    /**
+     * @title 用户申请加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 18:06
+     */
+    @Action(name = "用户申请加入活动")
+    @PostMapping("/activity/tryJoin")
+    public JSONResult tryJoinActivity(int activityId,int userId){
+        return JSONResult.success(activityService.tryJoinActivity(activityId, userId));
+    }
 
-
+    /**
+     * @title 用户取消申请加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 18:06
+     */
+    @Action(name = "用户取消申请加入活动")
+    @DeleteMapping("/activity/cancelJoin")
+    public JSONResult cancelJoinActivity(int activityId,int userId){
+        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
+    }
 }

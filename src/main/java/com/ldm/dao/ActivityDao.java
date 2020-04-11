@@ -2,6 +2,7 @@ package com.ldm.dao;
 
 import com.ldm.entity.Activity;
 import com.ldm.entity.ActivityDetail;
+import com.ldm.entity.MyActivity;
 import com.ldm.request.PublishActivity;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
@@ -21,21 +22,27 @@ public interface ActivityDao {
             " `remark`, `view_count`, `comment_count`, `member_count`, `publish_time`, `images`, " +
             "`status`) VALUES (#{activityName}, #{userId}, #{activityType}, #{locationName}," +
             " #{longitude}, #{latitude}, #{beginTime}, #{endTime}, #{require}, #{remark}," +
-            " 0, 0, 0, #{publishTime}, #{images}, 0)")
+            " 0, 0, 0, NOW(), #{images}, 0)")
+    @Options(useGeneratedKeys = true,keyProperty = "activityId",keyColumn = "activity_id")
     int publishActivity(PublishActivity request);
 
     /**
      * @title 删除活动
-     * @description
+     * @description 将所有与活动相关的都删除
      * @author lidongming
      * @updateTime 2020/4/4 4:30
      */
-    @Delete("delete from t_activity where activity_id=#{activityId}")
+    @Delete("DELETE from t_reply where comment_id in (SELECT t_comment.comment_id from t_comment WHERE item_id=#{activityId} AND flag=0);\n" +
+            "DELETE FROM t_comment WHERE item_id=#{activityId} AND flag=0;\n" +
+            "DELETE FROM t_activity_member WHERE activity_id=#{activityId};\n" +
+            "DELETE FROM t_activity_join_request WHERE activity_id=#{activityId};\n" +
+            "DELETE FROM t_activity_view WHERE activity_id=#{activityId};\n" +
+            "DELETE FROM t_activity WHERE activity_id=#{activityId};")
     int deleteActivity(int activityId);
 
     /**
      * @title 获取最新发布的活动
-     * @description 获取最新发布的活动
+     * @description 获取最新发布的活动,暂时不考虑分页
      * @author lidongming
      * @updateTime 2020/4/6 14:40
      */
@@ -43,6 +50,29 @@ public interface ActivityDao {
             "LEFT JOIN t_user ON t_activity.user_id=t_user.user_id ORDER BY publish_time DESC")
     List<Activity> selectActivityListByTime();
 
+
+    /**
+     * @title 获取该用户申请加入的活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 17:57
+     */
+    @Select("SELECT t.activity_id,t.`status`,tt.activity_name,tt.begin_time,tt.end_time,tt.images as image,tt.location_name\n" +
+            ",tt.member_count,tt.publish_time FROM t_activity_join_request t\n" +
+            "LEFT JOIN t_activity tt ON tt.activity_id=t.activity_id\n" +
+            "WHERE t.user_id=#{userId} ORDER BY t.publish_time DESC")
+    List<MyActivity> selectMyActivityList(int userId);
+
+    /**
+     * @title 获取我发布的活动列表
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 20:57
+     */
+    @Select("SELECT t_activity.*,avatar,user_nickname FROM t_activity\n" +
+            "LEFT JOIN t_user ON t_user.user_id=t_activity.user_id\n" +
+            "WHERE t_activity.user_id=#{userId} ORDER BY publish_time DESC")
+    List<Activity> selectActivityCreatedByMe(int userId);
 
     /**
      * @title 获取该活动的详情内容
@@ -56,52 +86,58 @@ public interface ActivityDao {
     ActivityDetail selectActivityDetail(int activityId,int userId);
 
     /**
-     * @title 用户进入活动详情页，redis如果不存在{activityId:userId}，则浏览量+1
+     * @title 用户第一次点击该活动,浏览量+1
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/6 14:40 
      */
-    @Insert("INSERT INTO t_activity_view VALUES(NULL,#{activityId},#{userId})")
+    @Insert("INSERT INTO t_activity_view VALUES(NULL,#{activityId},#{userId});" +
+            "UPDATE t_activity SET view_count=view_count+1 WHERE activity_id=#{activityId}")
     int addViewCount(int activityId,int userId);
 
     /**
-     * 用户申请加入活动
-     * @param activityId
-     * @param userId
-     * @return
+     * @title 检查该用户是否第一次点击该活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/9 17:55
      */
-    @Insert("INSERT INTO `t_activity_join_request`(`user_id`, `activity_id`," +
-            " `status`, `publish_time`) VALUES " +
-            "(#{userId}, #{activityId}, '0', NOW())")
+    @Select("SELECT COUNT(id) FROM t_activity_view WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    int isFirstClickActivity(int activityId,int userId);
+    /**
+     * @title 用户申请加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 19:51
+     */
+    @Insert("INSERT INTO t_activity_join_request VALUES(NULL,#{userId},#{activityId},0,NOW())")
     int tryJoinActivity(int activityId,int userId);
 
     /**
-     * 用户取消加入活动
-     * @param activityId
-     * @param userId
-     * @return
-     * 从请求表和成员表删除数据
+     * @title 用户取消加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 19:55
      */
-    @Delete({"DELETE FROM t_activity_join_request WHERE activity_id=#{activityId} AND user_id=#{userId}",
-    "DELETE FROM t_activity_member WHERE activity_id='#{activityId}' AND user_id='#{userId}'"})
+    @Delete("DELETE FROM t_activity_join_request WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int cancelJoinActivity(int activityId,int userId);
 
     /**
-     * 活动发布者同意该用户加入活动
-     * @param activityId
-     * @param userId
-     * @return
+     * @title 活动发布者同意该用户加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 19:55
      */
-    @Update("UPDATE t_activity_join_request SET `status`=2,update_time=NOW() WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    @Update("UPDATE t_activity_join_request SET `status`=2 WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int agreeJoinActivity(int activityId,int userId);
 
     /**
-     * 活动发布者拒绝该加入活动
-     * @param activityId
-     * @param userId
-     * @return
+     * @title 活动发布者拒绝该加入活动
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 19:54
      */
-    @Update("UPDATE t_activity_join_request SET `status`=1,update_time=NOW() WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    @Update("UPDATE t_activity_join_request SET `status`=1 WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int disagreeJoinActivity(int activityId,int userId);
+
 
 }

@@ -1,5 +1,6 @@
 package com.ldm.dao;
 
+import com.ldm.entity.SimpleUserInfo;
 import com.ldm.request.UserInfo;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -16,9 +17,23 @@ public interface UserDao {
      * @author lidongming 
      * @updateTime 2020/4/6 19:51 
      */
-    @Select("SELECT user_id FROM `t_follow` WHERE follower_id=#{userId}")
-    List<Integer> getFollowedUserList(int userId);
+    @Select("SELECT t_follow.user_id,user_nickname,avatar FROM t_follow \n" +
+            "LEFT JOIN t_user ON t_user.user_id=t_follow.user_id WHERE follower_id=#{userId}")
+    List<SimpleUserInfo> getFollowedUserList(int userId);
+
+    /**
+     * @title 获取关注该用户的用户列表
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/10 17:15 
+     */
+    @Select("SELECT t_follow.follower_id as user_id,user_nickname,avatar FROM t_follow \n" +
+            "LEFT JOIN t_user ON t_user.user_id=t_follow.follower_id WHERE t_follow.user_id=#{userId}")
+    List<SimpleUserInfo> getFollowMeUserList(int userId);
 
     int addUserInfo(UserInfo userInfo);
     int isFirstLogin(String openId);
+
+    @Select("SELECT user_id,user_nickname,avatar FROM `t_user`")
+    List<SimpleUserInfo> selectSimpleUserInfo();
 }

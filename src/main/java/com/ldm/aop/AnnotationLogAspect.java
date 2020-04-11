@@ -33,7 +33,7 @@ public class AnnotationLogAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Action action = method.getAnnotation(Action.class); //获取方法上定义的注解，粒度更细更精确
-        log.info("注解式拦截，即将执行：" + action.name()); // 反射获得注解上的属性，然后做日志相关的记录操作
+        log.debug("注解式拦截，即将执行：" + action.name()); // 反射获得注解上的属性，然后做日志相关的记录操作
     }
 
     /**
@@ -44,7 +44,7 @@ public class AnnotationLogAspect {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
         Action action = method.getAnnotation(Action.class);
-        log.info("注解式拦截，刚刚执行完：" + action.name());
+        log.debug("注解式拦截，刚刚执行完：" + action.name());
     }
 
     /**
@@ -54,6 +54,6 @@ public class AnnotationLogAspect {
      */
     @AfterThrowing(value = "annotationPointcut()",throwing = "e")
     public void AfterThrowing(JoinPoint joinPoint, Throwable e){
-        log.error("happened error");
+        log.error("主人,主人,出bug啦!!!");
     }
 }

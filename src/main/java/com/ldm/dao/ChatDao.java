@@ -18,7 +18,7 @@ public interface ChatDao {
      * @author lidongming
      * @updateTime 2020/4/7 23:30
      */
-    @Insert("INSERT INTO t_chat(user_id,msg,to_user_id,publish_time,msg_flag) VALUES(#{userId},#{msg},#{toUserId},#{publishTime},#{msgFlag})")
+    @Insert("INSERT INTO t_chat(user_id,msg,to_user_id,publish_time,msg_flag) VALUES(#{userId},#{msg},#{toUserId},NOW(),#{msgFlag})")
     int sendMsg(int userId,String msg,int toUserId,String publishTime,String msgFlag);
     /**
      * @title 获取聊天双方的历史信息
