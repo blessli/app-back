@@ -76,9 +76,9 @@ public interface ActivityDao {
 
     /**
      * @title 获取该活动的详情内容
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/6 14:40 
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/6 14:40
      */
     @Select("SELECT t_activity.*,avatar,user_nickname,IFNULL((SELECT t.`status` FROM t_activity_join_request t\n" +
             "WHERE t.activity_id=#{activityId} AND t.user_id=#{userId}),-1) AS is_joined FROM t_activity,t_user\n" +

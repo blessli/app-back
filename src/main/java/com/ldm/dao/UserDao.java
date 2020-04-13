@@ -23,9 +23,9 @@ public interface UserDao {
 
     /**
      * @title 获取关注该用户的用户列表
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/10 17:15 
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/10 17:15
      */
     @Select("SELECT t_follow.follower_id as user_id,user_nickname,avatar FROM t_follow \n" +
             "LEFT JOIN t_user ON t_user.user_id=t_follow.follower_id WHERE t_follow.user_id=#{userId}")
