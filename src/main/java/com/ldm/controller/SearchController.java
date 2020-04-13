@@ -10,8 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 public class SearchController implements InitializingBean {
     @Autowired
@@ -28,12 +26,12 @@ public class SearchController implements InitializingBean {
      */
     @Action(name = "搜索活动")
     @GetMapping("/search")
-    public JSONResult search(String keyword){
+    public JSONResult search(String keyword,int pageNum,int pageSize){
         return JSONResult.success(searchService.searchActivity(keyword));
     }
 
     @Override
     public void afterPropertiesSet(){
-        searchService.init(activityService.selectActivityListByTime());
+        searchService.init(activityService.selectActivityListByTime(0,100000));
     }
 }

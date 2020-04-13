@@ -41,7 +41,7 @@ public class CommentService {
      * @author lidongming
      * @updateTime 2020/4/6 19:28
      */
-    public List<Reply> getReplyList(int commentId){
+    public List<Reply> getReplyList(int commentId,int pageNum,int pageSize){
         return commentDao.selectReplyList(commentId);
     }
     /**
@@ -50,7 +50,7 @@ public class CommentService {
      * @author lidongming
      * @updateTime 2020/4/6 19:29
      */
-    public List<Comment> getCommentList(int itemId, int flag){
+    public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
         return commentDao.selectCommentList(itemId, flag);
     }
     /**
@@ -148,7 +148,7 @@ public class CommentService {
      * @author lidongming
      * @updateTime 2020/4/11 14:46
      */
-    public List<CommentNotice> selectCommentNotice(int userId){
+    public List<CommentNotice> selectCommentNotice(int userId,int pageNum,int pageSize){
         List<String> list=cacheService.lrange(RedisKeyUtil.getCommentNotice(userId));
         List<CommentNotice> commentNoticeList=new ArrayList<>();
         for(String string:list){
@@ -161,8 +161,8 @@ public class CommentService {
             }
             commentNotice.setAvatar(cacheService.hget(RedisKeyUtil.getUserInfo(commentNotice.getUserId()),"avatar"));
             commentNotice.setUserNickname(cacheService.hget(RedisKeyUtil.getUserInfo(commentNotice.getUserId()),"userNickname"));
-            commentNotice.setAvatar(cacheService.hget(RedisKeyUtil.getUserInfo(commentNotice.getUserId()),"avatar"));
         }
+        cacheService.set(RedisKeyUtil.getCommentNoticeUnread(2,userId),0);
         return commentNoticeList;
     }
 }

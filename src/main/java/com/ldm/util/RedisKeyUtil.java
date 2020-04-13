@@ -16,7 +16,7 @@ public class RedisKeyUtil {
     }
 
     /**
-     * @title 获取活动信息:userId
+     * @title 获取活动信息:userId,image
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/11 17:12 
@@ -26,7 +26,7 @@ public class RedisKeyUtil {
     }
     
     /**
-     * @title 获取动态信息:userId
+     * @title 获取动态信息:userId,image
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/11 17:16
@@ -46,6 +46,22 @@ public class RedisKeyUtil {
      * @updateTime 2020/4/11 15:51
      */
     public static String getCommentNoticeUnread(int flag,int userId){
-        return "comment:notice:unRead:"+flag+":"+userId;
+        return "notice:unread:"+flag+":"+userId;
+    }
+
+    public static String getDynamicLike(int dynamicId){
+        return "dynamic:like:"+dynamicId;
+    }
+    public static String getChatRecord(int userId,int toUserId){
+        return "chat:record:"+userId+":"+toUserId;
+    }
+    public static String limitFrequency(String type,int userId){
+        return "limit:frequency:"+type+":"+userId;
+    }
+    public static String followMe(int userId){
+        return "followMe:"+userId;
+    }
+    public static String meFollow(int userId){
+        return "meFollow:"+userId;
     }
 }

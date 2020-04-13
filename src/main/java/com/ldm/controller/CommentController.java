@@ -8,6 +8,7 @@ import com.ldm.service.CacheService;
 import com.ldm.service.CommentService;
 import com.ldm.util.JSONResult;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +20,7 @@ import java.util.List;
  * @Description TODO
  * @createTime 2020年04月04日 04:37:00
  */
+@Slf4j
 @RestController
 public class CommentController {
     @Autowired
@@ -34,7 +36,7 @@ public class CommentController {
     @Action(name = "获取评论列表")
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
-    public JSONResult getCommentList(int itemId,int flag){
+    public JSONResult getCommentList(int itemId,int flag,int pageNum,int pageSize){
         return JSONResult.success(commentService.getCommentList(itemId, flag));
     }
 
@@ -46,7 +48,7 @@ public class CommentController {
      */
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
-    public JSONResult getReplyList(int commentId){
+    public JSONResult getReplyList(int commentId,int pageNum,int pageSize){
         return JSONResult.success(commentService.getReplyList(commentId));
     }
 
@@ -57,7 +59,7 @@ public class CommentController {
      * @updateTime 2020/3/29 0:23
      */
     @Action(name = "发表评论")
-    @RequestMapping(value = "/comment/add",method = RequestMethod.POST,consumes = "application/json;charset=utf-8")
+    @PostMapping(value = "/comment/add")
     public JSONResult publishComment(@RequestBody PublishComment request){
         if (cacheService.limitFrequency("comment",request.getUserId())){
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
@@ -72,8 +74,9 @@ public class CommentController {
      * @updateTime 2020/3/29 0:29
      */
     @Action(name = "删除评论")
-    @DeleteMapping("/comment/delete")
+    @PostMapping("/comment/delete")
     public JSONResult deleteComment(int itemId,int flag,int commentId){
+        log.debug(itemId+" "+flag+" "+commentId);
         return commentService.deleteComment(itemId, flag, commentId)>0?JSONResult.success():JSONResult.fail("error");
     }
 
@@ -84,7 +87,7 @@ public class CommentController {
      * @updateTime 2020/3/29 0:23
      */
     @Action(name = "发表回复")
-    @PostMapping(value = "/reply/add",consumes = "application/json")
+    @PostMapping(value = "/reply/add")
     public JSONResult publishReply(@RequestBody PublishReply request){
 
         if (cacheService.limitFrequency("reply",request.getFromUserId())){
@@ -100,7 +103,7 @@ public class CommentController {
      * @updateTime 2020/3/29 0:28
      */
     @Action(name = "删除回复")
-    @DeleteMapping("/reply/delete")
+    @PostMapping("/reply/delete")
     public JSONResult deleteReply(int commentId,int replyId){
         return commentService.deleteReply(commentId, replyId)>0?JSONResult.success():JSONResult.fail("error");
     }
@@ -113,7 +116,7 @@ public class CommentController {
      */
     @Action(name = "获取评论通知")
     @GetMapping("/comment/notice")
-    public JSONResult getCommentNotice(int userId){
+    public JSONResult getCommentNotice(int userId,int pageNum,int pageSize){
         return JSONResult.success(commentService.selectCommentNotice(userId));
     }
 }
