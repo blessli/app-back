@@ -27,7 +27,7 @@ public class SearchController implements InitializingBean {
     @Action(name = "搜索活动")
     @GetMapping("/search")
     public JSONResult search(String keyword,int pageNum,int pageSize){
-        return JSONResult.success(searchService.searchActivity(keyword));
+        return JSONResult.success(searchService.searchActivity(keyword, pageNum, pageSize));
     }
 
     @Override

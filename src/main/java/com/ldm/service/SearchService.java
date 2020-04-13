@@ -21,6 +21,7 @@ import redis.clients.jedis.JedisPool;
 import com.ldm.entity.SearchResult;
 
 import java.util.*;
+
 @Slf4j
 @Service
 public class SearchService {
@@ -41,10 +42,10 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<SearchResult> searchActivity(String key) {
+    public List<SearchResult> searchActivity(String key, int pageNum, int pageSize) {
         Client client = esConfig.esTemplate();
-        BoolQueryBuilder boolQueryBuilder= QueryBuilders.boolQuery();
-        boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key,"activityName","locationName","userNickname"));
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+        boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key, "activityName", "locationName", "userNickname"));
 
         //搜索数据
         SearchResponse response = client.prepareSearch("app")
@@ -53,50 +54,50 @@ public class SearchService {
         SearchHits searchHits = response.getHits();
         System.out.println(searchHits.getTotalHits());
         List<SearchResult> list = new ArrayList<>();
-        for(SearchHit hit : searchHits) {
-            SearchResult entity=new SearchResult();
+        for (SearchHit hit : searchHits) {
+            SearchResult entity = new SearchResult();
             Map<String, Object> entityMap = hit.getSourceAsMap();
 
             //map to object
-            if(!CollectionUtils.isEmpty(entityMap)) {
-                if(!StringUtils.isEmpty(entityMap.get("activityId"))) {
+            if (!CollectionUtils.isEmpty(entityMap)) {
+                if (!StringUtils.isEmpty(entityMap.get("activityId"))) {
                     entity.setActivityId(Integer.valueOf(String.valueOf(entityMap.get("activityId"))));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("userId"))) {
+                if (!StringUtils.isEmpty(entityMap.get("userId"))) {
                     entity.setUserId(Integer.valueOf(String.valueOf(entityMap.get("userId"))));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("activityName"))) {
+                if (!StringUtils.isEmpty(entityMap.get("activityName"))) {
 
                     entity.setActivityName(String.valueOf(entityMap.get("activityName")));
                 }
-                if (!StringUtils.isEmpty(entityMap.get("activityType"))){
+                if (!StringUtils.isEmpty(entityMap.get("activityType"))) {
                     entity.setActivityType(String.valueOf(entityMap.get("activityType")));
                 }
-                if (!StringUtils.isEmpty(entityMap.get("locationName"))){
+                if (!StringUtils.isEmpty(entityMap.get("locationName"))) {
                     entity.setLocationName(String.valueOf(entityMap.get("locationName")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("publishTime"))) {
+                if (!StringUtils.isEmpty(entityMap.get("publishTime"))) {
                     entity.setPublishTime(String.valueOf(entityMap.get("publishTime")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("beginTime"))) {
+                if (!StringUtils.isEmpty(entityMap.get("beginTime"))) {
                     entity.setBeginTime(String.valueOf(entityMap.get("beginTime")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("endTime"))) {
+                if (!StringUtils.isEmpty(entityMap.get("endTime"))) {
                     entity.setEndTime(String.valueOf(entityMap.get("endTime")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("avatar"))) {
+                if (!StringUtils.isEmpty(entityMap.get("avatar"))) {
                     entity.setAvatar(String.valueOf(entityMap.get("avatar")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("userNickname"))) {
+                if (!StringUtils.isEmpty(entityMap.get("userNickname"))) {
                     entity.setUserNickname(String.valueOf(entityMap.get("userNickname")));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("viewCount"))) {
+                if (!StringUtils.isEmpty(entityMap.get("viewCount"))) {
                     entity.setViewCount(Integer.valueOf(String.valueOf(entityMap.get("viewCount"))));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("commentCount"))) {
+                if (!StringUtils.isEmpty(entityMap.get("commentCount"))) {
                     entity.setCommentCount(Integer.valueOf(String.valueOf(entityMap.get("commentCount"))));
                 }
-                if(!StringUtils.isEmpty(entityMap.get("images"))) {
+                if (!StringUtils.isEmpty(entityMap.get("images"))) {
                     entity.setImageList(Arrays.asList(String.valueOf(entityMap.get("images")).split(",")));
                 }
 
@@ -105,6 +106,7 @@ public class SearchService {
         }
         return list;
     }
+
     /**
      * @title 保存活动到es
      * @description
@@ -112,9 +114,10 @@ public class SearchService {
      * @updateTime 2020/4/6 16:20
      */
     public void saveActivity(PublishActivity publishActivity) {
-        SearchDomain searchDomain=new SearchDomain();
+        SearchDomain searchDomain = new SearchDomain();
         searchActivityDao.save(searchDomain);
     }
+
     /**
      * @title 删除es中的活动
      * @description
@@ -125,8 +128,8 @@ public class SearchService {
         searchActivityDao.deleteByActivityIdEquals(activityId);
     }
 
-    public SearchDomain change(PublishActivity publishActivity){
-        SearchDomain searchDomain=new SearchDomain();
+    public SearchDomain change(PublishActivity publishActivity) {
+        SearchDomain searchDomain = new SearchDomain();
         searchDomain.setCommentCount(0);
         searchDomain.setViewCount(0);
         searchDomain.setUserId(publishActivity.getUserId());
@@ -137,14 +140,15 @@ public class SearchService {
         searchDomain.setActivityName(publishActivity.getActivityName());
         return searchDomain;
     }
-    public void init(List<Activity> activityList){
-        Iterable<SearchDomain> iterable=searchActivityDao.findAll();
-        Iterator it=iterable.iterator();
-        while (it.hasNext()){
+
+    public void init(List<Activity> activityList) {
+        Iterable<SearchDomain> iterable = searchActivityDao.findAll();
+        Iterator it = iterable.iterator();
+        while (it.hasNext()) {
             searchActivityDao.delete((SearchDomain) it.next());
         }
-        for (Activity activity:activityList){
-            SearchDomain searchDomain=new SearchDomain();
+        for (Activity activity : activityList) {
+            SearchDomain searchDomain = new SearchDomain();
             searchDomain.setActivityName(activity.getActivityName());
             searchDomain.setActivityType(activity.getActivityType());
             searchDomain.setActivityId(activity.getActivityId());

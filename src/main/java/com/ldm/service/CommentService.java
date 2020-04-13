@@ -42,7 +42,7 @@ public class CommentService {
      * @updateTime 2020/4/6 19:28
      */
     public List<Reply> getReplyList(int commentId,int pageNum,int pageSize){
-        return commentDao.selectReplyList(commentId);
+        return commentDao.selectReplyList(commentId, pageSize* (pageNum - 1), pageSize);
     }
     /**
      * @title 获取评论列表
@@ -51,7 +51,7 @@ public class CommentService {
      * @updateTime 2020/4/6 19:29
      */
     public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
-        return commentDao.selectCommentList(itemId, flag);
+        return commentDao.selectCommentList(itemId, flag, pageSize* (pageNum - 1), pageSize);
     }
     /**
      * @title 发表评论

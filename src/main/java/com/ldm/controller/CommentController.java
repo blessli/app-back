@@ -27,6 +27,7 @@ public class CommentController {
     private CommentService commentService;
     @Autowired
     private CacheService cacheService;
+
     /**
      * @title 获取评论列表
      * @description 活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
@@ -36,8 +37,8 @@ public class CommentController {
     @Action(name = "获取评论列表")
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
-    public JSONResult getCommentList(int itemId,int flag,int pageNum,int pageSize){
-        return JSONResult.success(commentService.getCommentList(itemId, flag));
+    public JSONResult getCommentList(int itemId, int flag, int pageNum, int pageSize) {
+        return JSONResult.success(commentService.getCommentList(itemId, flag, pageNum, pageSize));
     }
 
     /**
@@ -48,8 +49,8 @@ public class CommentController {
      */
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
-    public JSONResult getReplyList(int commentId,int pageNum,int pageSize){
-        return JSONResult.success(commentService.getReplyList(commentId));
+    public JSONResult getReplyList(int commentId, int pageNum, int pageSize) {
+        return JSONResult.success(commentService.getReplyList(commentId, pageNum, pageSize));
     }
 
     /**
@@ -60,11 +61,11 @@ public class CommentController {
      */
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
-    public JSONResult publishComment(@RequestBody PublishComment request){
-        if (cacheService.limitFrequency("comment",request.getUserId())){
+    public JSONResult publishComment(@RequestBody PublishComment request) {
+        if (cacheService.limitFrequency("comment", request.getUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return commentService.publishComment(request)>0?JSONResult.success():JSONResult.fail("error");
+        return commentService.publishComment(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
     /**
@@ -75,9 +76,9 @@ public class CommentController {
      */
     @Action(name = "删除评论")
     @PostMapping("/comment/delete")
-    public JSONResult deleteComment(int itemId,int flag,int commentId){
-        log.debug(itemId+" "+flag+" "+commentId);
-        return commentService.deleteComment(itemId, flag, commentId)>0?JSONResult.success():JSONResult.fail("error");
+    public JSONResult deleteComment(int itemId, int flag, int commentId) {
+        log.debug(itemId + " " + flag + " " + commentId);
+        return commentService.deleteComment(itemId, flag, commentId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
     /**
@@ -88,12 +89,12 @@ public class CommentController {
      */
     @Action(name = "发表回复")
     @PostMapping(value = "/reply/add")
-    public JSONResult publishReply(@RequestBody PublishReply request){
+    public JSONResult publishReply(@RequestBody PublishReply request) {
 
-        if (cacheService.limitFrequency("reply",request.getFromUserId())){
+        if (cacheService.limitFrequency("reply", request.getFromUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
-        return commentService.publishReply(request)>0?JSONResult.success():JSONResult.fail("error");
+        return commentService.publishReply(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
     /**
@@ -104,8 +105,8 @@ public class CommentController {
      */
     @Action(name = "删除回复")
     @PostMapping("/reply/delete")
-    public JSONResult deleteReply(int commentId,int replyId){
-        return commentService.deleteReply(commentId, replyId)>0?JSONResult.success():JSONResult.fail("error");
+    public JSONResult deleteReply(int commentId, int replyId) {
+        return commentService.deleteReply(commentId, replyId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
     /**
@@ -116,7 +117,7 @@ public class CommentController {
      */
     @Action(name = "获取评论通知")
     @GetMapping("/comment/notice")
-    public JSONResult getCommentNotice(int userId,int pageNum,int pageSize){
-        return JSONResult.success(commentService.selectCommentNotice(userId));
+    public JSONResult getCommentNotice(int userId, int pageNum, int pageSize) {
+        return JSONResult.success(commentService.selectCommentNotice(userId, pageNum, pageSize));
     }
 }

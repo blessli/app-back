@@ -51,7 +51,7 @@ public class UserController {
     @Action(name = "获取该用户关注的用户列表")
     @GetMapping("/user/followed")
     public JSONResult getFollowedUserList(int userId,int pageNum,int pageSize){
-        return JSONResult.success(userService.getFollowedUserList(userId));
+        return JSONResult.success(userService.getFollowedUserList(userId, pageNum, pageSize));
     }
 
     /**
@@ -63,14 +63,14 @@ public class UserController {
     @Action(name = "获取关注该用户的用户列表")
     @GetMapping("/user/followMe")
     public JSONResult getFollowMeUserList(int userId,int pageNum,int pageSize){
-        return JSONResult.success(userService.getFollowMeUserList(userId));
+        return JSONResult.success(userService.getFollowMeUserList(userId, pageNum, pageSize));
     }
 
     @Action(name = "获取关注该用户的用户列表通知")
     @GetMapping("/user/followMe/notice")
     public JSONResult getFollowMeNoticeList(int userId,int pageNum,int pageSize){
         cacheService.set(RedisKeyUtil.getCommentNoticeUnread(3,userId),0);
-        return JSONResult.success(userService.getFollowMeUserList(userId));
+        return JSONResult.success(userService.getFollowMeUserList(userId, pageNum, pageSize));
     }
 
     @Action(name = "关注用户")

@@ -105,7 +105,7 @@ public class UserService{
      * @author lidongming
      * @updateTime 2020/4/10 17:12
      */
-    public List<SimpleUserInfo> getFollowedUserList(int userId){
+    public List<SimpleUserInfo> getFollowedUserList(int userId, int pageNum,int pageSize){
         return userDao.getFollowedUserList(userId);
     }
 
@@ -115,8 +115,8 @@ public class UserService{
      * @author lidongming
      * @updateTime 2020/4/10 17:15
      */
-    public List<SimpleUserInfo> getFollowMeUserList(int userId){
-        return userDao.getFollowMeUserList(userId);
+    public List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize){
+        return userDao.getFollowMeUserList(userId, pageSize * (pageNum - 1), pageSize);
     }
     public List<SimpleUserInfo> selectSimpleUserInfo(){
         return userDao.selectSimpleUserInfo();
