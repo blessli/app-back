@@ -26,7 +26,7 @@ public class ActivityController {
      * @updateTime 2020/3/28 23:57
      */
     @Action(name = "发表活动")
-    @PostMapping(value = "/activity/add",consumes = "application/json")
+    @PostMapping(value = "/activity/add")
     public JSONResult publishActivity(@RequestBody PublishActivity request){
         log.info("发表活动");
         if (cacheService.limitFrequency("activity",request.getUserId())){
@@ -44,7 +44,7 @@ public class ActivityController {
      * @updateTime 2020/3/29 0:32
      */
     @Action(name = "删除活动")
-    @DeleteMapping("/activity/delete")
+    @PostMapping("/activity/delete")
     public JSONResult deleteActivity(int activityId){
         int ans=activityService.deleteActivity(activityId);
         return ans>0?JSONResult.success():JSONResult.fail("error");
@@ -58,14 +58,14 @@ public class ActivityController {
      */
     @Action(name = "获取活动列表-最新发表")
     @GetMapping("/activities/byTime")
-    public JSONResult getActivityListByTime(){
-        return JSONResult.success(activityService.selectActivityListByTime());
+    public JSONResult getActivityListByTime(int pageNum,int pageSize){
+        return JSONResult.success(activityService.selectActivityListByTime(pageNum,pageSize));
     }
 
     @Action(name = "获取我申请加入的活动")
     @GetMapping("/activities/tryJoined")
-    public JSONResult getMyActivityList(int userId){
-        return JSONResult.success(activityService.selectMyActivityList(userId));
+    public JSONResult getMyActivityList(int userId,int pageNum,int pageSize){
+        return JSONResult.success(activityService.selectMyActivityList(userId,pageNum,pageSize));
     }
 
     /**
@@ -76,8 +76,8 @@ public class ActivityController {
      */
     @Action(name = "获取我发表的活动列表")
     @GetMapping("/activities/createdByMe")
-    public JSONResult getActivityCreatedByMe(int userId){
-        return JSONResult.success(activityService.selectActivityCreatedByMe(userId));
+    public JSONResult getActivityCreatedByMe(int userId,int pageNum,int pageSize){
+        return JSONResult.success(activityService.selectActivityCreatedByMe(userId,pageNum,pageSize));
     }
     /**
      * @title 获取活动详情
@@ -87,8 +87,8 @@ public class ActivityController {
      */
     @Action(name = "获取活动详情")
     @GetMapping("/activity/detail")
-    public JSONResult getActivityDetail(int activityId,int userId){
-        return JSONResult.success(activityService.selectActivityDetail(activityId, userId));
+    public JSONResult getActivityDetail(int activityId,int userId,int pageNum,int pageSize){
+        return JSONResult.success(activityService.selectActivityDetail(activityId, userId,pageNum,pageSize));
     }
     /**
      * @title 用户申请加入活动
@@ -109,8 +109,26 @@ public class ActivityController {
      * @updateTime 2020/4/10 18:06
      */
     @Action(name = "用户取消申请加入活动")
-    @DeleteMapping("/activity/cancelJoin")
+    @PostMapping("/activity/cancelJoin")
     public JSONResult cancelJoinActivity(int activityId,int userId){
+        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
+    }
+
+    @Action(name = "获取申请通知")
+    @GetMapping("/activity/notice")
+    public JSONResult getActivityApplyList(int userId,int pageNum,int pageSize){
+        return JSONResult.success(activityService.selectActivityApplyList(userId,pageNum,pageSize));
+    }
+
+    @Action(name = "同意用户加入活动")
+    @PostMapping("/activity/agreeJoin")
+    public JSONResult agreeJoinActivity(int activityId,int userId){
+        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
+    }
+
+    @Action(name = "不同意用户加入活动")
+    @PostMapping("/activity/disagreeJoin")
+    public JSONResult disagreeJoinActivity(int activityId,int userId){
         return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
     }
 }

@@ -1,7 +1,6 @@
 package com.ldm.controller;
 import com.ldm.aop.Action;
 import com.ldm.entity.DynamicDetail;
-import com.ldm.entity.LikeNotice;
 import com.ldm.request.PublishDynamic;
 import com.ldm.service.CacheService;
 import com.ldm.service.CommentService;
@@ -10,7 +9,6 @@ import com.ldm.util.JSONResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 
 @RestController
 public class DynamicController {
@@ -30,7 +28,7 @@ public class DynamicController {
         return dynamicService.publish(request)>0?JSONResult.success():JSONResult.fail("error");
     }
     @Action(name = "删除动态")
-    @DeleteMapping("/dynamic/delete")
+    @PostMapping("/dynamic/delete")
     public JSONResult deleteDynamic(int dynamicId){
         return dynamicService.deleteDynamic(dynamicId)>0?JSONResult.success():JSONResult.fail("error");
     }
@@ -42,14 +40,14 @@ public class DynamicController {
      */
     @Action(name = "获取所有动态")
     @GetMapping("/dynamics/byTime")
-    public JSONResult getDynamicList(int userId){
-        return JSONResult.success(dynamicService.selectDynamicList(userId));
+    public JSONResult getDynamicList(int userId,int pageNum,int pageSize){
+        return JSONResult.success(dynamicService.selectDynamicList(userId,pageNum,pageSize));
     }
 
     @Action(name = "获取我的动态")
     @GetMapping("/dynamics/my")
-    public JSONResult getMyDynamicList(int userId){
-        return JSONResult.success(dynamicService.selectMyDynamicList(userId));
+    public JSONResult getMyDynamicList(int userId,int pageNum,int pageSize){
+        return JSONResult.success(dynamicService.selectMyDynamicList(userId,pageNum,pageSize));
     }
     @Action(name = "点赞动态")
     @PostMapping("/dynamic/like")
@@ -58,23 +56,23 @@ public class DynamicController {
         return JSONResult.success();
     }
     @Action(name = "取消点赞动态")
-    @DeleteMapping("/dynamic/cancelLike")
+    @PostMapping("/dynamic/cancelLike")
     public JSONResult cancelLikeDynamic(int dynamicId,int userId){
         dynamicService.cancelLikeDynamic(dynamicId,userId);
         return JSONResult.success();
     }
     @Action(name = "获取动态详情")
     @GetMapping("/dynamic/detail")
-    public JSONResult getDynamicDetail(int dynamicId,int userId){
+    public JSONResult getDynamicDetail(int dynamicId,int userId,int pageNum,int pageSize){
         DynamicDetail dynamicDetail=dynamicService.selectDynamicDetail(dynamicId, userId);
-        dynamicDetail.setCommentList(commentService.getCommentList(dynamicId,1));
+        dynamicDetail.setCommentList(commentService.getCommentList(dynamicId,1,pageNum,pageSize));
         return JSONResult.success(dynamicDetail);
     }
 
     @Action(name = "获取动态点赞通知")
     @GetMapping("/dynamic/likeNotice")
-    public JSONResult selectLikeNotice(int userId){
-        return JSONResult.success(dynamicService.selectLikeNotice(userId));
+    public JSONResult selectLikeNotice(int userId,int pageNum,int pageSize){
+        return JSONResult.success(dynamicService.selectLikeNotice(userId,pageNum,pageSize));
     }
 
 }

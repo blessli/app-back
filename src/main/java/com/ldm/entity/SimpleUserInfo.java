@@ -13,4 +13,5 @@ public class SimpleUserInfo {
     private int userId;
     private String avatar;
     private String userNickname;
+    private String publishTime;// 用于获取关注通知
 }

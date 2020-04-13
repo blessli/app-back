@@ -121,8 +121,8 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:21
      */
-    public void deleteActivity(SearchDomain searchDomain) {
-        searchActivityDao.delete(searchDomain);
+    public void deleteActivity(int activityId) {
+        searchActivityDao.deleteByActivityIdEquals(activityId);
     }
 
     public SearchDomain change(PublishActivity publishActivity){

@@ -2,6 +2,7 @@ package com.ldm.service;
 
 import com.ldm.dao.ActivityDao;
 import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityApply;
 import com.ldm.entity.ActivityDetail;
 import com.ldm.entity.MyActivity;
 import com.ldm.netty.SocketClientComponent;
@@ -36,10 +37,13 @@ public class ActivityService {
     private CacheService cacheService;
 
     @Autowired
+    private SearchService searchService;
+
+    @Autowired
     private SocketClientComponent socketClientComponent;
     /**
      * @title 用户发布活动
-     * @description 
+     * @description 将发布的活动添加到es,redis中需要保存某些基本信息
      * @author lidongming 
      * @updateTime 2020/4/4 4:52 
      */
@@ -48,28 +52,38 @@ public class ActivityService {
         if (ans<=0) {
             return ans;
         }
-        log.info("发布活动成功,活动ID为 "+request.getActivityId());
+        log.debug("发布活动成功,活动ID为 "+request.getActivityId());
+        searchService.saveActivity(request);
+        List<String> imageList= Arrays.asList(request.getImages().split(","));
+        cacheService.hset(RedisKeyUtil.getActivityInfo(request.getActivityId()),"userId",String.valueOf(request.getUserId()));
+        cacheService.hset(RedisKeyUtil.getActivityInfo(request.getActivityId()),"image",imageList.get(0));
         return ans;
     }
 
     /**
      * @title 用户删除活动
-     * @description 使用分布式锁和事务
+     * @description 使用分布式锁和事务,删除活动需要删干净!!!
      * @author lidongming 
      * @updateTime 2020/4/4 4:52 
      */
     @Transactional
     public int deleteActivity(int activityId){
+        int ans=activityDao.deleteActivity(activityId);
+        if(ans<=0) {
+            return ans;
+        }
         cacheService.mdel("activity:"+activityId);
-        return activityDao.deleteActivity(activityId);
+        cacheService.delete(RedisKeyUtil.getActivityInfo(activityId));
+        searchService.deleteActivity(activityId);
+        return ans;
     }
 
     /**
      * 获取最新发布的活动
      * @return
      */
-    public List<Activity> selectActivityListByTime(){
-        List<Activity> activityList=activityDao.selectActivityListByTime();
+    public List<Activity> selectActivityListByTime(int pageNum,int pageSize){
+        List<Activity> activityList=activityDao.selectActivityListByTime(pageNum, pageSize);
         for(Activity activity:activityList){
             List<String> list= Arrays.asList(activity.getImages().split(","));
             activity.setImageList(list);
@@ -83,12 +97,12 @@ public class ActivityService {
      * @author lidongming 
      * @updateTime 2020/4/4 5:01 
      */
-    public ActivityDetail selectActivityDetail(int activityId,int userId){
+    public ActivityDetail selectActivityDetail(int activityId,int userId,int pageNum,int pageSize){
         clickActivityDetail(activityId, userId);
         ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId, userId);
         List<String> list=Arrays.asList(activityDetail.getImages().split(","));
         activityDetail.setImageList(list);
-        activityDetail.setActivityCommentList(commentService.getCommentList(activityId,0));
+        activityDetail.setActivityCommentList(commentService.getCommentList(activityId,0,pageNum,pageSize));
         return activityDetail;
     }
 
@@ -98,8 +112,8 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/10 20:59
      */
-    public List<Activity> selectActivityCreatedByMe(int userId){
-        List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId);
+    public List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize){
+        List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum,pageSize);
         for (Activity activity:activityList){
             List<String> list= Arrays.asList(activity.getImages().split(","));
             activity.setImageList(list);
@@ -113,8 +127,8 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/10 21:14
      */
-    public List<MyActivity> selectMyActivityList(int userId){
-        List<MyActivity> myActivityList=activityDao.selectMyActivityList(userId);
+    public List<MyActivity> selectMyActivityList(int userId,int pageNum,int pageSize){
+        List<MyActivity> myActivityList=activityDao.selectMyActivityList(userId, pageNum, pageSize);
         for (MyActivity myActivity:myActivityList){
             List<String> list= Arrays.asList(myActivity.getImage().split(","));
             myActivity.setImage(list.get(0));
@@ -195,6 +209,17 @@ public class ActivityService {
      */
     public int disagreeJoinActiviy(int activityId,int userId){
         return activityDao.disagreeJoinActivity(activityId, userId);
+    }
+
+    /**
+     * @title 获取该用户发表的活动接收到的申请通知
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/12 0:27 
+     */
+    public List<ActivityApply> selectActivityApplyList(int userId,int pageNum,int pageSize){
+        cacheService.set(RedisKeyUtil.getCommentNoticeUnread(0,userId),0);
+        return activityDao.selectActivityApplyList(userId,pageNum,pageSize);
     }
 
 }

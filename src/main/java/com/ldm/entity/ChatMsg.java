@@ -15,4 +15,5 @@ public class ChatMsg {
     private String publishTime;
     private String toAvatar;
     private String toUserNickname;
+    private int unReadCount;
 }

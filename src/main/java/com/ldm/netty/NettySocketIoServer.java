@@ -115,13 +115,13 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
         }
 		int ans=chatDao.sendMsg(Integer.valueOf(userId),msg,Integer.valueOf(toUserId),publishTime,msgFlag);
 		if(ans>0){
-		    log.info(userId+"给"+toUserId+"发送聊天信息成功");
+		    log.debug(userId+"给"+toUserId+"发送聊天信息成功");
             Map<String,Object> map=new HashMap<>();
             map.put("userId",userId);
             map.put("msg",msg);
             map.put("publishTime",publishTime);
             socketClientComponent.send(toUserId,"chatPage","receiveMsg",map);
-            log.info("发送成功");
+            log.debug("发送成功");
         }else {
 		    log.error(userId+"给"+toUserId+"发送聊天信息失败");
         }

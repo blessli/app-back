@@ -110,4 +110,6 @@ public interface DynamicDao {
             "LEFT JOIN t_user ON t_user.user_id=t.user_id\n" +
             "INNER JOIN t_dynamic ON t_dynamic.dynamic_id=t.dynamic_id AND t_dynamic.user_id=#{userId}")
     List<LikeNotice> selectLikeNotice(int userId);
+    @Select("select * from t_dynamic")
+    List<Dynamic> selectAllDynamic();
 }
