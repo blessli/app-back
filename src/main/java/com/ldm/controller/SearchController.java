@@ -5,11 +5,13 @@ import com.ldm.entity.Activity;
 import com.ldm.service.ActivityService;
 import com.ldm.service.SearchService;
 import com.ldm.util.JSONResult;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 public class SearchController implements InitializingBean {
     @Autowired
@@ -27,6 +29,8 @@ public class SearchController implements InitializingBean {
     @Action(name = "搜索活动")
     @GetMapping("/search")
     public JSONResult search(String keyword,int pageNum,int pageSize){
+
+        log.info("获取搜索词 {} 的第 {} 页", keyword, pageNum);
         return JSONResult.success(searchService.searchActivity(keyword, pageNum, pageSize));
     }
 

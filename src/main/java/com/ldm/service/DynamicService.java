@@ -148,6 +148,7 @@ public class DynamicService {
      */
     public List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize) {
         cacheService.set(RedisKeyUtil.getCommentNoticeUnread(1, userId), 0);
+
         return dynamicDao.selectLikeNotice(userId, pageSize *(pageNum -1 ), pageSize);
     }
 }

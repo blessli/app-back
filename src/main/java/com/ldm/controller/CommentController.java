@@ -38,6 +38,11 @@ public class CommentController {
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
     public JSONResult getCommentList(int itemId, int flag, int pageNum, int pageSize) {
+        if (flag == 0) {
+            log.info("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
+        } else {
+            log.info("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
+        }
         return JSONResult.success(commentService.getCommentList(itemId, flag, pageNum, pageSize));
     }
 
@@ -50,6 +55,7 @@ public class CommentController {
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
     public JSONResult getReplyList(int commentId, int pageNum, int pageSize) {
+        log.info("获取评论 {} 的回复列表，当前页为：{}", commentId, pageNum);
         return JSONResult.success(commentService.getReplyList(commentId, pageNum, pageSize));
     }
 
@@ -62,6 +68,7 @@ public class CommentController {
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
     public JSONResult publishComment(@RequestBody PublishComment request) {
+        log.info("用户 {} 给用户 {} 发表评论", request.getUserId(), request.getToUserId());
         if (cacheService.limitFrequency("comment", request.getUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
@@ -77,7 +84,11 @@ public class CommentController {
     @Action(name = "删除评论")
     @PostMapping("/comment/delete")
     public JSONResult deleteComment(int itemId, int flag, int commentId) {
-        log.debug(itemId + " " + flag + " " + commentId);
+        if(flag == 0){
+            log.info("删除活动 {} 的评论 {}", itemId, commentId);
+        }else {
+            log.info("删除动态 {} 的评论 {}", itemId, commentId);
+        }
         return commentService.deleteComment(itemId, flag, commentId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
@@ -91,9 +102,12 @@ public class CommentController {
     @PostMapping(value = "/reply/add")
     public JSONResult publishReply(@RequestBody PublishReply request) {
 
+        log.info("用户 {} 给 {} 回复评论", request.getFromUserId(), request.getToUserId());
         if (cacheService.limitFrequency("reply", request.getFromUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
+
+        //操作过于频繁后在redis是否应该设置一个过期时间，使用户在相应时间后能继续操作
         return commentService.publishReply(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
@@ -106,6 +120,7 @@ public class CommentController {
     @Action(name = "删除回复")
     @PostMapping("/reply/delete")
     public JSONResult deleteReply(int commentId, int replyId) {
+        log.info("删除评论 {} 的回复 {}", commentId, replyId);
         return commentService.deleteReply(commentId, replyId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
@@ -118,6 +133,7 @@ public class CommentController {
     @Action(name = "获取评论通知")
     @GetMapping("/comment/notice")
     public JSONResult getCommentNotice(int userId, int pageNum, int pageSize) {
+        log.info("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(commentService.selectCommentNotice(userId, pageNum, pageSize));
     }
 }

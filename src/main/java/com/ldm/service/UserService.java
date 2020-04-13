@@ -64,6 +64,7 @@ public class UserService{
 
         return loginCredential;
     }
+
     /**
      * @title 获取接口调用凭证
      * @description 获取小程序全局唯一后台接口调用凭据（access_token）。调用绝大多数后台接口时都需使用 access_token，开发者需要进行妥善保存。
@@ -96,9 +97,11 @@ public class UserService{
         System.out.println(accessToken);
         return accessToken;
     }
+
     public int addUserInfo(UserInfo userInfo){
         return 0;
     }
+
     /**
      * @title 获取该用户关注的用户列表
      * @description
@@ -118,6 +121,7 @@ public class UserService{
     public List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize){
         return userDao.getFollowMeUserList(userId, pageSize * (pageNum - 1), pageSize);
     }
+
     public List<SimpleUserInfo> selectSimpleUserInfo(){
         return userDao.selectSimpleUserInfo();
     }
