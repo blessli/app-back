@@ -108,6 +108,12 @@ public class RedisKeys {
         return "feed:dynamic:send:"+userId;
     }
 
+    /**
+     * @title 
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/14 19:42 
+     */
     public static String allDynamic(int dynamicId){
         return "dynamic:"+dynamicId;
     }

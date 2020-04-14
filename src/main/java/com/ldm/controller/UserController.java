@@ -43,8 +43,8 @@ public class UserController {
     public JSONResult getUserProfile(int userId) {
         Jedis jedis=jedisPool.getResource();
         UserProfile userProfile=new UserProfile();
-        userProfile.setAvatar(jedis.hget(RedisKeys.getUserInfo(userId),"avatar"));
-        userProfile.setUserNickname(jedis.hget(RedisKeys.getUserInfo(userId),"userNickname"));
+        userProfile.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
+        userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
         userProfile.setFanCount(jedis.zcard(RedisKeys.followMe(userId)));
         userProfile.setFocusCount(jedis.zcard(RedisKeys.meFollow(userId)));
         return JSONResult.success();
@@ -80,7 +80,7 @@ public class UserController {
     public JSONResult getFollowMeNoticeList(int userId,int pageNum,int pageSize){
         log.debug("获取用户 {} 的关注通知", userId);
         Jedis jedis=jedisPool.getResource();
-        jedis.set(RedisKeys.getCommentNoticeUnread(3,userId),"0");
+        jedis.set(RedisKeys.commentNoticeUnread(3,userId),"0");
         returnToPool(jedis);
         //应该判断从redis有没有获取到相应的数据。没有的话应该从数据库获取，获取到后再存入redis，同时设置过期时间
         return JSONResult.success(userService.getFollowMeUserList(userId, pageNum, pageSize));

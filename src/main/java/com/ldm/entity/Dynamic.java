@@ -15,7 +15,7 @@ public class Dynamic {
     private String images;// 图片列表，数据库中以逗号分开
     private List<String> imageList;// 返回给前端的图片列表是一个list
     private String publishLocation;// 发表地点
-    private int isLike;// 是否已经点赞，正数为已赞，-1为未点赞
+    private int isLike;// 是否已经点赞，正数为已赞，-1为未点赞,直接从redis中读取
     private int likeCount;// 点赞量
     private int commentCount;// 评论量
 }

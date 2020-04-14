@@ -116,7 +116,7 @@ public class UserService{
      * @updateTime 2020/4/10 17:15
      */
     public List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize){
-        return userDao.getFollowMeUserList(userId, pageSize * (pageNum - 1), pageSize);
+        return userDao.getFollowMeUserList(userId, pageSize * pageSize, pageSize);
     }
     public List<SimpleUserInfo> selectSimpleUserInfo(){
         return userDao.selectSimpleUserInfo();

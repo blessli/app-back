@@ -14,7 +14,7 @@ import java.util.List;
 public interface ActivityDao {
     /**
      * @title 发表活动
-     * @description
+     * @description 返回activityId
      * @author lidongming
      * @updateTime 2020/4/4 4:29
      */
@@ -42,25 +42,21 @@ public interface ActivityDao {
     int deleteActivity(int activityId);
 
     /**
-    *@Author: ggh
-    *@Description: 获取最新发布的活动
-    *@DATE: 2020/4/13 11:36
-    *@Param: [pageNum, pageSize] :起始页数，页面大小
-    *@return: java.util.List<com.ldm.entity.Activity>
-    **/
-    @Select("SELECT t_activity.*,t_user.avatar,t_user.user_nickname FROM t_activity\n" +
-            "LEFT JOIN t_user ON t_activity.user_id=t_user.user_id ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
+     * @title 获取最新发布的活动
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/14 19:34
+     */
     List<Activity> selectActivityListByTime(int pageNum,int pageSize);
 
 
 
     /**
-    *@Author: ggh
-    *@Description: 获取该用户申请加入的活动
-    *@DATE: 2020/4/13 11:37
-    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
-    *@return: java.util.List<com.ldm.entity.MyActivity>
-    **/
+     * @title 获取该用户申请加入的活动
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/14 19:36
+     */
     @Select("SELECT t.activity_id,t.`status`,tt.activity_name,tt.begin_time,tt.end_time,tt.images as image,tt.location_name\n" +
             ",tt.member_count,tt.publish_time FROM t_activity_join_request t\n" +
             "LEFT JOIN t_activity tt ON tt.activity_id=t.activity_id\n" +
@@ -69,12 +65,11 @@ public interface ActivityDao {
 
 
     /**
-    *@Author: ggh
-    *@Description: 获取我发布的活动列表
-    *@DATE: 2020/4/13 11:38
-    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
-    *@return: java.util.List<com.ldm.entity.Activity>
-    **/
+     * @title 获取我发布的活动列表
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/14 19:37
+     */
     @Select("SELECT t_activity.*,avatar,user_nickname FROM t_activity\n" +
             "LEFT JOIN t_user ON t_user.user_id=t_activity.user_id\n" +
             "WHERE t_activity.user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
@@ -89,7 +84,7 @@ public interface ActivityDao {
     @Select("SELECT t_activity.*,avatar,user_nickname,IFNULL((SELECT t.`status` FROM t_activity_join_request t\n" +
             "WHERE t.activity_id=#{activityId} AND t.user_id=#{userId}),-1) AS is_joined FROM t_activity,t_user\n" +
             "WHERE t_activity.activity_id=#{activityId} AND t_user.user_id=#{userId}")
-    ActivityDetail selectActivityDetail(int activityId,int userId);
+    ActivityDetail selectActivityDetail(int activityId);
 
     /**
      * @title 用户第一次点击该活动,浏览量+1
@@ -146,16 +141,22 @@ public interface ActivityDao {
     int disagreeJoinActivity(int activityId,int userId);
 
     /**
-    *@Author: ggh
-    *@Description: 获取该用户发表的活动接收到的申请通知
-    *@DATE: 2020/4/13 11:40
-    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
-    *@return: java.util.List<com.ldm.entity.ActivityApply>
-    **/
+     * @title 获取该用户发表的活动接收到的申请通知
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/14 19:38
+     */
     @Select("SELECT t.user_id,t.activity_id,t.publish_time,t.`status`,avatar,user_nickname,tt.activity_name FROM t_activity_join_request t\n" +
             "LEFT JOIN t_user ON t_user.user_id=t.user_id\n" +
             "INNER JOIN (SELECT t_activity.activity_id,activity_name \n" +
             "FROM t_activity WHERE t_activity.user_id=#{userId}) tt ON t.activity_id=tt.activity_id LIMIT #{pageNum}, #{pageSize}")
     List<ActivityApply> selectActivityApplyList(int userId,int pageNum,int pageSize);
 
+    /**
+     * @title 根据es查询出来的activityId列表,在mysql中查询
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/14 17:18
+     */
+    List<Activity> selectActivityListByEs(List<Integer> activityIdList);
 }

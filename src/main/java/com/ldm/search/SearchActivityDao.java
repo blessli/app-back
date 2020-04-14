@@ -1,5 +1,4 @@
-package com.ldm.dao;
-import com.ldm.entity.SearchDomain;
+package com.ldm.search;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.stereotype.Component;
 

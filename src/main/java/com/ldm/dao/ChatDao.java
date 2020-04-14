@@ -32,7 +32,7 @@ public interface ChatDao {
     /**
      * @title 获取用户的聊天情况
      * @description 与哪些人聊过天,并展示最新的一条消息
-     * @author lidongming
+     * @author ggh
      * @updateTime 2020/4/7 23:35
      */
     @Select("SELECT t.uid to_user_id,t.msg,t.publish_time,u.user_nickname as to_user_nickname,u.avatar as to_avatar,IFNULL(un_read_count,0) AS un_read_count from (\n" +

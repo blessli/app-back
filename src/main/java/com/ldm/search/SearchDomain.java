@@ -1,4 +1,4 @@
-package com.ldm.entity;
+package com.ldm.search;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;
@@ -10,19 +10,12 @@ import org.springframework.data.elasticsearch.annotations.Field;
 public class SearchDomain {
     @Id
     private Integer activityId;
-    private Integer userId;
     @Field(analyzer = "ik_max_word")
     private String activityName;
+    @Field(analyzer = "ik_max_word")
     private String activityType;
     @Field(analyzer = "ik_max_word")
     private String locationName;
-    private String publishTime;
-    private String beginTime;
-    private String endTime;
-    private Integer viewCount;
-    private Integer commentCount;
     @Field(analyzer = "ik_max_word")
     private String userNickname;
-    private String images;
-    private String avatar;
 }

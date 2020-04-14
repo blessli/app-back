@@ -47,7 +47,7 @@ public class CommentService {
      * @updateTime 2020/4/6 19:28
      */
     public List<Reply> getReplyList(int commentId,int pageNum,int pageSize){
-        return commentDao.selectReplyList(commentId, pageSize* (pageNum - 1), pageSize);
+        return commentDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
     }
     /**
      * @title 获取评论列表
@@ -56,7 +56,7 @@ public class CommentService {
      * @updateTime 2020/4/6 19:29
      */
     public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
-        return commentDao.selectCommentList(itemId, flag, pageSize* (pageNum - 1), pageSize);
+        return commentDao.selectCommentList(itemId, flag, pageSize*pageSize, pageSize);
     }
     /**
      * @title 发表评论
@@ -157,7 +157,7 @@ public class CommentService {
      */
     public List<CommentNotice> selectCommentNotice(int userId,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<String> list=jedis.lrange(RedisKeys.commentNotice(userId),pageNum,pageSize);
+        List<String> list=jedis.lrange(RedisKeys.commentNotice(userId),pageNum*pageSize,pageSize);
         List<CommentNotice> commentNoticeList=new ArrayList<>();
         for(String string:list){
             CommentNotice commentNotice=JsonUtil.stringToBean(string,CommentNotice.class);

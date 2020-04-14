@@ -75,10 +75,16 @@ public class DynamicService {
         for(String string:set){
             dynamicIdList.add(Integer.valueOf(string));
         }
-        List<Dynamic> dynamicList = dynamicDao.selectDynamicList(userId, pageSize * (pageNum - 1), pageSize);
+        List<Dynamic> dynamicList = dynamicDao.selectDynamicList(dynamicIdList, pageNum*pageSize, pageSize);
         for (Dynamic dynamic : dynamicList) {
             List<String> list = Arrays.asList(dynamic.getImages().split(","));
             dynamic.setImageList(list);
+            // 用户是否点赞,从redis中读取,1为已赞,0为未赞
+            if (jedis.sismember(RedisKeys.likeDynamic(dynamic.getDynamicId()),""+userId)){
+                dynamic.setIsLike(1);
+            }else{
+                dynamic.setIsLike(0);
+            }
         }
         return dynamicList;
     }
@@ -90,7 +96,7 @@ public class DynamicService {
      * @updateTime 2020/4/10 16:49
      */
     public List<Dynamic> selectMyDynamicList(int userId, int pageNum, int pageSize) {
-        List<Dynamic> dynamicList = dynamicDao.selectMyDynamicList(userId, pageSize * (pageNum - 1), pageSize);
+        List<Dynamic> dynamicList = dynamicDao.selectDynamicCreatedByMeList(userId, pageNum*pageSize, pageSize);
         for (Dynamic dynamic : dynamicList) {
             List<String> list = Arrays.asList(dynamic.getImages().split(","));
             dynamic.setImageList(list);
@@ -105,7 +111,11 @@ public class DynamicService {
      * @updateTime 2020/4/10 20:57
      */
     public DynamicDetail selectDynamicDetail(int dynamicId, int userId) {
-        DynamicDetail dynamicDetail = dynamicDao.selectDynamicDetail(dynamicId, userId);
+        Jedis jedis=jedisPool.getResource();
+        DynamicDetail dynamicDetail = dynamicDao.selectDynamicDetail(dynamicId);
+        dynamicDetail.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId));
+        dynamicDetail.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
+        dynamicDetail.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
         List<String> list = Arrays.asList(dynamicDetail.getImages().split(","));
         dynamicDetail.setImageList(list);
         return dynamicDetail;
@@ -133,52 +143,35 @@ public class DynamicService {
     }
 
     /**
-     * @title 点赞动态
+     * @title 点赞或取消点赞动态
      * @description
      * @author lidongming
      * @updateTime 2020/4/8 1:48
      */
     public int likeDynamic(int dynamicId, int userId) {
         Jedis jedis=jedisPool.getResource();
-        String key = RedisKeys.likeDynamic(dynamicId);
-        jedis.sadd(RedisKeys.allDynamic(dynamicId), key);// 为了方便清理
-        if (!jedis.sismember(key,""+userId) && dynamicDao.checkLiked(dynamicId, userId) == 0) {
-            dynamicDao.likeDynamic(dynamicId, userId,
-                    jedis.hget(RedisKeys.dynamicInfo(dynamicId),"image"));
-            jedis.sadd(key,userId+"");
+        if (jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId)){
+            log.debug("用户 {} 取消给动态 {} 点赞", userId, dynamicId);
+            jedis.srem(RedisKeys.likeDynamic(dynamicId),""+userId);
+        }else{
+            log.debug("用户 {} 给动态 {} 点赞", userId, dynamicId);
+            jedis.sadd(RedisKeys.likeDynamic(dynamicId),""+userId);
         }
         returnToPool(jedis);
         return 1;
     }
-
     /**
-     * @title 取消点赞动态
-     * @description 取消给动态点赞
-     * @author lidongming
-     * @updateTime 2020/4/8 1:48
-     */
-    public int cancelLikeDynamic(int dynamicId, int userId) {
-        Jedis jedis=jedisPool.getResource();
-        String key = RedisKeys.likeDynamic(dynamicId);
-        if (jedis.exists(key) || dynamicDao.checkLiked(dynamicId, userId) > 0) {
-            dynamicDao.cancelLikeDynamic(dynamicId, userId);
-            jedis.del(key);
-        }
-        returnToPool(jedis);
-        return 1;
-    }
-
-    /**
-     * @title 点赞通知
+     * @title 获取点赞通知列表
      * @description
      * @author lidongming
      * @updateTime 2020/4/11 22:38
      */
     public List<LikeNotice> selectLikeNotice(int userId,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
+        // 点赞未读数清零
         jedis.set(RedisKeys.commentNoticeUnread(1,userId),"0");
         returnToPool(jedis);
-        return dynamicDao.selectLikeNotice(userId,pageNum,pageSize);
+        return dynamicDao.selectLikeNotice(userId,pageNum*pageSize,pageSize);
     }
 
     /**

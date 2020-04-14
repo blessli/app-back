@@ -61,13 +61,6 @@ public class DynamicController {
         dynamicService.likeDynamic(dynamicId,userId);
         return JSONResult.success();
     }
-    @Action(name = "取消点赞动态")
-    @PostMapping("/dynamic/cancelLike")
-    public JSONResult cancelLikeDynamic(int dynamicId,int userId){
-        log.debug("用户 {} 取消给动态 {} 点赞", userId, dynamicId);
-        dynamicService.cancelLikeDynamic(dynamicId,userId);
-        return JSONResult.success();
-    }
     @Action(name = "获取动态详情")
     @GetMapping("/dynamic/detail")
     public JSONResult getDynamicDetail(int dynamicId,int userId,int pageNum,int pageSize){

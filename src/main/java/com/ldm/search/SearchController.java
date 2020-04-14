@@ -1,9 +1,8 @@
-package com.ldm.controller;
+package com.ldm.search;
 
 import com.ldm.aop.Action;
-import com.ldm.entity.Activity;
 import com.ldm.service.ActivityService;
-import com.ldm.service.SearchService;
+import com.ldm.search.SearchService;
 import com.ldm.util.JSONResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
@@ -29,7 +28,7 @@ public class SearchController implements InitializingBean {
     @GetMapping("/search")
     public JSONResult search(String keyword,int pageNum,int pageSize){
         log.debug("获取搜索词 {} 的第 {} 页", keyword, pageNum);
-        return JSONResult.success(searchService.searchActivity(keyword, pageNum, pageSize));
+        return JSONResult.success(activityService.selectActivityListByEs(searchService.searchActivity(keyword, pageNum, pageSize)));
     }
 
     @Override

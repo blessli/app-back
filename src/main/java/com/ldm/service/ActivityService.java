@@ -7,10 +7,10 @@ import com.ldm.entity.ActivityDetail;
 import com.ldm.entity.MyActivity;
 import com.ldm.netty.SocketClientComponent;
 import com.ldm.request.PublishActivity;
+import com.ldm.search.SearchService;
 import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
@@ -90,7 +90,7 @@ public class ActivityService {
      * @return
      */
     public List<Activity> selectActivityListByTime(int pageNum,int pageSize){
-        List<Activity> activityList=activityDao.selectActivityListByTime(pageNum, pageSize);
+        List<Activity> activityList=activityDao.selectActivityListByTime(pageNum*pageSize, pageSize);
         for(Activity activity:activityList){
             List<String> list= Arrays.asList(activity.getImages().split(","));
             activity.setImageList(list);
@@ -106,10 +106,10 @@ public class ActivityService {
      */
     public ActivityDetail selectActivityDetail(int activityId,int userId,int pageNum,int pageSize){
         clickActivityDetail(activityId, userId);
-        ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId, userId);
+        ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId);
         List<String> list=Arrays.asList(activityDetail.getImages().split(","));
         activityDetail.setImageList(list);
-        activityDetail.setActivityCommentList(commentService.getCommentList(activityId,0,pageNum,pageSize));
+        activityDetail.setActivityCommentList(commentService.getCommentList(activityId,0,pageNum*pageSize,pageSize));
         return activityDetail;
     }
 
@@ -120,7 +120,7 @@ public class ActivityService {
      * @updateTime 2020/4/10 20:59
      */
     public List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize){
-        List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum,pageSize);
+        List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum*pageSize,pageSize);
         for (Activity activity:activityList){
             List<String> list= Arrays.asList(activity.getImages().split(","));
             activity.setImageList(list);
@@ -135,7 +135,7 @@ public class ActivityService {
      * @updateTime 2020/4/10 21:14
      */
     public List<MyActivity> selectMyActivityList(int userId,int pageNum,int pageSize){
-        List<MyActivity> myActivityList=activityDao.selectMyActivityList(userId, pageNum, pageSize);
+        List<MyActivity> myActivityList=activityDao.selectMyActivityList(userId, pageNum*pageSize, pageSize);
         for (MyActivity myActivity:myActivityList){
             List<String> list= Arrays.asList(myActivity.getImage().split(","));
             myActivity.setImage(list.get(0));
@@ -234,7 +234,11 @@ public class ActivityService {
     public List<ActivityApply> selectActivityApplyList(int userId,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
 
-        return activityDao.selectActivityApplyList(userId,pageNum,pageSize);
+        return activityDao.selectActivityApplyList(userId,pageNum*pageSize,pageSize);
+    }
+
+    public List<Activity> selectActivityListByEs(List<Integer> activityIdList){
+        return activityDao.selectActivityListByEs(activityIdList);
     }
 
     /**
