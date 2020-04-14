@@ -6,13 +6,12 @@ import com.ldm.entity.Activity;
 import com.ldm.entity.Dynamic;
 import com.ldm.entity.SimpleUserInfo;
 import com.ldm.util.JsonUtil;
-import com.ldm.util.RedisKeyUtil;
+import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.util.*;
@@ -56,7 +55,7 @@ public class CacheService implements InitializingBean {
             // 归还redis连接到连接池
             returnToPool(jedis);
         }
-        
+
     }
 
     public <T> boolean set(String key, T value) {
@@ -268,20 +267,6 @@ public class CacheService implements InitializingBean {
             returnToPool(jedis);
         }
     }
-
-    public boolean delete(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            Long del = jedis.del(key);
-            return del > 0;
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
     public Long zadd(String key,String member) {
         Jedis jedis = null;// redis连接
         try {
@@ -368,7 +353,7 @@ public class CacheService implements InitializingBean {
             jedis=jedisPool.getResource();
             long nowTs=System.currentTimeMillis();
             int period=60,maxCount=10;
-            String key=RedisKeyUtil.limitFrequency(type, userId);
+            String key= RedisKeys.limitFrequency(type, userId);
             jedis.zadd(key,nowTs,""+nowTs);
             jedis.zremrangeByScore(key,0,nowTs-period*1000);
             return jedis.zcard(key)>maxCount;
@@ -414,28 +399,24 @@ public class CacheService implements InitializingBean {
         List<Activity> activityList=activityDao.selectActivityListByTime(0,1000000);
         List<Dynamic> dynamicList=dynamicDao.selectAllDynamic();
         Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            jedis.flushDB();// 删除当前数据库中的所有Key
-            for(SimpleUserInfo simpleUserInfo:simpleUserInfoList){
-                jedis.hset(RedisKeyUtil.getUserInfo(simpleUserInfo.getUserId()),"avatar",simpleUserInfo.getAvatar());
-                jedis.hset(RedisKeyUtil.getUserInfo(simpleUserInfo.getUserId()),"userNickname",simpleUserInfo.getUserNickname());
-            }
-            for (Activity activity:activityList){
-                jedis.hset(RedisKeyUtil.getActivityInfo(activity.getActivityId()),"userId",String.valueOf(activity.getUserId()));
-                List<String> imageList= Arrays.asList(activity.getImages().split(","));
-                jedis.hset(RedisKeyUtil.getActivityInfo(activity.getActivityId()),"image",imageList.get(0));
-            }
-            for (Dynamic dynamic:dynamicList){
-                jedis.hset(RedisKeyUtil.getDynamicInfo(dynamic.getDynamicId()),"userId",String.valueOf(dynamic.getUserId()));
-                List<String> imageList= Arrays.asList(dynamic.getImages().split(","));
-                jedis.hset(RedisKeyUtil.getDynamicInfo(dynamic.getDynamicId()),"image",imageList.get(0));
-            }
-
-            log.debug("redis初始化成功!!!");
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
+        jedis=jedisPool.getResource();
+        jedis.flushDB();// 删除当前数据库中的所有Key
+        for(SimpleUserInfo simpleUserInfo:simpleUserInfoList){
+            jedis.hset(RedisKeys.userInfo(simpleUserInfo.getUserId()),"avatar",simpleUserInfo.getAvatar());
+            jedis.hset(RedisKeys.userInfo(simpleUserInfo.getUserId()),"userNickname",simpleUserInfo.getUserNickname());
         }
+        for (Activity activity:activityList){
+            jedis.hset(RedisKeys.activityInfo(activity.getActivityId()),"userId",String.valueOf(activity.getUserId()));
+            List<String> imageList= Arrays.asList(activity.getImages().split(","));
+            jedis.hset(RedisKeys.activityInfo(activity.getActivityId()),"image",imageList.get(0));
+        }
+        for (Dynamic dynamic:dynamicList){
+            jedis.hset(RedisKeys.dynamicInfo(dynamic.getDynamicId()),"userId",String.valueOf(dynamic.getUserId()));
+            List<String> imageList= Arrays.asList(dynamic.getImages().split(","));
+            jedis.hset(RedisKeys.dynamicInfo(dynamic.getDynamicId()),"image",imageList.get(0));
+        }
+
+        log.debug("redis初始化成功!!!");
+        returnToPool(jedis);
     }
 }

@@ -1,5 +1,7 @@
 package com.ldm.service;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import com.ldm.config.EsConfig;
 import com.ldm.dao.SearchActivityDao;
 import com.ldm.entity.Activity;
@@ -16,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 import com.ldm.entity.SearchResult;
@@ -42,7 +45,8 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<SearchResult> searchActivity(String key, int pageNum, int pageSize) {
+    public PageInfo<SearchResult> searchActivity(String key, int pageNum, int pageSize) {
+        PageHelper.startPage(pageNum, pageSize);
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key, "activityName", "locationName", "userNickname"));
@@ -53,8 +57,16 @@ public class SearchService {
                 .execute().actionGet();
         SearchHits searchHits = response.getHits();
         System.out.println(searchHits.getTotalHits());
+        int ans=0;
         List<SearchResult> list = new ArrayList<>();
         for (SearchHit hit : searchHits) {
+            ans++;
+            if(ans<=(pageNum-1)*pageSize) {
+                continue;
+            }
+            if(ans>pageNum*pageSize){
+                break;
+            }
             SearchResult entity = new SearchResult();
             Map<String, Object> entityMap = hit.getSourceAsMap();
 
@@ -104,7 +116,8 @@ public class SearchService {
             }
             list.add(entity);
         }
-        return list;
+        PageInfo<SearchResult> res=new PageInfo<>();
+        return res;
     }
 
     /**
@@ -113,9 +126,8 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:20
      */
-    public void saveActivity(PublishActivity publishActivity) {
-        SearchDomain searchDomain = new SearchDomain();
-        searchActivityDao.save(searchDomain);
+    public void saveActivity(PublishActivity request) {
+        searchActivityDao.save(change(request));
     }
 
     /**
@@ -166,6 +178,18 @@ public class SearchService {
         }
         log.info("elasticsearch初始化完成");
 
+    }
+
+    /**
+     * @title 将redis连接对象归还到redis连接池
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/4 16:14
+     */
+    private void returnToPool(Jedis jedis) {
+        if (jedis != null){
+            jedis.close();
+        }
     }
 }
 

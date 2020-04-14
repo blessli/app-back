@@ -9,17 +9,30 @@ import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
 import com.ldm.entity.CommentNotice;
+import com.ldm.request.PublishDynamic;
+import com.ldm.response.FollowOrNot;
 import com.ldm.service.CacheService;
 import com.ldm.util.JsonUtil;
 import com.ldm.util.RandomUtil;
+import com.ldm.util.RedisKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
+import java.util.Set;
+@Slf4j
 @Service
 public class MQReceiver {
+
+    /**
+     * 通过连接池对象可以获得对redis的连接
+     */
     @Autowired
-    private CacheService cacheService;
+    JedisPool jedisPool;
+
     /**
      * 阿里云发送短信验证码，redis保存验证码，并设置有效期5分钟
      * @param phone
@@ -59,7 +72,17 @@ public class MQReceiver {
      */
     @RabbitListener(queues = MQConfig.Feed_Dynamic_Publish_QUEUE)
     public void feedDynamicPublish(String message){
-
+        Jedis jedis=jedisPool.getResource();
+        PublishDynamic request=JsonUtil.stringToBean(message,PublishDynamic.class);
+        log.debug("RabbitMQ消费了一条动态ID为: {} 的消息",request.getDynamicId());
+        int userId=request.getUserId();
+        Set<String> set=jedis.smembers(RedisKeys.followMe(userId));
+        // 每个用户都有一个发feed收件箱
+        jedis.sadd(RedisKeys.dynamicFeedSend(request.getUserId()),String.valueOf(request.getDynamicId()));
+        // 给每个粉丝推送一条动态
+        for(String string:set){
+            jedis.sadd(RedisKeys.dynamicFeedReceive(Integer.valueOf(string)),String.valueOf(request.getDynamicId()));
+        }
     }
 
     /**
@@ -71,13 +94,37 @@ public class MQReceiver {
      * @param message
      */
     @RabbitListener(queues = MQConfig.Feed_Dynamic_Publish_QUEUE)
-    public void feedFollow(String message){
+    public void feedFollow(String message) {
+        FollowOrNot followOrNot = JsonUtil.stringToBean(message, FollowOrNot.class);
+        Jedis jedis = jedisPool.getResource();
+        if (followOrNot.isFlag()) {
+            log.debug("RabbitMQ消费了一条用户 {} 关注用户 {} 的消息", followOrNot.getUserId(), followOrNot.getToUserId());
+            // 将被关注者的发feed存到关注者的收feed
+            Set<String> set = jedis.smembers(RedisKeys.dynamicFeedSend(followOrNot.getToUserId()));
+            jedis.sadd(RedisKeys.dynamicFeedReceive(followOrNot.getUserId()),set.toArray(new String[set.size()]));
 
+        } else {
+            log.debug("RabbitMQ消费了一条用户 {} 取消关注用户 {} 的消息", followOrNot.getUserId(), followOrNot.getToUserId());
+            // 将被关注者的发feed从关注者的收feed中删除
+            Set<String> set = jedis.smembers(RedisKeys.dynamicFeedSend(followOrNot.getToUserId()));
+            jedis.srem(RedisKeys.dynamicFeedReceive(followOrNot.getUserId()),set.toArray(new String[set.size()]));
+        }
     }
-
     @RabbitListener(queues = MQConfig.Comment_Notice)
     public void commentNotice(String message){
         CommentNotice commentNotice= JsonUtil.stringToBean(message,CommentNotice.class);
 
+    }
+
+    /**
+     * @title 将redis连接对象归还到redis连接池
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/4 16:14
+     */
+    private void returnToPool(Jedis jedis) {
+        if (jedis != null){
+            jedis.close();
+        }
     }
 }

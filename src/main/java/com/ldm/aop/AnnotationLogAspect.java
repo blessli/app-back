@@ -54,6 +54,9 @@ public class AnnotationLogAspect {
      */
     @AfterThrowing(value = "annotationPointcut()",throwing = "e")
     public void AfterThrowing(JoinPoint joinPoint, Throwable e){
-        log.error("主人,主人,出bug啦!!!");
+        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+        Method method = signature.getMethod();
+        Action action = method.getAnnotation(Action.class);
+        log.error("主人,主人,出bug啦!!!："+action.name());
     }
 }

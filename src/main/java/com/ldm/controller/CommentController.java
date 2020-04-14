@@ -1,7 +1,6 @@
 package com.ldm.controller;
 
 import com.ldm.aop.Action;
-import com.ldm.entity.CommentNotice;
 import com.ldm.request.PublishComment;
 import com.ldm.request.PublishReply;
 import com.ldm.service.CacheService;
@@ -12,12 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * @author lidongming
  * @ClassName CommentController.java
- * @Description TODO
+ * @Description 评论服务
  * @createTime 2020年04月04日 04:37:00
  */
 @Slf4j
@@ -38,6 +35,11 @@ public class CommentController {
     @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
     public JSONResult getCommentList(int itemId, int flag, int pageNum, int pageSize) {
+        if (flag == 0) {
+            log.debug("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
+        } else {
+            log.debug("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
+        }
         return JSONResult.success(commentService.getCommentList(itemId, flag, pageNum, pageSize));
     }
 
@@ -50,6 +52,7 @@ public class CommentController {
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
     public JSONResult getReplyList(int commentId, int pageNum, int pageSize) {
+        log.debug("获取评论 {} 的回复列表，当前页为：{}", commentId, pageNum);
         return JSONResult.success(commentService.getReplyList(commentId, pageNum, pageSize));
     }
 
@@ -62,6 +65,7 @@ public class CommentController {
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
     public JSONResult publishComment(@RequestBody PublishComment request) {
+        log.debug("用户 {} 给用户 {} 发表评论", request.getUserId(), request.getToUserId());
         if (cacheService.limitFrequency("comment", request.getUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }
@@ -77,7 +81,11 @@ public class CommentController {
     @Action(name = "删除评论")
     @PostMapping("/comment/delete")
     public JSONResult deleteComment(int itemId, int flag, int commentId) {
-        log.debug(itemId + " " + flag + " " + commentId);
+        if(flag == 0){
+            log.debug("删除活动 {} 的评论 {}", itemId, commentId);
+        }else {
+            log.debug("删除动态 {} 的评论 {}", itemId, commentId);
+        }
         return commentService.deleteComment(itemId, flag, commentId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
@@ -89,10 +97,11 @@ public class CommentController {
      */
     @Action(name = "发表回复")
     @PostMapping(value = "/reply/add")
-    public JSONResult publishReply(@RequestBody PublishReply request) {
-
-        if (cacheService.limitFrequency("reply", request.getFromUserId())) {
-            return JSONResult.fail("操作过于频繁，请稍后再试！！！");
+    public JSONResult publishReply(@RequestBody PublishReply request){
+        log.debug("用户 {} 给 {} 回复评论", request.getFromUserId(), request.getToUserId());
+        if (cacheService.limitFrequency("reply",request.getFromUserId())){
+            log.debug(frequencyReplyHit);
+            return JSONResult.fail(frequencyReplyHit);
         }
         return commentService.publishReply(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
@@ -106,6 +115,7 @@ public class CommentController {
     @Action(name = "删除回复")
     @PostMapping("/reply/delete")
     public JSONResult deleteReply(int commentId, int replyId) {
+        log.debug("删除评论 {} 的回复 {}", commentId, replyId);
         return commentService.deleteReply(commentId, replyId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
@@ -117,7 +127,11 @@ public class CommentController {
      */
     @Action(name = "获取评论通知")
     @GetMapping("/comment/notice")
-    public JSONResult getCommentNotice(int userId, int pageNum, int pageSize) {
+    public JSONResult getCommentNotice(int userId, int pageNum, int pageSize){
+        log.debug("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(commentService.selectCommentNotice(userId, pageNum, pageSize));
     }
+
+    private static final String frequencyCommentHit="发表评论过于频繁，请稍后再试！！！";
+    private static final String frequencyReplyHit="发表回复过于频繁，请稍后再试！！！";
 }

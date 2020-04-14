@@ -96,25 +96,25 @@ public interface CommentDao {
     *@Author: ggh
     *@Description: 获取评论列表,活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
     *@DATE: 2020/4/13 11:42
-    *@Param: [itemId, flag, startPage, pageSize]:活动/动态id，标志，起始页数，页面大小
+    *@Param: [itemId, flag, pageNum, pageSize]:活动/动态id，标志，起始页数，页面大小
     *@return: java.util.List<com.ldm.entity.Comment>
     **/
     @Select("SELECT t2.*, t1.user_nickname, t1.avatar FROM t_user t1 JOIN " +
             "(SELECT * FROM t_comment WHERE item_id=#{itemId} AND flag=#{flag}) t2 " +
-            "ON t1.user_id=t2.user_id LIMIT #{startPage}, #{pageSize}")
-    List<Comment> selectCommentList(int itemId,int flag, int startPage,int pageSize);
+            "ON t1.user_id=t2.user_id LIMIT #{pageNum}, #{pageSize}")
+    List<Comment> selectCommentList(int itemId,int flag, int pageNum,int pageSize);
 
     /**
     *@Author: ggh
     *@Description: 获取评论的回复列表
     *@DATE: 2020/4/13 11:45
-    *@Param: [commentId, startPage, pageSize] :评论id，起始页数，页面大小
+    *@Param: [commentId, pageNum, pageSize] :评论id，起始页数，页面大小
     *@return: java.util.List<com.ldm.entity.Reply>
     **/
     @Select("SELECT t_reply.*,t1.avatar,t1.user_nickname fromNickname,t2.user_nickname toNickname from t_reply \n" +
             "LEFT JOIN t_user t1 ON comment_id=#{commentId} and t1.user_id=t_reply.from_user_id \n" +
             "LEFT JOIN t_user t2 ON comment_id=#{commentId} and t2.user_id=t_reply.to_user_id\n" +
-            "HAVING comment_id=#{commentId} ORDER BY publish_time DESC LIMIT #{startPage}, #{pageSize}")
-    List<Reply> selectReplyList(int commentId, int startPage,int pageSize);
+            "HAVING comment_id=#{commentId} ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
+    List<Reply> selectReplyList(int commentId, int pageNum,int pageSize);
 
 }

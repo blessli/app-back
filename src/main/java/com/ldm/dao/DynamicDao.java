@@ -29,28 +29,28 @@ public interface DynamicDao {
     *@Author: ggh
     *@Description: 获取已关注者发表的动态
     *@DATE: 2020/4/13 11:47
-    *@Param: [userId, startPage, pageSize]:用户id，起始页数，页面大小
+    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
     *@return: java.util.List<com.ldm.entity.Dynamic>
     **/
     @Select("SELECT t_dynamic.*,t_user.avatar,t_user.user_nickname,IFNULL(t_dynamic_like.id,-1) AS is_like FROM `t_follow` INNER JOIN t_dynamic\n" +
             "ON t_follow.follower_id=#{userId} AND t_dynamic.user_id=t_follow.user_id\n" +
             "LEFT JOIN t_user ON t_user.user_id=t_follow.user_id\n" +
             "LEFT JOIN t_dynamic_like ON t_dynamic.dynamic_id=t_dynamic_like.dynamic_id AND #{userId}=t_dynamic_like.user_id\n" +
-            "ORDER BY publish_time DESC LIMIT #{startPage}, #{pageSize}")
-    List<Dynamic> selectDynamicList(int userId, int startPage,int pageSize);
+            "ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
+    List<Dynamic> selectDynamicList(List<Integer> userIdList, int pageNum,int pageSize);
 
     /**
     *@Author: ggh
     *@Description: 获取我的动态列表
     *@DATE: 2020/4/13 11:48
-    *@Param: [userId, startPage, pageSize]:用户id，起始页数，页面大小
+    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
     *@return: java.util.List<com.ldm.entity.Dynamic>
     **/
     @Select("SELECT t_dynamic.*,avatar,user_nickname,IFNULL(t_dynamic_like.id,-1) AS is_like FROM t_dynamic\n" +
             "LEFT JOIN t_user ON t_user.user_id=t_dynamic.user_id\n" +
             "LEFT JOIN t_dynamic_like ON t_dynamic.dynamic_id=t_dynamic_like.dynamic_id AND #{userId}=t_dynamic_like.user_id\n" +
-            "ORDER BY publish_time DESC LIMIT #{startPage}, #{pageSize}")
-    List<Dynamic> selectMyDynamicList(int userId, int startPage, int pageSize);
+            "ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
+    List<Dynamic> selectMyDynamicList(int userId, int pageNum, int pageSize);
     /**
      * @title 删除动态
      * @description 将所有与动态相关的都删除
@@ -113,13 +113,13 @@ public interface DynamicDao {
     *@Author: ggh
     *@Description: 获取点赞通知
     *@DATE: 2020/4/13 11:49
-    *@Param: [userId, startPage, pageSize]:用户id，起始页数，页面大小
+    *@Param: [userId, pageNum, pageSize]:用户id，起始页数，页面大小
     *@return: java.util.List<com.ldm.entity.LikeNotice>
     **/
     @Select("SELECT t.dynamic_id,t.user_id,t.publish_time,avatar,user_nickname,image FROM t_dynamic_like t\n" +
             "LEFT JOIN t_user ON t_user.user_id=t.user_id\n" +
-            "INNER JOIN t_dynamic ON t_dynamic.dynamic_id=t.dynamic_id AND t_dynamic.user_id=#{userId} LIMIT #{startPage}, #{pageSize}")
-    List<LikeNotice> selectLikeNotice(int userId, int startPage, int pageSize);
+            "INNER JOIN t_dynamic ON t_dynamic.dynamic_id=t.dynamic_id AND t_dynamic.user_id=#{userId} LIMIT #{pageNum}, #{pageSize}")
+    List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize);
 
 
     @Select("select * from t_dynamic")
