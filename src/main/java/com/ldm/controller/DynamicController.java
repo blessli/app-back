@@ -21,7 +21,7 @@ public class DynamicController {
     @Autowired
     private CommentService commentService;
     @Action(name = "发布动态")
-    @PostMapping(value = "/dynamic/add",consumes = "application/json")
+    @PostMapping(value = "/dynamic/add")
     public JSONResult publishDynamic(@RequestBody PublishDynamic request){
         log.debug("用户 {} 发表动态", request.getUserId());
         if (cacheService.limitFrequency("dynamic",request.getUserId())){
@@ -54,10 +54,9 @@ public class DynamicController {
         log.debug("获取用户 {} 的动态，当前页为：{}", userId, pageNum);
         return JSONResult.success(dynamicService.selectMyDynamicList(userId,pageNum,pageSize));
     }
-    @Action(name = "点赞动态")
+    @Action(name = "取消/点赞动态")
     @PostMapping("/dynamic/like")
     public JSONResult likeDynamic(int dynamicId,int userId){
-        log.debug("用户 {} 给动态 {} 点赞", userId, dynamicId);
         dynamicService.likeDynamic(dynamicId,userId);
         return JSONResult.success();
     }
@@ -70,11 +69,6 @@ public class DynamicController {
         return JSONResult.success(dynamicDetail);
     }
 
-    @Action(name = "获取动态点赞通知")
-    @GetMapping("/dynamic/likeNotice")
-    public JSONResult selectLikeNotice(int userId,int pageNum,int pageSize){
-        log.debug("获取用户 {} 的点赞通知，当前页为：{}", userId, pageNum);
-        return JSONResult.success(dynamicService.selectLikeNotice(userId,pageNum,pageSize));
-    }
+
 
 }

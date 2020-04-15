@@ -4,20 +4,18 @@ import com.ldm.request.PublishActivity;
 import com.ldm.service.ActivityService;
 import com.ldm.service.CacheService;
 import com.ldm.util.JSONResult;
-import com.ldm.service.SensitiveService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
-public class ActivityController {
+public class ActivityController implements InitializingBean {
     @Autowired
     ActivityService activityService;
     @Autowired
     private CacheService cacheService;
-    @Autowired
-    private SensitiveService sensitiveService;
 
     /**
      * @title 发布活动
@@ -46,8 +44,8 @@ public class ActivityController {
     @Action(name = "删除活动")
     @PostMapping("/activity/delete")
     public JSONResult deleteActivity(int activityId){
-        int ans=activityService.deleteActivity(activityId);
         log.debug("删除活动：{}", activityId);
+        int ans=activityService.deleteActivity(activityId);
         return ans>0?JSONResult.success():JSONResult.fail("error");
     }
 
@@ -59,9 +57,16 @@ public class ActivityController {
      */
     @Action(name = "获取活动列表-最新发表")
     @GetMapping("/activities/byTime")
-    public JSONResult getActivityListByTime(int pageNum,int pageSize){
+    public JSONResult getActivityListByTime(int userId,int pageNum,int pageSize){
         log.debug("获取最新活动列表：第 {} 页", pageNum);
-        return JSONResult.success(activityService.selectActivityListByTime(pageNum,pageSize));
+        return JSONResult.success(activityService.selectActivityListByTime(userId,pageNum,pageSize));
+    }
+
+    @Action(name = "获取活动列表-按距离排序")
+    @GetMapping("/activities/byDistance")
+    public JSONResult getActivityListByDistance(int userId,double longitude,double latitude,int pageNum,int pageSize){
+        log.debug("获取最新活动列表：第 {} 页", pageNum);
+        return JSONResult.success(activityService.selectActivityByDistance(userId, longitude, latitude, pageNum, pageSize));
     }
 
     @Action(name = "获取我申请加入的活动")
@@ -96,50 +101,37 @@ public class ActivityController {
         return JSONResult.success(activityService.selectActivityDetail(activityId, userId,pageNum,pageSize));
     }
     /**
-     * @title 用户申请加入活动
+     * @title 用户申请/取消申请加入活动
      * @description
      * @author lidongming
      * @updateTime 2020/4/10 18:06
      */
     @Action(name = "用户申请加入活动")
-    @PostMapping("/activity/tryJoin")
-    public JSONResult tryJoinActivity(int activityId,int userId){
-        log.debug("用户 {} 申请加入活动 {}", userId, activityId);
-        return JSONResult.success(activityService.tryJoinActivity(activityId, userId));
+    @PostMapping("/activity/join")
+    public JSONResult joinActivity(int activityId,int userId){
+        return JSONResult.success(activityService.joinActivity(activityId, userId));
     }
 
-    /**
-     * @title 用户取消申请加入活动
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/10 18:06
-     */
-    @Action(name = "用户取消申请加入活动")
-    @PostMapping("/activity/cancelJoin")
-    public JSONResult cancelJoinActivity(int activityId,int userId){
-        log.debug("用户 {} 取消加入活动 {}", userId, activityId);
-        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
-    }
-
-    @Action(name = "获取申请通知")
-    @GetMapping("/activity/notice")
-    public JSONResult getActivityApplyList(int userId,int pageNum,int pageSize){
-        log.debug("正在获取用户 {} 的申请通知，当前页为 {}", userId, pageNum);
-        return JSONResult.success(activityService.selectActivityApplyList(userId,pageNum,pageSize));
-    }
 
     @Action(name = "同意用户加入活动")
     @PostMapping("/activity/agreeJoin")
     public JSONResult agreeJoinActivity(int activityId,int userId){
-        log.debug("用户 {} 同意加入活动 {}", userId, activityId);
-        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
+        log.debug("同意用户 {} 加入活动 {}", userId, activityId);
+        int ans=activityService.agreeJoinActivity(activityId, userId);
+        return ans>0?JSONResult.success():JSONResult.fail("error");
     }
 
     @Action(name = "不同意用户加入活动")
     @PostMapping("/activity/disagreeJoin")
     public JSONResult disagreeJoinActivity(int activityId,int userId){
-        log.debug("用户 {} 拒绝加入活动 {}", userId, activityId);
-        return JSONResult.success(activityService.cancelJoinActivity(activityId, userId));
+        log.debug("拒绝用户 {} 加入活动 {}", userId, activityId);
+        int ans=activityService.disagreeJoinActivity(activityId, userId);
+        return ans>0?JSONResult.success():JSONResult.fail("error");
     }
     private static final String frequencyHit="发表活动过于频繁，请稍后再试！！！";
+
+    @Override
+    public void afterPropertiesSet() {
+        cacheService.afterPropertiesSet();
+    }
 }

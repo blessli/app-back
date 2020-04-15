@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.awt.image.Kernel;
 import java.util.Set;
 @Slf4j
 @Service
@@ -83,6 +84,7 @@ public class MQReceiver {
         for(String string:set){
             jedis.sadd(RedisKeys.dynamicFeedReceive(Integer.valueOf(string)),String.valueOf(request.getDynamicId()));
         }
+        CacheService.returnToPool(jedis);
     }
 
     /**
@@ -97,34 +99,23 @@ public class MQReceiver {
     public void feedFollow(String message) {
         FollowOrNot followOrNot = JsonUtil.stringToBean(message, FollowOrNot.class);
         Jedis jedis = jedisPool.getResource();
+        // 关注
         if (followOrNot.isFlag()) {
             log.debug("RabbitMQ消费了一条用户 {} 关注用户 {} 的消息", followOrNot.getUserId(), followOrNot.getToUserId());
             // 将被关注者的发feed存到关注者的收feed
             Set<String> set = jedis.smembers(RedisKeys.dynamicFeedSend(followOrNot.getToUserId()));
             jedis.sadd(RedisKeys.dynamicFeedReceive(followOrNot.getUserId()),set.toArray(new String[set.size()]));
 
-        } else {
+        } else {// 取消关注
             log.debug("RabbitMQ消费了一条用户 {} 取消关注用户 {} 的消息", followOrNot.getUserId(), followOrNot.getToUserId());
             // 将被关注者的发feed从关注者的收feed中删除
             Set<String> set = jedis.smembers(RedisKeys.dynamicFeedSend(followOrNot.getToUserId()));
             jedis.srem(RedisKeys.dynamicFeedReceive(followOrNot.getUserId()),set.toArray(new String[set.size()]));
         }
+        CacheService.returnToPool(jedis);
     }
     @RabbitListener(queues = MQConfig.Comment_Notice)
     public void commentNotice(String message){
-        CommentNotice commentNotice= JsonUtil.stringToBean(message,CommentNotice.class);
 
-    }
-
-    /**
-     * @title 将redis连接对象归还到redis连接池
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 16:14
-     */
-    private void returnToPool(Jedis jedis) {
-        if (jedis != null){
-            jedis.close();
-        }
     }
 }

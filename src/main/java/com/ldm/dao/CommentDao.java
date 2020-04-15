@@ -94,7 +94,7 @@ public interface CommentDao {
 
     /**
      * @title 获取评论列表,活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
-     * @description
+     * @description redis获取avatar.userNickname
      * @author ggh
      * @updateTime 2020/4/14 19:40
      */

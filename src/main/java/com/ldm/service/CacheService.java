@@ -42,84 +42,6 @@ public class CacheService implements InitializingBean {
     @Autowired
     private DynamicDao dynamicDao;
 
-    public <T> T get(String key, Class<T> clazz) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            // 通过key获取存储于redis中的对象（这个对象是以json格式存储的，所以是字符串）
-            String strValue = jedis.get(key);
-            // 将json字符串转换为对应的对象
-            T objValue = JsonUtil.stringToBean(strValue, clazz);
-            return objValue;
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    public <T> boolean set(String key, T value) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            // 将对象转换为json字符串
-            String strValue = JsonUtil.beanToString(value);
-            if (strValue == null || strValue.length() <= 0){
-                return false;
-            }
-            jedis.set(key, strValue);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-        return true;
-    }
-
-    /**
-     * @title set
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/12 0:56 
-     */
-    public <T> boolean sadd(String key, T value) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            // 将对象转换为json字符串
-            String strValue = JsonUtil.beanToString(value);
-            if (strValue == null || strValue.length() <= 0){
-                return false;
-            }
-            jedis.sadd(key, strValue);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-        return true;
-    }
-
-    /**
-     * @title 当用户删除活动/动态/评论等,将所有与之相关并存储在redis中的都删除
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/9 23:08
-     */
-    public <T> boolean mdel(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            Set<String> set=jedis.smembers(key);
-            for(String string:set){
-                jedis.del(string);
-            }
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-        return true;
-    }
-
-
 
     /**
      * 分布式锁
@@ -172,175 +94,6 @@ public class CacheService implements InitializingBean {
         }
     }
 
-    public boolean exists(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.exists(key);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    public long incr(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.incr(key);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    public long decr(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.decr(key);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-    public long lpush(String key, String value) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.lpush(key, value);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-    public List<String> brpop(int timeout, String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.brpop(timeout, key);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    public List<String> lrange(String key){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.lrange(key,0,-1);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-    }
-
-    /**
-     * @title hash字典
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/12 0:55 
-     */
-    public String hget(String key,String field){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.hget(key,field);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-    }
-    public Long hset(String key,String field,String value){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.hset(key, field, value);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-    }
-    public Long zadd(String key,String member) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.zadd(key,System.currentTimeMillis(),member);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    /**
-     * @title 移除有序集合中的一个或多个成员
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/12 1:08 
-     */
-    public Long zrem(String key,String member) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.zrem(key,member);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-    /**
-     * @title 获取有序集合的成员数
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/12 1:03 
-     */
-    public Long zcard(String key) {
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            return jedis.zcard(key);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
-
-
-    /**
-     * 点赞帖子
-     * @param dynamicId
-     * @param userId
-     * @return
-     */
-    public void likeDynamic(int dynamicId,int userId){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            String key="like:dynamic:"+dynamicId;
-            if(jedis.sismember(key,""+userId)) {
-                jedis.srem(key,""+userId);
-            }
-            else {
-                jedis.sadd(key,""+userId);
-            }
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-
     /**
      * @title 用户操作频率限制
      * @description 用于控制用户行为,如发布活动/动态/评论/回复/聊天
@@ -386,7 +139,7 @@ public class CacheService implements InitializingBean {
      * @author lidongming 
      * @updateTime 2020/4/4 16:14
      */
-    private void returnToPool(Jedis jedis) {
+    public static void returnToPool(Jedis jedis) {
         if (jedis != null){
             jedis.close();
         }
@@ -398,8 +151,7 @@ public class CacheService implements InitializingBean {
         List<SimpleUserInfo> simpleUserInfoList=userService.selectSimpleUserInfo();
         List<Activity> activityList=activityDao.selectActivityListByTime(0,1000000);
         List<Dynamic> dynamicList=dynamicDao.selectAllDynamic();
-        Jedis jedis = null;// redis连接
-        jedis=jedisPool.getResource();
+        Jedis jedis = jedisPool.getResource();// redis连接
         jedis.flushDB();// 删除当前数据库中的所有Key
         for(SimpleUserInfo simpleUserInfo:simpleUserInfoList){
             jedis.hset(RedisKeys.userInfo(simpleUserInfo.getUserId()),"avatar",simpleUserInfo.getAvatar());

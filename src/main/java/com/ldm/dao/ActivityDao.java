@@ -78,7 +78,7 @@ public interface ActivityDao {
             "WHERE user_id=#{userId}\n" +
             ") t1\n" +
             "LEFT JOIN t_activity t2 \n" +
-            "ON t1.activity_id=t2.activity_id LIMIT #{pageNum}, #{pageSize}")
+            "ON t1.activity_id=t2.activity_id ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
     List<MyActivity> selectMyActivityList(int userId,int pageNum,int pageSize);
 
 
@@ -88,7 +88,7 @@ public interface ActivityDao {
      * @author ggh
      * @updateTime 2020/4/14 19:37
      */
-    @Select("SELECT * FROM t_activity WHERE user_id=#{userId} LIMIT #{pageNum},#{pageSize}")
+    @Select("SELECT * FROM t_activity WHERE user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize);
 
     /**
@@ -97,9 +97,7 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/6 14:40
      */
-    @Select("SELECT t_activity.*,avatar,user_nickname,IFNULL((SELECT t.`status` FROM t_activity_join_request t\n" +
-            "WHERE t.activity_id=#{activityId} AND t.user_id=#{userId}),-1) AS is_joined FROM t_activity,t_user\n" +
-            "WHERE t_activity.activity_id=#{activityId} AND t_user.user_id=#{userId}")
+    @Select("select * from t_activity where activity_id=#{activityId}")
     ActivityDetail selectActivityDetail(int activityId);
 
     /**
@@ -173,7 +171,7 @@ public interface ActivityDao {
 
     /**
      * @title 根据es查询出来的activityId列表,在mysql中查询
-     * @description
+     * @description 走xml
      * @author ggh
      * @updateTime 2020/4/14 17:18
      */

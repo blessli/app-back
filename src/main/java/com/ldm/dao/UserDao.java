@@ -31,10 +31,12 @@ public interface UserDao {
             "LIMIT #{pageNum},#{pageSize}")
     List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize);
 
-    int addUserInfo(UserInfo userInfo);
-
-    int isFirstLogin(String openId);
-
+    /**
+     * @title 用户redis初始化
+     * @description 将用户基本信息保存在redis中
+     * @author lidongming
+     * @updateTime 2020/4/15 13:05
+     */
     @Select("SELECT user_id,user_nickname,avatar FROM `t_user`")
     List<SimpleUserInfo> selectSimpleUserInfo();
 }

@@ -32,7 +32,7 @@ public class UserController {
         return JSONResult.success(userService.loginCredentialVerification(code));
     }
     @Action(name = "获取用户信息")
-    @PostMapping(value = "/user/info",consumes = "application/json")
+    @PostMapping(value = "/user/info")
     public JSONResult addUserInfo(@RequestBody UserInfo userInfo) throws Exception {
         log.debug("获取用户信息");
         return JSONResult.success();
@@ -41,13 +41,8 @@ public class UserController {
     @Action(name = "用户个人中心")
     @GetMapping("/user/profile")
     public JSONResult getUserProfile(int userId) {
-        Jedis jedis=jedisPool.getResource();
-        UserProfile userProfile=new UserProfile();
-        userProfile.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
-        userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
-        userProfile.setFanCount(jedis.zcard(RedisKeys.followMe(userId)));
-        userProfile.setFocusCount(jedis.zcard(RedisKeys.meFollow(userId)));
-        return JSONResult.success();
+        log.debug("获取用户 {} 的个人主页", userId);
+        return JSONResult.success(userService.getUserProfile(userId));
     }
     /**
      * @title 获取该用户关注的用户列表
@@ -56,10 +51,10 @@ public class UserController {
      * @updateTime 2020/4/10 17:12
      */
     @Action(name = "获取该用户关注的用户列表")
-    @GetMapping("/user/followed")
-    public JSONResult getFollowedUserList(int userId,int pageNum,int pageSize){
-        log.debug("获取用户 {} 关注的用户列表，当前页为：{}", userId, pageNum);
-        return JSONResult.success(userService.getFollowedUserList(userId, pageNum, pageSize));
+    @GetMapping("/user/meFollow")
+    public JSONResult getMeFollowUserList(int userId){
+        log.debug("获取用户 {} 关注的用户列表", userId);
+        return JSONResult.success(userService.getMeFollowUserList(userId));
     }
 
     /**
@@ -70,9 +65,9 @@ public class UserController {
      */
     @Action(name = "获取关注该用户的用户列表")
     @GetMapping("/user/followMe")
-    public JSONResult getFollowMeUserList(int userId,int pageNum,int pageSize){
-        log.debug("获取关注了用户 {} 的用户列表，当前页为：{}", userId, pageNum);
-        return JSONResult.success(userService.getFollowMeUserList(userId, pageNum, pageSize));
+    public JSONResult getFollowMeUserList(int userId){
+        log.debug("获取关注了用户 {} 的用户列表");
+        return JSONResult.success(userService.getFollowMeUserList(userId));
     }
 
     @Action(name = "获取关注该用户的用户列表通知")
@@ -83,32 +78,21 @@ public class UserController {
         jedis.set(RedisKeys.commentNoticeUnread(3,userId),"0");
         returnToPool(jedis);
         //应该判断从redis有没有获取到相应的数据。没有的话应该从数据库获取，获取到后再存入redis，同时设置过期时间
-        return JSONResult.success(userService.getFollowMeUserList(userId, pageNum, pageSize));
+        return JSONResult.success(userService.getFollowMeUserList(userId));
     }
 
     @Action(name = "关注用户")
     @PostMapping(value = "/user/follow")
     public JSONResult followUser(int userId,int toUserId){
         log.debug("用户 {} 关注用户 {}", userId, toUserId);
-        Jedis jedis=jedisPool.getResource();
-        long now=System.currentTimeMillis();
-        jedis.zadd(RedisKeys.followMe(toUserId),now,userId+"");
-        jedis.zadd(RedisKeys.meFollow(userId),now,toUserId+"");
-        //添加数据时应该先向数据库添加，同时删除redis相应的缓存数据，保持一致性，下次查询redis时没有
-        //相应数据就会从数据库查，记得将查到的结果存入redis
-        //操作数据库
-        return JSONResult.success();
+        return JSONResult.success(userService.followUser(userId, toUserId));
     }
 
     @Action(name = "取消关注用户")
     @PostMapping(value = "/user/cancelFollow")
     public JSONResult cancelFollowUser(int userId,int toUserId){
         log.debug("用户 {} 取关用户 {}", userId, toUserId);
-        Jedis jedis=jedisPool.getResource();
-        jedis.zrem(RedisKeys.followMe(toUserId),userId+"");
-        jedis.zrem(RedisKeys.meFollow(userId),toUserId+"");
-        
-        return JSONResult.success();
+        return JSONResult.success(userService.cancelFollowUser(userId, toUserId));
     }
     /**
      * @title 将redis连接对象归还到redis连接池

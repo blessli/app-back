@@ -3,8 +3,10 @@ package com.ldm.util;
 import lombok.Data;
 
 /**
- * @author ldm
- * @create 2019/9/17 23:39
+ * @title 统一返回格式
+ * @description
+ * @author lidongming
+ * @updateTime 2020/4/14 23:06
  */
 @Data
 public class JSONResult {
@@ -16,12 +18,22 @@ public class JSONResult {
     public JSONResult(Object result, boolean success) {
         this.result = result;
         this.success = success;
+        if (!success){
+            this.error="操作失败";
+        }else {
+            this.error="操作成功";
+        }
     }
 
     public JSONResult(int code, Object result, boolean success) {
         this.code = code;
         this.result = result;
         this.success = success;
+        if (!success){
+            this.error="操作失败";
+        }else {
+            this.error="操作成功";
+        }
     }
 
     public static JSONResult result(Object result, boolean success) {
@@ -40,18 +52,6 @@ public class JSONResult {
         JSONResult result = result(null, false);
         result.error = error;
         return result;
-    }
-
-    public JSONResult(Object result, boolean success, Object error) {
-        this.result = result;
-        this.success = success;
-        this.error = error;
-    }
-
-    public JSONResult(Object error, int code) {
-        this.code = code;
-        this.success = Boolean.FALSE;
-        this.error = error;
     }
 
 }

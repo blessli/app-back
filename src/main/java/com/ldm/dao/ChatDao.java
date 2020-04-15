@@ -27,8 +27,8 @@ public interface ChatDao {
      * @author lidongming
      * @updateTime 2020/4/7 23:33
      */
-    @Select("SELECT user_id,to_user_id,msg,publish_time FROM t_chat WHERE msg_flag=#{msgFlag}")
-    List<ChatHistory> selectChatHistory(String msgFlag);
+    @Select("SELECT user_id,to_user_id,msg,publish_time FROM t_chat WHERE msg_flag=#{msgFlag} ORDER BY publish_time ASC LIMIT #{pageNum},#{pageSize}")
+    List<ChatHistory> selectChatHistory(String msgFlag, int pageNum,int pageSize);
     /**
      * @title 获取用户的聊天情况
      * @description 与哪些人聊过天,并展示最新的一条消息

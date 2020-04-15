@@ -119,19 +119,6 @@ public class CommentController {
         return commentService.deleteReply(commentId, replyId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
 
-    /**
-     * @title 获取评论通知
-     * @description 使用redis实现
-     * @author lidongming
-     * @updateTime 2020/4/11 14:51
-     */
-    @Action(name = "获取评论通知")
-    @GetMapping("/comment/notice")
-    public JSONResult getCommentNotice(int userId, int pageNum, int pageSize){
-        log.debug("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
-        return JSONResult.success(commentService.selectCommentNotice(userId, pageNum, pageSize));
-    }
-
     private static final String frequencyCommentHit="发表评论过于频繁，请稍后再试！！！";
     private static final String frequencyReplyHit="发表回复过于频繁，请稍后再试！！！";
 }

@@ -57,12 +57,12 @@ public class DynamicService {
         List<String> imageList= Arrays.asList(request.getImages().split(","));
         jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"image",imageList.get(0));
         jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"userId",String.valueOf(request.getUserId()));
-        returnToPool(jedis);
+        CacheService.returnToPool(jedis);
         return ans;
     }
 
     /**
-     * @title 获取已关注者发表的动态
+     * @title 获取好友动态
      * @description 从redis获取当前用户的feed流
      * @author lidongming
      * @updateTime 2020/4/7 2:44
@@ -75,16 +75,12 @@ public class DynamicService {
         for(String string:set){
             dynamicIdList.add(Integer.valueOf(string));
         }
-        List<Dynamic> dynamicList = dynamicDao.selectDynamicList(dynamicIdList, pageNum*pageSize, pageSize);
+        List<Dynamic> dynamicList = dynamicDao.selectDynamicList(dynamicIdList,pageNum*pageSize, pageSize);
         for (Dynamic dynamic : dynamicList) {
             List<String> list = Arrays.asList(dynamic.getImages().split(","));
             dynamic.setImageList(list);
-            // 用户是否点赞,从redis中读取,1为已赞,0为未赞
-            if (jedis.sismember(RedisKeys.likeDynamic(dynamic.getDynamicId()),""+userId)){
-                dynamic.setIsLike(1);
-            }else{
-                dynamic.setIsLike(0);
-            }
+            // 用户是否点赞,从redis中读取,true为已赞,false为未赞
+            dynamic.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamic.getDynamicId()),""+userId));
         }
         return dynamicList;
     }
@@ -137,13 +133,13 @@ public class DynamicService {
         jedis.del(RedisKeys.dynamicInfo(dynamicId));
         Set<String> set=jedis.smembers(RedisKeys.allDynamic(dynamicId));
         jedis.del(set.toArray(new String[set.size()]));
-        returnToPool(jedis);
         jedis.sadd(RedisKeys.deletedDynamic(),String.valueOf(dynamicId));// 保存被删除的动态
+        CacheService.returnToPool(jedis);
         return ans;
     }
 
     /**
-     * @title 点赞或取消点赞动态
+     * @title 取消/点赞动态
      * @description
      * @author lidongming
      * @updateTime 2020/4/8 1:48
@@ -157,32 +153,7 @@ public class DynamicService {
             log.debug("用户 {} 给动态 {} 点赞", userId, dynamicId);
             jedis.sadd(RedisKeys.likeDynamic(dynamicId),""+userId);
         }
-        returnToPool(jedis);
+        CacheService.returnToPool(jedis);
         return 1;
-    }
-    /**
-     * @title 获取点赞通知列表
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/11 22:38
-     */
-    public List<LikeNotice> selectLikeNotice(int userId,int pageNum,int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        // 点赞未读数清零
-        jedis.set(RedisKeys.commentNoticeUnread(1,userId),"0");
-        returnToPool(jedis);
-        return dynamicDao.selectLikeNotice(userId,pageNum*pageSize,pageSize);
-    }
-
-    /**
-     * @title 将redis连接对象归还到redis连接池
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 16:14
-     */
-    private void returnToPool(Jedis jedis) {
-        if (jedis != null){
-            jedis.close();
-        }
     }
 }

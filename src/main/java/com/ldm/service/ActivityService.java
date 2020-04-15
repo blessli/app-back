@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-
 import java.util.*;
 
 /**
@@ -36,7 +35,7 @@ public class ActivityService {
     private SearchService searchService;
 
     @Autowired
-    private SocketClientComponent socketClientComponent;
+    private SocketClientComponent socketClient;
 
     /**
      * 通过连接池对象可以获得对redis的连接
@@ -54,13 +53,15 @@ public class ActivityService {
         if (ans<=0) {
             return ans;
         }
-        log.debug("发布活动成功,活动ID为 "+request.getActivityId());
+        log.debug("用户 {} 发布活动成功,活动ID为 {}",request.getUserId(),request.getActivityId());
         searchService.saveActivity(request);
         List<String> imageList= Arrays.asList(request.getImages().split(","));
         Jedis jedis=jedisPool.getResource();
+        // redis保存活动基本信息
         jedis.hset(RedisKeys.activityInfo(request.getActivityId()),"userId",String.valueOf(request.getUserId()));
+        // 活动的第一张图片.用于通知
         jedis.hset(RedisKeys.activityInfo(request.getActivityId()),"image",imageList.get(0));
-        returnToPool(jedis);
+        CacheService.returnToPool(jedis);
         return ans;
     }
 
@@ -76,26 +77,38 @@ public class ActivityService {
         if(ans<=0) {
             return ans;
         }
+        log.debug("活动 {} 删除成功",activityId);
         Jedis jedis=jedisPool.getResource();
-        Set<String> set=jedis.smembers("activity:"+activityId);
-        jedis.del(set.toArray(new String[set.size()]));
+        Set<String> set=jedis.smembers(RedisKeys.allActivity(activityId));
+        jedis.del(set.toArray(new String[set.size()]));// 删除所有与活动相关的key
         jedis.del(RedisKeys.activityInfo(activityId));
         searchService.deleteActivity(activityId);
-        returnToPool(jedis);
+        CacheService.returnToPool(jedis);
         return ans;
     }
 
     /**
-     * 获取最新发布的活动
-     * @return
+     * @title 获取最新发布的活动
+     * @description redis存储用户基本信息,用户是否浏览过该活动
+     * @author lidongming
+     * @updateTime 2020/4/15 15:09
      */
-    public List<Activity> selectActivityListByTime(int pageNum,int pageSize){
+    public List<Activity> selectActivityListByTime(int userId,int pageNum,int pageSize){
+        Jedis jedis=jedisPool.getResource();
         List<Activity> activityList=activityDao.selectActivityListByTime(pageNum*pageSize, pageSize);
         for(Activity activity:activityList){
-            List<String> list= Arrays.asList(activity.getImages().split(","));
-            activity.setImageList(list);
+            activity.setImageList(Arrays.asList(activity.getImages().split(",")));
+            activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
+            activity.setUserNickname(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"userNickname"));
+            // 当前用户是否浏览过该活动
+            activity.setIsViewed(jedis.sismember(RedisKeys.activityViewed(activity.getActivityId()),""+userId));
         }
+        CacheService.returnToPool(jedis);
         return activityList;
+    }
+
+    public List<Activity> selectActivityByDistance(int userId,double longitude,double latitude,int pageNum,int pageSize){
+        return null;
     }
 
     /**
@@ -105,56 +118,51 @@ public class ActivityService {
      * @updateTime 2020/4/4 5:01 
      */
     public ActivityDetail selectActivityDetail(int activityId,int userId,int pageNum,int pageSize){
-        clickActivityDetail(activityId, userId);
+        Jedis jedis=jedisPool.getResource();
+        if (!jedis.sismember(RedisKeys.activityViewed(activityId),""+userId)){
+            jedis.sadd(RedisKeys.activityViewed(activityId),""+userId);
+            activityDao.addViewCount(activityId, userId);
+        }
         ActivityDetail activityDetail=activityDao.selectActivityDetail(activityId);
-        List<String> list=Arrays.asList(activityDetail.getImages().split(","));
-        activityDetail.setImageList(list);
+        activityDetail.setImageList(Arrays.asList(activityDetail.getImages().split(",")));
+        activityDetail.setIsJoined(jedis.sismember(RedisKeys.activityJoined(activityId),""+userId));
+        activityDetail.setAvatar(jedis.hget(RedisKeys.userInfo(activityDetail.getUserId()),"avatar"));
+        activityDetail.setUserNickname(jedis.hget(RedisKeys.userInfo(activityDetail.getUserId()),"userNickname"));
         activityDetail.setActivityCommentList(commentService.getCommentList(activityId,0,pageNum*pageSize,pageSize));
+        CacheService.returnToPool(jedis);
         return activityDetail;
     }
 
     /**
      * @title 获取我发布的活动列表
-     * @description
+     * @description 从redis中获取avatar,userNickname
      * @author lidongming
      * @updateTime 2020/4/10 20:59
      */
     public List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize){
+        Jedis jedis=jedisPool.getResource();
         List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum*pageSize,pageSize);
         for (Activity activity:activityList){
-            List<String> list= Arrays.asList(activity.getImages().split(","));
-            activity.setImageList(list);
+            activity.setImageList(Arrays.asList(activity.getImages().split(",")));
+            activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
+            activity.setUserNickname(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"userNickname"));
         }
+        CacheService.returnToPool(jedis);
         return activityList;
     }
 
     /**
      * @title 获取该用户申请加入的活动
-     * @description
+     * @description 从redis中获取avatar,userNickname
      * @author lidongming
      * @updateTime 2020/4/10 21:14
      */
     public List<MyActivity> selectMyActivityList(int userId,int pageNum,int pageSize){
         List<MyActivity> myActivityList=activityDao.selectMyActivityList(userId, pageNum*pageSize, pageSize);
         for (MyActivity myActivity:myActivityList){
-            List<String> list= Arrays.asList(myActivity.getImage().split(","));
-            myActivity.setImage(list.get(0));
+            myActivity.setImage(Arrays.asList(myActivity.getImage().split(",")).get(0));
         }
         return myActivityList;
-    }
-    /**
-     * 用户首次进入活动详情页，浏览量+1(先从redis判断)
-     * @param activityId
-     */
-    public void clickActivityDetail(int activityId,int userId){
-        String key="click:detail:"+activityId+":"+userId;
-        Jedis jedis=jedisPool.getResource();
-        jedis.sadd("activity:"+activityId,key);// 方便为了清理
-        if (!jedis.exists(key)&& activityDao.isFirstClickActivity(activityId, userId)==0){
-            activityDao.addViewCount(activityId, userId);
-            jedis.set(key,"0");
-        }
-        returnToPool(jedis);
     }
 
     /**
@@ -163,48 +171,32 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/11 21:53
      */
-    public int tryJoinActivity(int activityId,int userId){
+    public int joinActivity(int activityId,int userId){
         int ans=activityDao.tryJoinActivity(activityId, userId);
         if (ans<=0) {
             return ans;
         }
+        Map<String,Object> map=new HashMap<>();
         Jedis jedis=jedisPool.getResource();
         int toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(activityId),"userId"));
-        jedis.incr(RedisKeys.commentNoticeUnread(0,toUserId));
-        Map<String,Object> map=new HashMap<>();
-        map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
-        map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
-        map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
-        map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
-        socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
-        returnToPool(jedis);
-        return ans;
-    }
-
-    /**
-     * @title 用户取消加入活动
-     * @description 消息页的申请通知未读数-1
-     * @author lidongming
-     * @updateTime 2020/4/11 21:53
-     */
-    public int cancelJoinActivity(int activityId,int userId){
-        int ans=activityDao.cancelJoinActivity(activityId, userId);
-        if(ans<=0) {
-            return ans;
+        // 用户已加入活动,再次点击就是取消加入
+        if (jedis.sismember(RedisKeys.activityJoined(activityId),""+userId)){
+            log.debug("用户 {} 取消加入活动 {}", userId, activityId);
+            jedis.decr(RedisKeys.commentNoticeUnread(0,toUserId));
+            jedis.srem(RedisKeys.activityJoined(activityId),""+userId);
+        }else {
+            log.debug("用户 {} 申请加入活动 {}", userId, activityId);
+            jedis.incr(RedisKeys.commentNoticeUnread(0,toUserId));
+            jedis.sadd(RedisKeys.activityJoined(activityId),""+userId);
         }
-        Jedis jedis=jedisPool.getResource();
-        int toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(activityId),"userId"));
-        jedis.decr(RedisKeys.commentNoticeUnread(0,toUserId));
-        Map<String,Object> map=new HashMap<>();
         map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
         map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
         map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
         map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
-        socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
-        returnToPool(jedis);
+        socketClient.send(String.valueOf(toUserId),"msgPage","notice",map);
+        CacheService.returnToPool(jedis);
         return ans;
     }
-
     /**
      * 活动发布者同意该用户加入活动
      * @param activityId
@@ -212,6 +204,10 @@ public class ActivityService {
      * @return
      */
     public int agreeJoinActivity(int activityId,int userId){
+        Jedis jedis=jedisPool.getResource();
+        jedis.sadd(RedisKeys.activityJoined(activityId),""+userId);
+        jedis.sadd(RedisKeys.activityByUserJoined(userId),""+activityId);
+        CacheService.returnToPool(jedis);
         return activityDao.agreeJoinActivity(activityId, userId);
     }
 
@@ -221,35 +217,16 @@ public class ActivityService {
      * @param userId
      * @return
      */
-    public int disagreeJoinActiviy(int activityId,int userId){
-        return activityDao.disagreeJoinActivity(activityId, userId);
-    }
-
-    /**
-     * @title 获取该用户发表的活动接收到的申请通知
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/12 0:27 
-     */
-    public List<ActivityApply> selectActivityApplyList(int userId,int pageNum,int pageSize){
+    public int disagreeJoinActivity(int activityId,int userId){
         Jedis jedis=jedisPool.getResource();
-
-        return activityDao.selectActivityApplyList(userId,pageNum*pageSize,pageSize);
+        jedis.srem(RedisKeys.activityJoined(activityId),""+userId);
+        jedis.srem(RedisKeys.activityByUserJoined(userId),""+activityId);
+        CacheService.returnToPool(jedis);
+        
+        return activityDao.disagreeJoinActivity(activityId, userId);
     }
 
     public List<Activity> selectActivityListByEs(List<Integer> activityIdList){
         return activityDao.selectActivityListByEs(activityIdList);
-    }
-
-    /**
-     * @title 将redis连接对象归还到redis连接池
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 16:14
-     */
-    private void returnToPool(Jedis jedis) {
-        if (jedis != null){
-            jedis.close();
-        }
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
 public class ActivityDetail {
     private int activityId;// 活动ID
     private String activityName;// 活动名称
-    private String userId;// 用户ID
+    private int userId;// 用户ID
     private String avatar;// 头像地址
     private String activityType;// 活动类型
     private String locationName;// 活动地址
@@ -29,6 +29,6 @@ public class ActivityDetail {
      * 当前用户是否已加入该活动
      * 0为1已加入，1为未申请，2为已申请
      */
-    private int isJoined;
+    private Boolean isJoined;
     private List<Comment> activityCommentList;
 }

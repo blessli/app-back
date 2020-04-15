@@ -25,4 +25,6 @@ public class Activity {
     private String publishTime;// 发表时间
     private String userNickname;// 用户昵称
     private List<String> imageList;// 返回给前端的图片列表是一个list
+
+    private Boolean isViewed;// 用户是否浏览过该活动
 }

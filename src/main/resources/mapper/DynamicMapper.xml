@@ -8,49 +8,5 @@
             #{dynamicId}
         </foreach>
         ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize};
-
-        <!--SELECT
-            t_user.user_id,
-            t_user.user_nickname,
-            t_user.avatar,
-            t4.dynamic_id,
-            t4.content,
-            t4.images,
-            t4.publish_location,
-            t4.publish_time,
-            t4.comment_count,
-            t4.like_count,
-            t4.is_like
-        FROM t_user
-        JOIN
-        (
-            SELECT
-                *,
-                IF(myId>0,1,-1) is_like
-            FROM
-            (
-                SELECT
-                    t1.*,
-                    t2.user_id myId
-                FROM
-                (
-                    (
-                        SELECT
-                            *
-                        FROM t_dynamic
-                        WHERE user_id
-                        IN
-                        <foreach collection="list" item="item" open="(" separator="," close=")">
-                            #{item}
-                        </foreach>
-                        ORDER BY publish_time DESC
-                    ) t1
-                    LEFT JOIN t_dynamic_like t2
-                    ON t1.dynamic_id=t2.dynamic_id AND t2.user_id=#{userId}
-                )
-            ) t3
-        ) t4
-        ON t_user.user_id=t4.user_id
-        LIMIT #{startPage},#{pageSize}-->
     </select>
 </mapper>

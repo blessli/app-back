@@ -7,7 +7,10 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 
 /**
@@ -34,6 +37,18 @@ public class AnnotationLogAspect {
         Method method = signature.getMethod();
         Action action = method.getAnnotation(Action.class); //获取方法上定义的注解，粒度更细更精确
         log.debug("注解式拦截，即将执行：" + action.name()); // 反射获得注解上的属性，然后做日志相关的记录操作
+
+        // 接收到请求，记录请求内容
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();
+        log.info("-------------------用户发起请求-----------------");
+        // 记录下请求内容
+        log.info("URL : " + request.getRequestURL().toString());
+        log.info("HTTP_METHOD : " + request.getMethod());
+        //如果是表单，参数值是普通键值对。如果是application/json，则request.getParameter是取不到的。
+        log.info("HTTP_HEAD Type : " + request.getHeader("Content-Type"));
+        log.info("IP : " + request.getRemoteAddr());
+        log.info("CLASS_METHOD : " + joinPoint.getSignature().getDeclaringTypeName() + "." + joinPoint.getSignature().getName());
     }
 
     /**

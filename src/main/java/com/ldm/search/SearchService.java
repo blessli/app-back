@@ -7,6 +7,8 @@ import com.ldm.search.SearchActivityDao;
 import com.ldm.entity.Activity;
 import com.ldm.search.SearchDomain;
 import com.ldm.request.PublishActivity;
+import com.ldm.service.ActivityService;
+import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.Client;
@@ -28,6 +30,9 @@ import java.util.*;
 public class SearchService {
     @Autowired
     private SearchActivityDao searchActivityDao;
+
+    @Autowired
+    private ActivityService activityService;
     @Autowired
     private EsConfig esConfig;
 
@@ -43,7 +48,7 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<Integer> searchActivity(String key, int pageNum, int pageSize) {
+    public List<Activity> searchActivity(int userId,String key, int pageNum, int pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -75,7 +80,17 @@ public class SearchService {
 
             }
         }
-        return activityIdList;
+        Jedis jedis=jedisPool.getResource();
+        List<Activity> activityList=activityService.selectActivityListByEs(activityIdList);
+        for (Activity activity:activityList){
+            List<String> imageList= Arrays.asList(activity.getImages().split(","));
+            activity.setImageList(imageList);
+            activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
+            activity.setUserNickname(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"userNickname"));
+            // 当前用户是否浏览过该活动
+            activity.setIsViewed(jedis.sismember(RedisKeys.activityViewed(activity.getActivityId()),""+userId));
+        }
+        return activityList;
     }
 
     /**
@@ -119,18 +134,6 @@ public class SearchService {
         }
         log.info("elasticsearch初始化完成");
 
-    }
-
-    /**
-     * @title 将redis连接对象归还到redis连接池
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 16:14
-     */
-    private void returnToPool(Jedis jedis) {
-        if (jedis != null){
-            jedis.close();
-        }
     }
 }
 

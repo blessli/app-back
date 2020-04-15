@@ -47,7 +47,15 @@ public class CommentService {
      * @updateTime 2020/4/6 19:28
      */
     public List<Reply> getReplyList(int commentId,int pageNum,int pageSize){
-        return commentDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
+        Jedis jedis=jedisPool.getResource();
+        List<Reply> replyList=commentDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
+        for (Reply reply:replyList){
+            reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"avatar"));
+            reply.setFromNickname(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"userNickname"));
+            reply.setToNickname(jedis.hget(RedisKeys.userInfo(reply.getToUserId()),"userNickname"));
+        }
+        CacheService.returnToPool(jedis);
+        return replyList;
     }
     /**
      * @title 获取评论列表
@@ -56,7 +64,14 @@ public class CommentService {
      * @updateTime 2020/4/6 19:29
      */
     public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
-        return commentDao.selectCommentList(itemId, flag, pageSize*pageSize, pageSize);
+        Jedis jedis=jedisPool.getResource();
+        List<Comment> commentList=commentDao.selectCommentList(itemId, flag, pageSize*pageSize, pageSize);
+        for (Comment comment:commentList){
+            comment.setAvatar(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"avatar"));
+            comment.setUserNickname(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"userNickname"));
+        }
+        CacheService.returnToPool(jedis);
+        return commentList;
     }
     /**
      * @title 发表评论
@@ -66,35 +81,33 @@ public class CommentService {
      */
     public int publishComment(PublishComment request){
         Jedis jedis=jedisPool.getResource();
+        int toUserId;
         if (request.getFlag()==0){
             commentDao.addActivityCommentCount(request.getItemId());
+            toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(request.getItemId()),"userId"));
         }else {
             commentDao.addDynamicCommentCount(request.getItemId());
+            toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(request.getItemId()),"userId"));
         }
         int ans=commentDao.publishComment(request);
-        if(ans>0&&request.getToUserId()!=request.getUserId()){
-            int toUserId=0;
-            if (request.getFlag()==0){
-                toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(request.getItemId()),"userId"));
-            }else {
-                toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(request.getItemId()),"userId"));
-            }
-            jedis.incr(RedisKeys.commentNoticeUnread(2,toUserId));
-            Map<String,Object> map=new HashMap<>();
-            map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
-            map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
-            map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
-            map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
-            socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
-            CommentNotice commentNotice=new CommentNotice();
-            commentNotice.setContent(request.getContent());
-            commentNotice.setFlag(request.getFlag());
-            commentNotice.setIsReply(0);
-            commentNotice.setItemId(request.getItemId());
-            commentNotice.setUserId(request.getUserId());
-            commentNotice.setPublishTime(DateHandle.currentDate());
-            jedis.lpush(RedisKeys.commentNotice(request.getToUserId()), JsonUtil.beanToString(commentNotice));
+        if (ans<=0||request.getToUserId()!=request.getUserId()){
+            return ans;
         }
+        jedis.incr(RedisKeys.commentNoticeUnread(2,toUserId));
+        Map<String,Object> map=new HashMap<>();
+        map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
+        map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
+        map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
+        map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
+        socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
+        CommentNotice commentNotice=new CommentNotice();
+        commentNotice.setContent(request.getContent());
+        commentNotice.setFlag(request.getFlag());
+        commentNotice.setIsReply(0);
+        commentNotice.setItemId(request.getItemId());
+        commentNotice.setUserId(request.getUserId());
+        commentNotice.setPublishTime(DateHandle.currentDate());
+        jedis.lpush(RedisKeys.commentNotice(request.getToUserId()), JsonUtil.beanToString(commentNotice));
         return ans;
     }
     /**
@@ -122,6 +135,14 @@ public class CommentService {
         map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
         map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
         socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
+        CommentNotice commentNotice=new CommentNotice();
+        commentNotice.setContent(request.getContent());
+        commentNotice.setFlag(request.getFlag());
+        commentNotice.setIsReply(1);
+        commentNotice.setItemId(request.getItemId());
+        commentNotice.setUserId(request.getUserId());
+        commentNotice.setPublishTime(DateHandle.currentDate());
+        jedis.lpush(RedisKeys.commentNotice(request.getToUserId()), JsonUtil.beanToString(commentNotice));
         return ans;
     }
     /**
@@ -147,42 +168,5 @@ public class CommentService {
      */
     public int deleteReply(int commentId,int replyId){
         return commentDao.deleteReply(commentId,replyId);
-    }
-
-    /**
-     * @title 获取评论通知
-     * @description 活动/动态/回复
-     * @author lidongming
-     * @updateTime 2020/4/11 14:46
-     */
-    public List<CommentNotice> selectCommentNotice(int userId,int pageNum,int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        List<String> list=jedis.lrange(RedisKeys.commentNotice(userId),pageNum*pageSize,pageSize);
-        List<CommentNotice> commentNoticeList=new ArrayList<>();
-        for(String string:list){
-            CommentNotice commentNotice=JsonUtil.stringToBean(string,CommentNotice.class);
-            // 还有一些赋值undo
-            if (commentNotice.getFlag()==0){
-                commentNotice.setImage(jedis.hget(RedisKeys.activityInfo(commentNotice.getItemId()),"image"));
-            }else {
-                commentNotice.setImage(jedis.hget(RedisKeys.dynamicInfo(commentNotice.getItemId()),"image"));
-            }
-            commentNotice.setAvatar(jedis.hget(RedisKeys.userInfo(commentNotice.getUserId()),"avatar"));
-            commentNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(commentNotice.getUserId()),"userNickname"));
-        }
-        jedis.set(RedisKeys.commentNoticeUnread(2,userId),"0");
-        returnToPool(jedis);
-        return commentNoticeList;
-    }
-    /**
-     * @title 将redis连接对象归还到redis连接池
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 16:14
-     */
-    private void returnToPool(Jedis jedis) {
-        if (jedis != null){
-            jedis.close();
-        }
     }
 }

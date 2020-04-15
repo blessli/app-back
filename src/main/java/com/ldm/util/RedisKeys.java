@@ -11,13 +11,19 @@ public class RedisKeys {
         return "userInfo:"+userId;
     }
 
+    /**
+     * @title redis存储token,记录登录状态
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/15 14:00
+     */
     public static String token(int userId){
         return "token:"+userId;
     }
 
     /**
-     * @title 获取活动信息:userId,image
-     * @description 
+     * @title 获取活动基本信息
+     * @description redis存储userId,image
      * @author lidongming 
      * @updateTime 2020/4/11 17:12 
      */
@@ -26,8 +32,8 @@ public class RedisKeys {
     }
     
     /**
-     * @title 获取动态信息:userId,image
-     * @description 
+     * @title 获取动态基本信息
+     * @description redis存储userId,image
      * @author lidongming 
      * @updateTime 2020/4/11 17:16
      */
@@ -35,6 +41,12 @@ public class RedisKeys {
         return "dynamInfo:"+dynamicId;
     }
 
+    /**
+     * @title 评论通知
+     * @description 使用list存储
+     * @author lidongming
+     * @updateTime 2020/4/15 13:58
+     */
     public static String commentNotice(int userId){
         return "comment:notice:"+userId;
     }
@@ -49,19 +61,29 @@ public class RedisKeys {
         return "notice:unread:"+flag+":"+userId;
     }
 
+    /**
+     * @title 点赞动态的用户列表
+     * @description 使用set存储给该动态点赞了的userId
+     * @author lidongming
+     * @updateTime 2020/4/14 21:49
+     */
     public static String likeDynamic(int dynamicId){
         return "dynamic:like:"+dynamicId;
     }
-    public static String chatRecord(int userId,int toUserId){
-        return "chat:record:"+userId+":"+toUserId;
-    }
+
+    /**
+     * @title 限制频率,用于控制用户行为
+     * @description 滑动窗口
+     * @author lidongming
+     * @updateTime 2020/4/14 21:50
+     */
     public static String limitFrequency(String type,int userId){
         return "limit:frequency:"+type+":"+userId;
     }
 
     /**
      * @title 关注我的用户列表
-     * @description 使用集合存储userId
+     * @description 使用set存储userId
      * @author lidongming
      * @updateTime 2020/4/13 23:47
      */
@@ -69,26 +91,15 @@ public class RedisKeys {
         return "followMe:"+userId;
     }
     /**
-     * @title
-     * @description
+     * @title 我关注的用户列表
+     * @description 使用set存储userId
      * @author lidongming
      * @updateTime 2020/4/13 23:46
      */
     public static String meFollow(int userId){
         return "meFollow:"+userId;
     }
-    public static String getAllActivity(int activityId){
-        return "activity:"+activityId;
-    }
-    /**
-     * @title 该用户是否浏览过该活动
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/13 21:41
-     */
-    public static String activityIsView(int activityId,int userId){
-        return "activity:isView:"+activityId+":"+userId;
-    }
+
     /**
      * @title 用户的收Feed
      * @description 使用zset存储dynamicId
@@ -109,8 +120,8 @@ public class RedisKeys {
     }
 
     /**
-     * @title 
-     * @description 
+     * @title 所有的动态相关的key集合
+     * @description 使用set存储,方便用于数据清理
      * @author lidongming 
      * @updateTime 2020/4/14 19:42 
      */
@@ -118,10 +129,52 @@ public class RedisKeys {
         return "dynamic:"+dynamicId;
     }
 
-    public static String dynamicFeedId(int dynamicId){
-        return "feed:single:dynamic:"+dynamicId;
+    /**
+     * @title 所有的活动相关的key集合
+     * @description 使用set存储,方便用于数据清理
+     * @author lidongming
+     * @updateTime 2020/4/14 19:42
+     */
+    public static String allActivity(int activityId){
+        return "activity:"+activityId;
     }
+
+    /**
+     * @title 删除了的动态集合
+     * @description 使用set存储
+     * @author lidongming
+     * @updateTime 2020/4/14 21:45
+     */
     public static String deletedDynamic(){
-        return "deleted:dynamic";
+        return "deleted:dynamic:";
+    }
+    /**
+     * @title 判断某用户是否浏览过该活动
+     * @description 使用set存储userId
+     * @author lidongming
+     * @updateTime 2020/4/14 21:44
+     */
+    public static String activityViewed(int activityId){
+        return "activity:viewed:"+activityId;
+    }
+
+    /**
+     * @title 判断某用户是否加入了该活动
+     * @description 使用set存储userId
+     * @author lidongming
+     * @updateTime 2020/4/14 21:53
+     */
+    public static String activityJoined(int activityId){
+        return "activity:joined:"+activityId;
+    }
+
+    /**
+     * @title 某用户加入的活动列表
+     * @description 使用set存储activityId
+     * @author lidongming
+     * @updateTime 2020/4/14 21:53
+     */
+    public static String activityByUserJoined(int userId){
+        return "activity:user:joined:"+userId;
     }
 }
