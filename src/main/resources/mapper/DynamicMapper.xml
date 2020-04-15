@@ -2,16 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.DynamicDao">
     <select id="selectDynamicList" resultType="com.ldm.entity.Dynamic">
-<!--        SELECT *-->
-<!--        FROM POST P-->
-<!--        WHERE ID in-->
-<!--        <foreach item="item" index="index" collection="list"-->
-<!--                 open="(" separator="," close=")">-->
-<!--            #{item}-->
-<!--        </foreach>-->
 
+        SELECT  * FROM t_dynamic WHERE dynamic_id IN
+        <foreach collection="list" item="dynamicId" open="(" separator="," close=")">
+            #{dynamicId}
+        </foreach>
+        ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize};
 
-        SELECT
+        <!--SELECT
             t_user.user_id,
             t_user.user_nickname,
             t_user.avatar,
@@ -53,6 +51,6 @@
             ) t3
         ) t4
         ON t_user.user_id=t4.user_id
-        LIMIT #{startPage},#{pageSize}
+        LIMIT #{startPage},#{pageSize}-->
     </select>
 </mapper>

@@ -27,8 +27,8 @@ public interface UserDao {
      * @author ggh
      * @updateTime 2020/4/14 19:42
      */
-    @Select("SELECT t_follow.follower_id as user_id,user_nickname,avatar FROM t_follow \n" +
-            "LEFT JOIN t_user ON t_user.user_id=t_follow.follower_id WHERE t_follow.user_id=#{userId} LIMIT #{pageNum}, #{pageSize}")
+    @Select("SELECT follower_id user_id,publish_time FROM t_follow WHERE user_id=#{userId}" +
+            "LIMIT #{pageNum},#{pageSize}")
     List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize);
 
     int addUserInfo(UserInfo userInfo);

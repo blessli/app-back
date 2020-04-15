@@ -31,14 +31,16 @@ public interface DynamicDao {
      * @author ggh
      * @updateTime 2020/4/14 17:54
      */
-    List<Dynamic> selectDynamicList(List<Integer> dynamicIdList, int pageNum,int pageSize);
+    List<Dynamic> selectDynamicList(List<Integer> dynamicIdList, int userId,int pageNum,int pageSize);
 
     /**
      * @title 获取我发表的动态列表
      * @description 无需关联t_dynamic_like和t_user来进行查询,走redis
-     * @author lidongming
+     * @author ggh
      * @updateTime 2020/4/14 17:58
      */
+    @Select("SELECT * FROM t_activity WHERE user_id=#{userId} ORDER BY publish_time " +
+            "DESC LIMIT #{pageNum},#{pageSize}")
     List<Dynamic> selectDynamicCreatedByMeList(int userId, int pageNum, int pageSize);
     /**
      * @title 删除动态
@@ -86,6 +88,7 @@ public interface DynamicDao {
      * @author ggh
      * @updateTime 2020/4/10 20:24
      */
+    @Select("SELECT * FROM t_dynamic WHERE dynamic_id=#{dynamicId}")
     DynamicDetail selectDynamicDetail(int dynamicId);
 
     /**
@@ -94,9 +97,11 @@ public interface DynamicDao {
      * @author ggh
      * @updateTime 2020/4/14 19:41
      */
-    @Select("SELECT t.dynamic_id,t.user_id,t.publish_time,avatar,user_nickname,image FROM t_dynamic_like t\n" +
-            "LEFT JOIN t_user ON t_user.user_id=t.user_id\n" +
-            "INNER JOIN t_dynamic ON t_dynamic.dynamic_id=t.dynamic_id AND t_dynamic.user_id=#{userId} LIMIT #{pageNum}, #{pageSize}")
+//    @Select("SELECT t.dynamic_id,t.user_id,t.publish_time,avatar,user_nickname,image FROM t_dynamic_like t\n" +
+//            "LEFT JOIN t_user ON t_user.user_id=t.user_id\n" +
+//            "INNER JOIN t_dynamic ON t_dynamic.dynamic_id=t.dynamic_id AND t_dynamic.user_id=#{userId} LIMIT #{pageNum}, #{pageSize}")
+    @Select("SELECT * FROM t_dynamic_like WHERE user_id=#{userId} ORDER BY " +
+            "publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize);
 
 
