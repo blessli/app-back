@@ -8,6 +8,5 @@ package com.ldm.common;
  * @createTime 2020年04月13日 09:46:00
  */
 public final class Constant {
-    public interface Activity{
-    }
+
 }

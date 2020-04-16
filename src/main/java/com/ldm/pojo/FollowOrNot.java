@@ -1,4 +1,4 @@
-package com.ldm.response;
+package com.ldm.pojo;
 
 import lombok.Data;
 
@@ -10,7 +10,7 @@ import lombok.Data;
  */
 @Data
 public class FollowOrNot {
-    private boolean flag;
+    private boolean flag;// 取消/关注
     private int userId;
     private int toUserId;
 }

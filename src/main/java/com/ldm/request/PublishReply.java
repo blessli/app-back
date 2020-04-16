@@ -11,6 +11,7 @@ import lombok.Data;
 @Data
 public class PublishReply {
     private int commentId;// 评论ID
+    private String fromContent;// 被回复的内容
     private String content;// 回复内容
     private int fromUserId;// 回复者ID
     private int toUserId;// 被回复者ID

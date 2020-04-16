@@ -2,21 +2,19 @@ package com.ldm.service;
 
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.ldm.dao.UserDao;
-import com.ldm.entity.AccessToken;
-import com.ldm.entity.LoginCredential;
+import com.ldm.pojo.AccessToken;
+import com.ldm.pojo.LoginCredential;
 import com.ldm.entity.SimpleUserInfo;
+import com.ldm.rabbitmq.MQSender;
 import com.ldm.request.UserInfo;
-import com.ldm.response.FollowOrNot;
+import com.ldm.pojo.FollowOrNot;
 import com.ldm.response.FollowUserInfo;
 import com.ldm.response.UserProfile;
-import com.ldm.util.JSONResult;
+import com.ldm.util.JsonUtil;
 import com.ldm.util.RedisKeys;
-import org.apache.tomcat.util.json.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.PostMapping;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -38,6 +36,9 @@ import java.util.Set;
 public class UserService{
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private MQSender mqSender;
 
     /**
      * 通过连接池对象可以获得对redis的连接
@@ -170,6 +171,7 @@ public class UserService{
         userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
         userProfile.setFanCount(jedis.scard(RedisKeys.followMe(userId)));
         userProfile.setFocusCount(jedis.scard(RedisKeys.meFollow(userId)));
+        CacheService.returnToPool(jedis);
         return userProfile;
     }
     public List<SimpleUserInfo> selectSimpleUserInfo(){
@@ -193,6 +195,7 @@ public class UserService{
         followOrNot.setFlag(true);
         followOrNot.setUserId(userId);
         followOrNot.setToUserId(toUserId);
+        mqSender.feedFollow(JsonUtil.beanToString(followOrNot));
         CacheService.returnToPool(jedis);
         return 1;
     }
@@ -211,6 +214,7 @@ public class UserService{
         followOrNot.setFlag(false);
         followOrNot.setUserId(userId);
         followOrNot.setToUserId(toUserId);
+        mqSender.feedFollow(JsonUtil.beanToString(followOrNot));
         CacheService.returnToPool(jedis);
         return 1;
     }

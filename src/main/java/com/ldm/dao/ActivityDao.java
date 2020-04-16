@@ -1,7 +1,6 @@
 package com.ldm.dao;
 
 import com.ldm.entity.Activity;
-import com.ldm.entity.ActivityApply;
 import com.ldm.entity.ActivityDetail;
 import com.ldm.entity.MyActivity;
 import com.ldm.request.PublishActivity;
@@ -109,15 +108,6 @@ public interface ActivityDao {
     @Insert("INSERT INTO t_activity_view VALUES(NULL,#{activityId},#{userId});" +
             "UPDATE t_activity SET view_count=view_count+1 WHERE activity_id=#{activityId}")
     int addViewCount(int activityId,int userId);
-
-    /**
-     * @title 检查该用户是否第一次点击该活动
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/9 17:55
-     */
-    @Select("SELECT COUNT(id) FROM t_activity_view WHERE activity_id=#{activityId} AND user_id=#{userId}")
-    int isFirstClickActivity(int activityId,int userId);
     /**
      * @title 用户申请加入活动
      * @description
@@ -155,25 +145,18 @@ public interface ActivityDao {
     int disagreeJoinActivity(int activityId,int userId);
 
     /**
-     * @title 获取该用户发表的活动接收到的申请通知
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/14 19:38
-     */
-    @Select("SELECT * FROM\n" +
-            "(" +
-            "SELECT t2.user_id,t2.publish_time,t1.activity_name,t2.status FROM " +
-            "(SELECT activity_id,activity_name FROM t_activity WHERE user_id=#{userId}) t1" +
-            "JOIN t_activity_join_request t2 ON t1.activity_id=t2.activity_id ORDER BY publish_time DESC" +
-            ") t3 " +
-            " LIMIT #{pageNum},#{pageSize}")
-    List<ActivityApply> selectActivityApplyList(int userId,int pageNum,int pageSize);
-
-    /**
      * @title 根据es查询出来的activityId列表,在mysql中查询
      * @description 走xml
      * @author ggh
      * @updateTime 2020/4/14 17:18
      */
     List<Activity> selectActivityListByEs(List<Integer> activityIdList);
+
+    /**
+     * @title 异步更新活动分数
+     * @description
+     * @author lidongming
+     * @updateTime 2020/4/16 14:40
+     */
+    int updateActivityScore(int activityId,double score);
 }

@@ -65,7 +65,7 @@ public class CommentController {
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
     public JSONResult publishComment(@RequestBody PublishComment request) {
-        log.debug("用户 {} 给用户 {} 发表评论", request.getUserId(), request.getToUserId());
+        log.debug("用户 {} 发表评论", request.getUserId());
         if (cacheService.limitFrequency("comment", request.getUserId())) {
             return JSONResult.fail("操作过于频繁，请稍后再试！！！");
         }

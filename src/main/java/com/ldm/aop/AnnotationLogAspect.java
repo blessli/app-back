@@ -6,6 +6,7 @@ import org.apache.logging.log4j.Logger;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -31,6 +32,7 @@ public class AnnotationLogAspect {
     /**
      * 声明前置通知，复用了@Pointcut注解定义的切点
      */
+    @Async("asyncServiceExecutor")
     @Before("annotationPointcut()")
     public void before(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -54,6 +56,7 @@ public class AnnotationLogAspect {
     /**
      * 声明后继通知，复用了@Pointcut注解定义的切点
      */
+    @Async("asyncServiceExecutor")
     @After("annotationPointcut()")
     public void after(JoinPoint joinPoint) {
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
@@ -67,6 +70,7 @@ public class AnnotationLogAspect {
      * @param joinPoint
      * @param e
      */
+    @Async("asyncServiceExecutor")
     @AfterThrowing(value = "annotationPointcut()",throwing = "e")
     public void AfterThrowing(JoinPoint joinPoint, Throwable e){
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();

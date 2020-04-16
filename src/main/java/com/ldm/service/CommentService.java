@@ -2,7 +2,7 @@ package com.ldm.service;
 
 import com.ldm.dao.CommentDao;
 import com.ldm.entity.Comment;
-import com.ldm.entity.CommentNotice;
+import com.ldm.entity.ReplyNotice;
 import com.ldm.entity.Reply;
 import com.ldm.netty.SocketClientComponent;
 import com.ldm.request.PublishComment;
@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,7 +25,7 @@ import java.util.Map;
 /**
  * @author lidongming
  * @ClassName CommentService.java
- * @Description 评论，回复服务
+ * @Description 评论服务
  * @createTime 2020年04月04日 05:05:00
  */
 @Service
@@ -33,30 +34,14 @@ public class CommentService {
     private CommentDao commentDao;
 
     @Autowired
-    private SocketClientComponent socketClientComponent;
+    private CommonService commonService;
 
     /**
      * 通过连接池对象可以获得对redis的连接
      */
     @Autowired
     JedisPool jedisPool;
-    /**
-     * @title 获取回复列表
-     * @description 活动详情页中点击某个评论展示回复列表
-     * @author lidongming
-     * @updateTime 2020/4/6 19:28
-     */
-    public List<Reply> getReplyList(int commentId,int pageNum,int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        List<Reply> replyList=commentDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
-        for (Reply reply:replyList){
-            reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"avatar"));
-            reply.setFromNickname(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"userNickname"));
-            reply.setToNickname(jedis.hget(RedisKeys.userInfo(reply.getToUserId()),"userNickname"));
-        }
-        CacheService.returnToPool(jedis);
-        return replyList;
-    }
+
     /**
      * @title 获取评论列表
      * @description 活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
@@ -75,76 +60,29 @@ public class CommentService {
     }
     /**
      * @title 发表评论
-     * @description redis存储这个评论信息,用于通知
+     * @description 更新activityScore
      * @author lidongming
      * @updateTime 2020/4/4 5:12
      */
-    public int publishComment(PublishComment request){
+    public int publishComment(PublishComment request) throws ParseException {
         Jedis jedis=jedisPool.getResource();
-        int toUserId;
         if (request.getFlag()==0){
-            commentDao.addActivityCommentCount(request.getItemId());
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(request.getItemId()),"userId"));
+            int activityId=request.getItemId();
+            commentDao.addActivityCommentCount(activityId);
+            Integer commentCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"commentCount"));
+            commentCount++;
+            jedis.hset(RedisKeys.activityInfo(activityId),"commentCount",""+commentCount);
+            String publishTime=jedis.hget(RedisKeys.activityInfo(activityId),"publishTime");
+            Integer viewCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"viewCount"));
+            Integer shareCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"shareCount"));
+            // 异步更新score
+            commonService.updateActivityScore(activityId,publishTime,viewCount,commentCount,shareCount);
         }else {
             commentDao.addDynamicCommentCount(request.getItemId());
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(request.getItemId()),"userId"));
         }
-        int ans=commentDao.publishComment(request);
-        if (ans<=0||request.getToUserId()!=request.getUserId()){
-            return ans;
-        }
-        jedis.incr(RedisKeys.commentNoticeUnread(2,toUserId));
-        Map<String,Object> map=new HashMap<>();
-        map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
-        map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
-        map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
-        map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
-        socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
-        CommentNotice commentNotice=new CommentNotice();
-        commentNotice.setContent(request.getContent());
-        commentNotice.setFlag(request.getFlag());
-        commentNotice.setIsReply(0);
-        commentNotice.setItemId(request.getItemId());
-        commentNotice.setUserId(request.getUserId());
-        commentNotice.setPublishTime(DateHandle.currentDate());
-        jedis.lpush(RedisKeys.commentNotice(request.getToUserId()), JsonUtil.beanToString(commentNotice));
-        return ans;
+        return commentDao.publishComment(request);
     }
-    /**
-     * @title 发表回复
-     * @description redis存储这个回复信息,用于通知
-     * @author lidongming
-     * @updateTime 2020/4/4 5:12
-     */
-    public int publishReply(PublishReply request){
-        Jedis jedis=jedisPool.getResource();
-        int ans=commentDao.publishReply(request);
-        if(ans<=0){
-            return ans;
-        }
-        int toUserId=0;
-        if (request.getFlag()==0){
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(request.getItemId()),"userId"));
-        }else {
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(request.getItemId()),"userId"));
-        }
-        jedis.incr(RedisKeys.commentNoticeUnread(2,toUserId));
-        Map<String,Object> map=new HashMap<>();
-        map.put("applyCount",jedis.get(RedisKeys.commentNoticeUnread(0,toUserId)));
-        map.put("agreeCount",jedis.get(RedisKeys.commentNoticeUnread(1,toUserId)));
-        map.put("replyCount",jedis.get(RedisKeys.commentNoticeUnread(2,toUserId)));
-        map.put("followCount",jedis.get(RedisKeys.commentNoticeUnread(3,toUserId)));
-        socketClientComponent.send(String.valueOf(toUserId),"msgPage","notice",map);
-        CommentNotice commentNotice=new CommentNotice();
-        commentNotice.setContent(request.getContent());
-        commentNotice.setFlag(request.getFlag());
-        commentNotice.setIsReply(1);
-        commentNotice.setItemId(request.getItemId());
-        commentNotice.setUserId(request.getUserId());
-        commentNotice.setPublishTime(DateHandle.currentDate());
-        jedis.lpush(RedisKeys.commentNotice(request.getToUserId()), JsonUtil.beanToString(commentNotice));
-        return ans;
-    }
+
     /**
      * @title 删除评论
      * @description 使用分布式锁和事务,flag为0则活动，flag为1则动态
@@ -160,13 +98,5 @@ public class CommentService {
         }
         return commentDao.deleteComment(commentId);
     }
-    /**
-     * @title 删除回复
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/4 5:13
-     */
-    public int deleteReply(int commentId,int replyId){
-        return commentDao.deleteReply(commentId,replyId);
-    }
+
 }

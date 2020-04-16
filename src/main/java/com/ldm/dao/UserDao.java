@@ -1,8 +1,6 @@
 package com.ldm.dao;
 
 import com.ldm.entity.SimpleUserInfo;
-import com.ldm.request.UserInfo;
-import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Component;
@@ -39,4 +37,5 @@ public interface UserDao {
      */
     @Select("SELECT user_id,user_nickname,avatar FROM `t_user`")
     List<SimpleUserInfo> selectSimpleUserInfo();
+
 }

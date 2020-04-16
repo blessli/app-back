@@ -1,6 +1,6 @@
 package com.ldm.util;
 
-import com.ldm.entity.Mail;
+import com.ldm.pojo.Mail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

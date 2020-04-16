@@ -1,4 +1,4 @@
-package com.ldm.entity;
+package com.ldm.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

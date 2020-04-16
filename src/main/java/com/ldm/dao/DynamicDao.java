@@ -91,16 +91,6 @@ public interface DynamicDao {
     @Select("SELECT * FROM t_dynamic WHERE dynamic_id=#{dynamicId}")
     DynamicDetail selectDynamicDetail(int dynamicId);
 
-    /**
-     * @title 获取点赞通知
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/14 19:41
-     */
-    @Select("SELECT * FROM t_dynamic_like WHERE user_id=#{userId} ORDER BY " +
-            "publish_time DESC LIMIT #{pageNum},#{pageSize}")
-    List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize);
-
 
     @Select("select * from t_dynamic")
     List<Dynamic> selectAllDynamic();

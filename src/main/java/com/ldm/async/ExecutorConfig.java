@@ -19,8 +19,15 @@ public class ExecutorConfig {
     public Executor asyncServiceExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         //配置核心线程数
+        /**
+         * 核心线程数设置为核心数+1?
+         * 即使当CPU密集型的线程偶尔由于页确实故障或者其他原因而暂停时,这个"额外"的线程也能确保CPU的时钟周期不会被浪费.
+         */
         executor.setCorePoolSize(5);
         //配置最大线程数
+        /**
+         * 线程池大小 = （（线程 IO time + 线程 CPU time ）/线程 CPU time ） CPU数目
+         */
         executor.setMaxPoolSize(10);
         //配置队列大小
         executor.setQueueCapacity(400);

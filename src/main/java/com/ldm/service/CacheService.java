@@ -118,22 +118,6 @@ public class CacheService implements InitializingBean {
     }
 
     /**
-     * 排行榜功能
-     * @param
-     */
-    public void rank(){
-        Jedis jedis = null;// redis连接
-        try {
-            jedis=jedisPool.getResource();
-            String key="rank:activity";
-            Set<String> set=jedis.zrevrange(key,0,49);
-        }finally {
-            // 归还redis连接到连接池
-            returnToPool(jedis);
-        }
-
-    }
-    /**
      * @title 将redis连接对象归还到redis连接池
      * @description 
      * @author lidongming 
@@ -147,7 +131,7 @@ public class CacheService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        log.debug("redis初始化开始咯!!!");
+        log.debug("redis初始化开始!!!");
         List<SimpleUserInfo> simpleUserInfoList=userService.selectSimpleUserInfo();
         List<Activity> activityList=activityDao.selectActivityListByTime(0,1000000);
         List<Dynamic> dynamicList=dynamicDao.selectAllDynamic();
@@ -159,8 +143,6 @@ public class CacheService implements InitializingBean {
         }
         for (Activity activity:activityList){
             jedis.hset(RedisKeys.activityInfo(activity.getActivityId()),"userId",String.valueOf(activity.getUserId()));
-            List<String> imageList= Arrays.asList(activity.getImages().split(","));
-            jedis.hset(RedisKeys.activityInfo(activity.getActivityId()),"image",imageList.get(0));
         }
         for (Dynamic dynamic:dynamicList){
             jedis.hset(RedisKeys.dynamicInfo(dynamic.getDynamicId()),"userId",String.valueOf(dynamic.getUserId()));

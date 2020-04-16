@@ -2,7 +2,6 @@ package com.ldm.dao;
 
 
 import com.ldm.entity.Comment;
-import com.ldm.entity.CommentNotice;
 import com.ldm.entity.Reply;
 import com.ldm.request.PublishComment;
 import com.ldm.request.PublishReply;
@@ -23,18 +22,6 @@ public interface CommentDao {
             "`publish_time`, `content`, `reply_count`, `flag`) VALUES " +
             "(#{itemId}, #{userId}, NOW(), #{content}, 0, #{flag})")
     int publishComment(PublishComment request);
-
-    /**
-     * @title 发表回复
-     * @description 评论的回复量+1
-     * @author lidongming
-     * @updateTime 2020/4/9 23:45
-     */
-    @Insert("INSERT INTO `t_reply`(`comment_id`, `from_user_id`, `to_user_id`," +
-            " `content`, `publish_time`) " +
-            "VALUES (#{commentId}, #{fromUserId}, #{toUserId}, #{content}, NOW());" +
-            "UPDATE t_comment SET reply_count=reply_count+1 WHERE comment_id=#{commentId}")
-    int publishReply(PublishReply request);
 
     /**
      * @title 删除评论
@@ -83,16 +70,6 @@ public interface CommentDao {
     int addDynamicCommentCount(int itemId);
 
     /**
-     * @title 删除回复
-     * @description 评论的回复量-1
-     * @author lidongming
-     * @updateTime 2020/4/9 23:48
-     */
-    @Delete("DELETE FROM t_reply WHERE reply_id=#{replyId};" +
-            "UPDATE t_comment SET reply_count=reply_count-1 WHERE comment_id=#{commentId}")
-    int deleteReply(int commentId,int replyId);
-
-    /**
      * @title 获取评论列表,活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
      * @description redis获取avatar.userNickname
      * @author ggh
@@ -101,15 +78,5 @@ public interface CommentDao {
     @Select("SELECT * FROM t_comment WHERE item_id=#{itemId} AND flag=#{flag} " +
             "ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<Comment> selectCommentList(int itemId,int flag, int pageNum,int pageSize);
-
-    /**
-     * @title 获取评论的回复列表
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/14 19:41
-     */
-    @Select("SELECT * FROM t_reply WHERE comment_id=#{commentId} ORDER BY " +
-            "publish_time DESC LIMIT #{pageNum},#{pageSize}")
-    List<Reply> selectReplyList(int commentId, int pageNum,int pageSize);
 
 }

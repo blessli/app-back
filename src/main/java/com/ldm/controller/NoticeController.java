@@ -1,9 +1,6 @@
 package com.ldm.controller;
 
 import com.ldm.aop.Action;
-import com.ldm.service.ActivityService;
-import com.ldm.service.CommentService;
-import com.ldm.service.DynamicService;
 import com.ldm.service.NoticeService;
 import com.ldm.util.JSONResult;
 import lombok.extern.slf4j.Slf4j;
@@ -48,5 +45,12 @@ public class NoticeController {
     public JSONResult getCommentNotice(int userId, int pageNum, int pageSize){
         log.debug("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(noticeService.selectCommentNotice(userId, pageNum, pageSize));
+    }
+
+    @Action(name = "获取关注通知")
+    @GetMapping("/notice/follow")
+    public JSONResult getFollowNotice(int userId, int pageNum, int pageSize){
+        log.debug("获取用户 {} 的关注通知，当前页为：{}", userId, pageNum);
+        return JSONResult.success(noticeService.selectFollowNotice(userId, pageNum, pageSize));
     }
 }

@@ -23,7 +23,7 @@ public class RedisKeys {
 
     /**
      * @title 获取活动基本信息
-     * @description redis存储userId,image
+     * @description redis存储userId,viewCount,commentCount,shareCount,publishTime
      * @author lidongming 
      * @updateTime 2020/4/11 17:12 
      */
@@ -47,8 +47,8 @@ public class RedisKeys {
      * @author lidongming
      * @updateTime 2020/4/15 13:58
      */
-    public static String commentNotice(int userId){
-        return "comment:notice:"+userId;
+    public static String replyNotice(int userId){
+        return "reply:notice:"+userId;
     }
 
     /**
@@ -57,7 +57,7 @@ public class RedisKeys {
      * @author lidongming
      * @updateTime 2020/4/11 15:51
      */
-    public static String commentNoticeUnread(int flag,int userId){
+    public static String noticeUnread(int flag,int userId){
         return "notice:unread:"+flag+":"+userId;
     }
 
@@ -176,5 +176,15 @@ public class RedisKeys {
      */
     public static String activityByUserJoined(int userId){
         return "activity:user:joined:"+userId;
+    }
+
+    /**
+     * @title 大V集合
+     * @description 用于feed流
+     * @author lidongming
+     * @updateTime 2020/4/16 16:58
+     */
+    public static String bigV(){
+        return "dynamic:big:v";
     }
 }

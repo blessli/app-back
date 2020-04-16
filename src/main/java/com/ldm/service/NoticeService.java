@@ -1,11 +1,6 @@
 package com.ldm.service;
-
-import com.ldm.dao.ActivityDao;
-import com.ldm.dao.DynamicDao;
-import com.ldm.entity.ActivityApply;
-import com.ldm.entity.CommentNotice;
-import com.ldm.entity.LikeNotice;
-import com.ldm.util.JsonUtil;
+import com.ldm.dao.NoticeDao;
+import com.ldm.entity.*;
 import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +8,6 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,24 +27,26 @@ public class NoticeService {
     JedisPool jedisPool;
     
     @Autowired
-    private ActivityDao activityDao;
-
-    @Autowired
-    private DynamicDao dynamicDao;
+    private NoticeDao noticeDao;
     /**
-     * @title 获取该用户发表的活动接收到的申请通知
+     * @title 获取申请通知
      * @description
      * @author lidongming
      * @updateTime 2020/4/12 0:27 
      */
-    public List<ActivityApply> selectActivityApplyList(int userId, int pageNum, int pageSize){
+    public List<ApplyNotice> selectActivityApplyList(int userId, int pageNum, int pageSize){
         Jedis jedis=jedisPool.getResource();
-
-        return activityDao.selectActivityApplyList(userId,pageNum*pageSize,pageSize);
+        List<ApplyNotice> activityApplyList=noticeDao.selectApplyNotice(userId,pageNum*pageSize,pageSize);
+        for (ApplyNotice activityApply:activityApplyList){
+            activityApply.setAvatar(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"avatar"));
+            activityApply.setUserNickname(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"userNickname"));
+        }
+        CacheService.returnToPool(jedis);
+        return activityApplyList;
     }
 
     /**
-     * @title 获取点赞通知列表
+     * @title 获取点赞通知
      * @description
      * @author lidongming
      * @updateTime 2020/4/11 22:38
@@ -58,36 +54,52 @@ public class NoticeService {
     public List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize){
         Jedis jedis=jedisPool.getResource();
         // 点赞未读数清零
-        jedis.set(RedisKeys.commentNoticeUnread(1,userId),"0");
+        jedis.set(RedisKeys.noticeUnread(1,userId),"0");
+        List<LikeNotice> likeNoticeList=noticeDao.selectLikeNotice(userId,pageNum*pageSize,pageSize);
+        for (LikeNotice likeNotice:likeNoticeList){
+            likeNotice.setImage(jedis.hget(RedisKeys.dynamicInfo(likeNotice.getDynamicId()),"image"));
+            likeNotice.setAvatar(jedis.hget(RedisKeys.userInfo(likeNotice.getUserId()),"avatar"));
+            likeNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(likeNotice.getUserId()),"userNickname"));
+        }
         CacheService.returnToPool(jedis);
-        return dynamicDao.selectLikeNotice(userId,pageNum*pageSize,pageSize);
+        return likeNoticeList;
     }
 
     /**
-     * @title 获取评论通知
-     * @description 活动/动态/回复
+     * @title 获取回复通知
+     * @description
      * @author lidongming
      * @updateTime 2020/4/11 14:46
      */
-    public List<CommentNotice> selectCommentNotice(int userId, int pageNum, int pageSize){
+    public List<ReplyNotice> selectReplyNotice(int userId, int pageNum, int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<String> list=jedis.lrange(RedisKeys.commentNotice(userId),pageNum*pageSize,pageSize);
-        List<CommentNotice> commentNoticeList=new ArrayList<>();
-        for(String string:list){
-            CommentNotice commentNotice= JsonUtil.stringToBean(string,CommentNotice.class);
-            // 还有一些赋值undo
-            if (commentNotice.getFlag()==0){
-                commentNotice.setImage(jedis.hget(RedisKeys.activityInfo(commentNotice.getItemId()),"image"));
-            }else {
-                commentNotice.setImage(jedis.hget(RedisKeys.dynamicInfo(commentNotice.getItemId()),"image"));
-            }
-            commentNotice.setAvatar(jedis.hget(RedisKeys.userInfo(commentNotice.getUserId()),"avatar"));
-            commentNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(commentNotice.getUserId()),"userNickname"));
+        List<ReplyNotice> replyNoticeList=noticeDao.selectReplyNotice(userId, pageNum*pageSize, pageSize);
+        for(ReplyNotice reply:replyNoticeList){
+            // 还有一些赋值undo,toContent
+            reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getUserId()),"avatar"));
+            reply.setUserNickname(jedis.hget(RedisKeys.userInfo(reply.getUserId()),"userNickname"));
         }
-        // 评论通知未读数清零
-        jedis.set(RedisKeys.commentNoticeUnread(2,userId),"0");
+        // 回复通知未读数清零
+        jedis.set(RedisKeys.noticeUnread(2,userId),"0");
         CacheService.returnToPool(jedis);
-        return commentNoticeList;
+        return replyNoticeList;
+    }
+
+    /**
+     * @title 获取关注通知
+     * @description 显示是否互相关注
+     * @author lidongming
+     * @updateTime 2020/4/15 16:27
+     */
+    public List<FollowNotice> selectFollowNotice(int userId, int pageNum, int pageSize){
+        Jedis jedis=jedisPool.getResource();
+        List<FollowNotice> followNoticeList=noticeDao.selectFollowNotice(userId, pageNum*pageSize, pageSize);
+        for (FollowNotice followNotice:followNoticeList){
+            followNotice.setAvatar(jedis.hget(RedisKeys.userInfo(followNotice.getUserId()),"avatar"));
+            followNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(followNotice.getUserId()),"userNickname"));
+            followNotice.setIsMutualFollow(jedis.sismember(RedisKeys.meFollow(userId),""+followNotice.getUserId()));
+        }
+        return followNoticeList;
     }
 
 }

@@ -14,5 +14,4 @@ public class PublishComment {
     private int userId;// 用户ID
     private String content;// 评论内容
     private int itemId;// 活动/动态ID
-    private int toUserId;// 为了通知
 }

@@ -3,7 +3,6 @@ package com.ldm.service;
 import com.ldm.dao.DynamicDao;
 import com.ldm.entity.Dynamic;
 import com.ldm.entity.DynamicDetail;
-import com.ldm.entity.LikeNotice;
 import com.ldm.rabbitmq.MQSender;
 import com.ldm.request.PublishDynamic;
 import com.ldm.util.JsonUtil;
@@ -42,7 +41,7 @@ public class DynamicService {
     JedisPool jedisPool;
     /**
      * @title 发表动态
-     * @description RabbitMQ处理feed流
+     * @description RabbitMQ异步处理feed流
      * @author lidongming
      * @updateTime 2020/4/7 13:44
      */
@@ -54,8 +53,7 @@ public class DynamicService {
         Jedis jedis=jedisPool.getResource();
         // RabbitMQ异步处理
         mqSender.feedDynamicPublish(JsonUtil.beanToString(request));
-        List<String> imageList= Arrays.asList(request.getImages().split(","));
-        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"image",imageList.get(0));
+        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"image",Arrays.asList(request.getImages().split(",")).get(0));
         jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"userId",String.valueOf(request.getUserId()));
         CacheService.returnToPool(jedis);
         return ans;
@@ -69,6 +67,14 @@ public class DynamicService {
      */
     public List<Dynamic> selectDynamicList(int userId, int pageNum, int pageSize) {
         Jedis jedis=jedisPool.getResource();
+        Set<String> meFollowSet=jedis.smembers(RedisKeys.meFollow(userId));
+        // 判断我关注的用户中是否存在大V,如果有则拉取大V的发feed合并到我的收feed中
+        for (String string:meFollowSet){
+            if (jedis.sismember(RedisKeys.bigV(),string)){
+                Set<String> feedSend=jedis.smembers(RedisKeys.dynamicFeedSend(Integer.valueOf(string)));
+                jedis.sadd(RedisKeys.dynamicFeedReceive(userId),feedSend.toArray(new String[feedSend.size()]));
+            }
+        }
         // 求两个集合的差集
         Set<String> set=jedis.sdiff(RedisKeys.dynamicFeedReceive(userId),RedisKeys.deletedDynamic());
         List<Integer> dynamicIdList=new ArrayList<>(set.size());
@@ -92,11 +98,15 @@ public class DynamicService {
      * @updateTime 2020/4/10 16:49
      */
     public List<Dynamic> selectMyDynamicList(int userId, int pageNum, int pageSize) {
+        Jedis jedis=jedisPool.getResource();
         List<Dynamic> dynamicList = dynamicDao.selectDynamicCreatedByMeList(userId, pageNum*pageSize, pageSize);
         for (Dynamic dynamic : dynamicList) {
-            List<String> list = Arrays.asList(dynamic.getImages().split(","));
-            dynamic.setImageList(list);
+            dynamic.setImageList(Arrays.asList(dynamic.getImages().split(",")));
+            dynamic.setAvatar(jedis.hget(RedisKeys.userInfo(dynamic.getUserId()),"avatar"));
+            dynamic.setUserNickname(jedis.hget(RedisKeys.userInfo(dynamic.getUserId()),"userNickname"));
+            dynamic.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamic.getUserId()),""+userId));
         }
+        CacheService.returnToPool(jedis);
         return dynamicList;
     }
 
@@ -112,8 +122,8 @@ public class DynamicService {
         dynamicDetail.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId));
         dynamicDetail.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
         dynamicDetail.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
-        List<String> list = Arrays.asList(dynamicDetail.getImages().split(","));
-        dynamicDetail.setImageList(list);
+        dynamicDetail.setImageList(Arrays.asList(dynamicDetail.getImages().split(",")));
+        CacheService.returnToPool(jedis);
         return dynamicDetail;
     }
 

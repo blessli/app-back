@@ -8,9 +8,8 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
-import com.ldm.entity.CommentNotice;
 import com.ldm.request.PublishDynamic;
-import com.ldm.response.FollowOrNot;
+import com.ldm.pojo.FollowOrNot;
 import com.ldm.service.CacheService;
 import com.ldm.util.JsonUtil;
 import com.ldm.util.RandomUtil;
@@ -22,7 +21,6 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.awt.image.Kernel;
 import java.util.Set;
 @Slf4j
 @Service
@@ -80,6 +78,10 @@ public class MQReceiver {
         Set<String> set=jedis.smembers(RedisKeys.followMe(userId));
         // 每个用户都有一个发feed收件箱
         jedis.sadd(RedisKeys.dynamicFeedSend(request.getUserId()),String.valueOf(request.getDynamicId()));
+        // 如果发布者是大V,则结束
+        if (jedis.sismember(RedisKeys.bigV(),""+request.getUserId())){
+            return;
+        }
         // 给每个粉丝推送一条动态
         for(String string:set){
             jedis.sadd(RedisKeys.dynamicFeedReceive(Integer.valueOf(string)),String.valueOf(request.getDynamicId()));
@@ -95,7 +97,7 @@ public class MQReceiver {
      * 消息处理完成，检查队列是否还有消息，无则阻塞。
      * @param message
      */
-    @RabbitListener(queues = MQConfig.Feed_Dynamic_Publish_QUEUE)
+    @RabbitListener(queues = MQConfig.Feed_Follow_QUEUE)
     public void feedFollow(String message) {
         FollowOrNot followOrNot = JsonUtil.stringToBean(message, FollowOrNot.class);
         Jedis jedis = jedisPool.getResource();

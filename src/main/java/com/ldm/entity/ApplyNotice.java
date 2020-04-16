@@ -9,11 +9,11 @@ import lombok.Data;
  * @createTime 2020年04月12日 00:22:00
  */
 @Data
-public class ActivityApply {
+public class ApplyNotice {
     private int userId;
-    private String avatar;
-    private String userNickname;
+    private String avatar;// redis中get
+    private String userNickname;// redis中get
     private String publishTime;
     private String activityName;
-    private int status;
+    private int applyStatus;// 0：申请中，1：拒绝，2：同意
 }

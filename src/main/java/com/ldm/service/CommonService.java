@@ -1,16 +1,20 @@
 package com.ldm.service;
 
 import com.alibaba.fastjson.JSON;
-import com.ldm.entity.AccessToken;
-import com.ldm.entity.MsgSecCheck;
+import com.ldm.dao.ActivityDao;
+import com.ldm.pojo.MsgSecCheck;
+import com.ldm.util.DateHandle;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.HashMap;
 
 /**
@@ -19,7 +23,11 @@ import java.util.HashMap;
  * @Description 公共服务
  * @createTime 2020年04月08日 23:38:00
  */
+@Service
 public class CommonService {
+
+    @Autowired
+    private ActivityDao activityDao;
     /**
      * @title 检查一段文本是否含有违法违规内容。
      * @description
@@ -60,5 +68,13 @@ public class CommonService {
         MsgSecCheck msgSecCheck=JSON.parseObject(response.toString(),MsgSecCheck.class);
         System.out.println(msgSecCheck);
         return msgSecCheck;
+    }
+
+    @Async("asyncServiceExecutor")
+    public void updateActivityScore(int activityId,String publishTime,int viewCount,int commentCount,int shareCount) throws ParseException {
+        long ts= DateHandle.changeDate(publishTime);
+        double z=shareCount*3+commentCount*1+viewCount*0.8f;
+        double score=Math.log10(z)+ts/45000;
+        activityDao.updateActivityScore(activityId,score);
     }
 }
