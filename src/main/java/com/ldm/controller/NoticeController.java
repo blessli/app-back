@@ -22,29 +22,29 @@ public class NoticeController {
     private NoticeService noticeService;
     @Action(name = "获取申请通知")
     @GetMapping("/notice/apply")
-    public JSONResult getActivityApplyList(int userId, int pageNum, int pageSize){
+    public JSONResult getApplyNotice(int userId, int pageNum, int pageSize){
         log.debug("正在获取用户 {} 的申请通知，当前页为 {}", userId, pageNum);
-        return JSONResult.success(noticeService.selectActivityApplyList(userId,pageNum,pageSize));
+        return JSONResult.success(noticeService.selectApplyNotice(userId,pageNum,pageSize));
     }
 
-    @Action(name = "获取动态点赞通知")
+    @Action(name = "获取点赞通知")
     @GetMapping("/notice/like")
-    public JSONResult selectLikeNotice(int userId,int pageNum,int pageSize){
+    public JSONResult getLikeNotice(int userId,int pageNum,int pageSize){
         log.debug("获取用户 {} 的点赞通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(noticeService.selectLikeNotice(userId,pageNum,pageSize));
     }
 
     /**
-     * @title 获取评论通知
+     * @title 获取回复通知
      * @description 使用redis实现
      * @author lidongming
      * @updateTime 2020/4/11 14:51
      */
     @Action(name = "获取评论通知")
-    @GetMapping("/notice/comment")
+    @GetMapping("/notice/reply")
     public JSONResult getCommentNotice(int userId, int pageNum, int pageSize){
         log.debug("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
-        return JSONResult.success(noticeService.selectCommentNotice(userId, pageNum, pageSize));
+        return JSONResult.success(noticeService.selectReplyNotice(userId, pageNum, pageSize));
     }
 
     @Action(name = "获取关注通知")

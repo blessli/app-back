@@ -4,10 +4,11 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.ldm.config.EsConfig;
 import com.ldm.search.SearchActivityDao;
-import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityIndex;
 import com.ldm.search.SearchDomain;
 import com.ldm.request.PublishActivity;
 import com.ldm.service.ActivityService;
+import com.ldm.service.CacheService;
 import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
@@ -48,11 +49,11 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<Activity> searchActivity(int userId,String key, int pageNum, int pageSize) {
+    public List<ActivityIndex> searchActivity(int userId,String key, int pageNum, int pageSize) {
         PageHelper.startPage(pageNum, pageSize);
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-        boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key, "activityName", "locationName", "userNickname"));
+        boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key, "activityName", "locationName", "activityType","userNickname"));
 
         //搜索数据
         SearchResponse response = client.prepareSearch("app")
@@ -81,8 +82,8 @@ public class SearchService {
             }
         }
         Jedis jedis=jedisPool.getResource();
-        List<Activity> activityList=activityService.selectActivityListByEs(activityIdList);
-        for (Activity activity:activityList){
+        List<ActivityIndex> activityList=activityService.selectActivityListByEs(activityIdList);
+        for (ActivityIndex activity:activityList){
             List<String> imageList= Arrays.asList(activity.getImages().split(","));
             activity.setImageList(imageList);
             activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
@@ -90,6 +91,7 @@ public class SearchService {
             // 当前用户是否浏览过该活动
             activity.setIsViewed(jedis.sismember(RedisKeys.activityViewed(activity.getActivityId()),""+userId));
         }
+        CacheService.returnToPool(jedis);
         return activityList;
     }
 
@@ -117,13 +119,13 @@ public class SearchService {
         searchActivityDao.deleteByActivityIdEquals(activityId);
     }
 
-    public void init(List<Activity> activityList) {
+    public void init(List<ActivityIndex> activityList) {
         Iterable<SearchDomain> iterable = searchActivityDao.findAll();
         Iterator it = iterable.iterator();
         while (it.hasNext()) {
             searchActivityDao.delete((SearchDomain) it.next());
         }
-        for (Activity activity : activityList) {
+        for (ActivityIndex activity : activityList) {
             SearchDomain searchDomain = new SearchDomain();
             searchDomain.setActivityName(activity.getActivityName());
             searchDomain.setActivityType(activity.getActivityType());

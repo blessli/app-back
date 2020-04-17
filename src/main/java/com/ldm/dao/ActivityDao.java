@@ -1,6 +1,6 @@
 package com.ldm.dao;
 
-import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityIndex;
 import com.ldm.entity.ActivityDetail;
 import com.ldm.entity.MyActivity;
 import com.ldm.request.PublishActivity;
@@ -13,7 +13,7 @@ import java.util.List;
 public interface ActivityDao {
     /**
      * @title 发表活动
-     * @description 返回activityId
+     * @description 返回activityId,注意新增了share_count字段
      * @author lidongming
      * @updateTime 2020/4/4 4:29
      */
@@ -47,7 +47,7 @@ public interface ActivityDao {
      * @updateTime 2020/4/14 19:34
      */
     @Select("SELECT * FROM t_activity ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize};")
-    List<Activity> selectActivityListByTime(int pageNum,int pageSize);
+    List<ActivityIndex> selectActivityListByTime(int pageNum,int pageSize);
 
 
 
@@ -88,7 +88,7 @@ public interface ActivityDao {
      * @updateTime 2020/4/14 19:37
      */
     @Select("SELECT * FROM t_activity WHERE user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
-    List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize);
+    List<ActivityIndex> selectActivityCreatedByMe(int userId,int pageNum,int pageSize);
 
     /**
      * @title 获取该活动的详情内容
@@ -150,7 +150,7 @@ public interface ActivityDao {
      * @author ggh
      * @updateTime 2020/4/14 17:18
      */
-    List<Activity> selectActivityListByEs(List<Integer> activityIdList);
+    List<ActivityIndex> selectActivityListByEs(List<Integer> activityIdList);
 
     /**
      * @title 异步更新活动分数

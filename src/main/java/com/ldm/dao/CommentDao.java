@@ -2,9 +2,7 @@ package com.ldm.dao;
 
 
 import com.ldm.entity.Comment;
-import com.ldm.entity.Reply;
 import com.ldm.request.PublishComment;
-import com.ldm.request.PublishReply;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 

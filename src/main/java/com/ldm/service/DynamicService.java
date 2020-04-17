@@ -1,7 +1,7 @@
 package com.ldm.service;
 
 import com.ldm.dao.DynamicDao;
-import com.ldm.entity.Dynamic;
+import com.ldm.entity.DynamicIndex;
 import com.ldm.entity.DynamicDetail;
 import com.ldm.rabbitmq.MQSender;
 import com.ldm.request.PublishDynamic;
@@ -65,7 +65,7 @@ public class DynamicService {
      * @author lidongming
      * @updateTime 2020/4/7 2:44
      */
-    public List<Dynamic> selectDynamicList(int userId, int pageNum, int pageSize) {
+    public List<DynamicIndex> selectDynamicList(int userId, int pageNum, int pageSize) {
         Jedis jedis=jedisPool.getResource();
         Set<String> meFollowSet=jedis.smembers(RedisKeys.meFollow(userId));
         // 判断我关注的用户中是否存在大V,如果有则拉取大V的发feed合并到我的收feed中
@@ -81,14 +81,14 @@ public class DynamicService {
         for(String string:set){
             dynamicIdList.add(Integer.valueOf(string));
         }
-        List<Dynamic> dynamicList = dynamicDao.selectDynamicList(dynamicIdList,pageNum*pageSize, pageSize);
-        for (Dynamic dynamic : dynamicList) {
-            List<String> list = Arrays.asList(dynamic.getImages().split(","));
-            dynamic.setImageList(list);
+        List<DynamicIndex> dynamicIndexList = dynamicDao.selectDynamicList(dynamicIdList,pageNum*pageSize, pageSize);
+        for (DynamicIndex dynamicIndex : dynamicIndexList) {
+            List<String> list = Arrays.asList(dynamicIndex.getImages().split(","));
+            dynamicIndex.setImageList(list);
             // 用户是否点赞,从redis中读取,true为已赞,false为未赞
-            dynamic.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamic.getDynamicId()),""+userId));
+            dynamicIndex.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicIndex.getDynamicId()),""+userId));
         }
-        return dynamicList;
+        return dynamicIndexList;
     }
 
     /**
@@ -97,17 +97,17 @@ public class DynamicService {
      * @author lidongming
      * @updateTime 2020/4/10 16:49
      */
-    public List<Dynamic> selectMyDynamicList(int userId, int pageNum, int pageSize) {
+    public List<DynamicIndex> selectMyDynamicList(int userId, int pageNum, int pageSize) {
         Jedis jedis=jedisPool.getResource();
-        List<Dynamic> dynamicList = dynamicDao.selectDynamicCreatedByMeList(userId, pageNum*pageSize, pageSize);
-        for (Dynamic dynamic : dynamicList) {
-            dynamic.setImageList(Arrays.asList(dynamic.getImages().split(",")));
-            dynamic.setAvatar(jedis.hget(RedisKeys.userInfo(dynamic.getUserId()),"avatar"));
-            dynamic.setUserNickname(jedis.hget(RedisKeys.userInfo(dynamic.getUserId()),"userNickname"));
-            dynamic.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamic.getUserId()),""+userId));
+        List<DynamicIndex> dynamicIndexList = dynamicDao.selectDynamicCreatedByMeList(userId, pageNum*pageSize, pageSize);
+        for (DynamicIndex dynamicIndex : dynamicIndexList) {
+            dynamicIndex.setImageList(Arrays.asList(dynamicIndex.getImages().split(",")));
+            dynamicIndex.setAvatar(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"avatar"));
+            dynamicIndex.setUserNickname(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"userNickname"));
+            dynamicIndex.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicIndex.getUserId()),""+userId));
         }
         CacheService.returnToPool(jedis);
-        return dynamicList;
+        return dynamicIndexList;
     }
 
     /**

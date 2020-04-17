@@ -9,6 +9,8 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+
 @Slf4j
 @RestController
 public class ActivityController implements InitializingBean {
@@ -25,7 +27,7 @@ public class ActivityController implements InitializingBean {
      */
     @Action(name = "发表活动")
     @PostMapping(value = "/activity/add")
-    public JSONResult publishActivity(@RequestBody PublishActivity request){
+    public JSONResult publishActivity(@RequestBody PublishActivity request) throws ParseException {
         log.debug("发表活动：{}", request.getActivityId());
         if (cacheService.limitFrequency("activity",request.getUserId())){
             log.debug(frequencyHit);

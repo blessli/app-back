@@ -34,7 +34,7 @@ public class NoticeService {
      * @author lidongming
      * @updateTime 2020/4/12 0:27 
      */
-    public List<ApplyNotice> selectActivityApplyList(int userId, int pageNum, int pageSize){
+    public List<ApplyNotice> selectApplyNotice(int userId, int pageNum, int pageSize){
         Jedis jedis=jedisPool.getResource();
         List<ApplyNotice> activityApplyList=noticeDao.selectApplyNotice(userId,pageNum*pageSize,pageSize);
         for (ApplyNotice activityApply:activityApplyList){

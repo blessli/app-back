@@ -44,56 +44,7 @@ public class UserController {
         log.debug("获取用户 {} 的个人主页", userId);
         return JSONResult.success(userService.getUserProfile(userId));
     }
-    /**
-     * @title 获取该用户关注的用户列表
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/10 17:12
-     */
-    @Action(name = "获取该用户关注的用户列表")
-    @GetMapping("/user/meFollow")
-    public JSONResult getMeFollowUserList(int userId){
-        log.debug("获取用户 {} 关注的用户列表", userId);
-        return JSONResult.success(userService.getMeFollowUserList(userId));
-    }
 
-    /**
-     * @title 获取关注该用户的用户列表
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/10 17:15
-     */
-    @Action(name = "获取关注该用户的用户列表")
-    @GetMapping("/user/followMe")
-    public JSONResult getFollowMeUserList(int userId){
-        log.debug("获取关注了用户 {} 的用户列表");
-        return JSONResult.success(userService.getFollowMeUserList(userId));
-    }
-
-    @Action(name = "获取关注该用户的用户列表通知")
-    @GetMapping("/user/followMe/notice")
-    public JSONResult getFollowMeNoticeList(int userId,int pageNum,int pageSize){
-        log.debug("获取用户 {} 的关注通知", userId);
-        Jedis jedis=jedisPool.getResource();
-        jedis.set(RedisKeys.commentNoticeUnread(3,userId),"0");
-        returnToPool(jedis);
-        //应该判断从redis有没有获取到相应的数据。没有的话应该从数据库获取，获取到后再存入redis，同时设置过期时间
-        return JSONResult.success(userService.getFollowMeUserList(userId));
-    }
-
-    @Action(name = "关注用户")
-    @PostMapping(value = "/user/follow")
-    public JSONResult followUser(int userId,int toUserId){
-        log.debug("用户 {} 关注用户 {}", userId, toUserId);
-        return JSONResult.success(userService.followUser(userId, toUserId));
-    }
-
-    @Action(name = "取消关注用户")
-    @PostMapping(value = "/user/cancelFollow")
-    public JSONResult cancelFollowUser(int userId,int toUserId){
-        log.debug("用户 {} 取关用户 {}", userId, toUserId);
-        return JSONResult.success(userService.cancelFollowUser(userId, toUserId));
-    }
     /**
      * @title 将redis连接对象归还到redis连接池
      * @description

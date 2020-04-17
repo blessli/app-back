@@ -3,7 +3,7 @@ package com.ldm.service;
 import com.ldm.dao.ActivityDao;
 import com.ldm.dao.DynamicDao;
 import com.ldm.entity.Activity;
-import com.ldm.entity.Dynamic;
+import com.ldm.entity.DynamicIndex;
 import com.ldm.entity.SimpleUserInfo;
 import com.ldm.util.JsonUtil;
 import com.ldm.util.RedisKeys;
@@ -134,7 +134,7 @@ public class CacheService implements InitializingBean {
         log.debug("redis初始化开始!!!");
         List<SimpleUserInfo> simpleUserInfoList=userService.selectSimpleUserInfo();
         List<Activity> activityList=activityDao.selectActivityListByTime(0,1000000);
-        List<Dynamic> dynamicList=dynamicDao.selectAllDynamic();
+        List<DynamicIndex> dynamicIndexList =dynamicDao.selectAllDynamic();
         Jedis jedis = jedisPool.getResource();// redis连接
         jedis.flushDB();// 删除当前数据库中的所有Key
         for(SimpleUserInfo simpleUserInfo:simpleUserInfoList){
@@ -144,10 +144,10 @@ public class CacheService implements InitializingBean {
         for (Activity activity:activityList){
             jedis.hset(RedisKeys.activityInfo(activity.getActivityId()),"userId",String.valueOf(activity.getUserId()));
         }
-        for (Dynamic dynamic:dynamicList){
-            jedis.hset(RedisKeys.dynamicInfo(dynamic.getDynamicId()),"userId",String.valueOf(dynamic.getUserId()));
-            List<String> imageList= Arrays.asList(dynamic.getImages().split(","));
-            jedis.hset(RedisKeys.dynamicInfo(dynamic.getDynamicId()),"image",imageList.get(0));
+        for (DynamicIndex dynamicIndex : dynamicIndexList){
+            jedis.hset(RedisKeys.dynamicInfo(dynamicIndex.getDynamicId()),"userId",String.valueOf(dynamicIndex.getUserId()));
+            List<String> imageList= Arrays.asList(dynamicIndex.getImages().split(","));
+            jedis.hset(RedisKeys.dynamicInfo(dynamicIndex.getDynamicId()),"image",imageList.get(0));
         }
 
         log.debug("redis初始化成功!!!");

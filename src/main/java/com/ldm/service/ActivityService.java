@@ -1,7 +1,7 @@
 package com.ldm.service;
 
 import com.ldm.dao.ActivityDao;
-import com.ldm.entity.Activity;
+import com.ldm.entity.ActivityIndex;
 import com.ldm.entity.ActivityDetail;
 import com.ldm.entity.MyActivity;
 import com.ldm.netty.SocketClientComponent;
@@ -102,10 +102,10 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/15 15:09
      */
-    public List<Activity> selectActivityListByTime(int userId,int pageNum,int pageSize){
+    public List<ActivityIndex> selectActivityListByTime(int userId,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<Activity> activityList=activityDao.selectActivityListByTime(pageNum*pageSize, pageSize);
-        for(Activity activity:activityList){
+        List<ActivityIndex> activityList=activityDao.selectActivityListByTime(pageNum*pageSize, pageSize);
+        for(ActivityIndex activity:activityList){
             activity.setImageList(Arrays.asList(activity.getImages().split(",")));
             activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
             activity.setUserNickname(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"userNickname"));
@@ -122,7 +122,7 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/16 15:20
      */
-    public List<Activity> selectActivityByDistance(int userId,double longitude,double latitude,int pageNum,int pageSize){
+    public List<ActivityIndex> selectActivityByDistance(int userId,double longitude,double latitude,int pageNum,int pageSize){
         return null;
     }
 
@@ -156,10 +156,10 @@ public class ActivityService {
      * @author lidongming
      * @updateTime 2020/4/10 20:59
      */
-    public List<Activity> selectActivityCreatedByMe(int userId,int pageNum,int pageSize){
+    public List<ActivityIndex> selectActivityCreatedByMe(int userId,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<Activity> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum*pageSize,pageSize);
-        for (Activity activity:activityList){
+        List<ActivityIndex> activityList=activityDao.selectActivityCreatedByMe(userId,pageNum*pageSize,pageSize);
+        for (ActivityIndex activity:activityList){
             activity.setImageList(Arrays.asList(activity.getImages().split(",")));
             activity.setAvatar(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"avatar"));
             activity.setUserNickname(jedis.hget(RedisKeys.userInfo(activity.getUserId()),"userNickname"));
@@ -242,7 +242,7 @@ public class ActivityService {
         return activityDao.disagreeJoinActivity(activityId, userId);
     }
 
-    public List<Activity> selectActivityListByEs(List<Integer> activityIdList){
+    public List<ActivityIndex> selectActivityListByEs(List<Integer> activityIdList){
         return activityDao.selectActivityListByEs(activityIdList);
     }
 

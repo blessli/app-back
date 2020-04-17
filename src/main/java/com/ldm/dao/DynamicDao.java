@@ -1,8 +1,7 @@
 package com.ldm.dao;
 
-import com.ldm.entity.Dynamic;
+import com.ldm.entity.DynamicIndex;
 import com.ldm.entity.DynamicDetail;
-import com.ldm.entity.LikeNotice;
 import com.ldm.request.PublishDynamic;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
@@ -31,7 +30,7 @@ public interface DynamicDao {
      * @author ggh
      * @updateTime 2020/4/14 17:54
      */
-    List<Dynamic> selectDynamicList(List<Integer> dynamicIdList,int pageNum,int pageSize);
+    List<DynamicIndex> selectDynamicList(List<Integer> dynamicIdList, int pageNum, int pageSize);
 
     /**
      * @title 获取我发表的动态列表
@@ -41,7 +40,7 @@ public interface DynamicDao {
      */
     @Select("SELECT * FROM t_dynamic WHERE user_id=#{userId} ORDER BY publish_time " +
             "DESC LIMIT #{pageNum},#{pageSize}")
-    List<Dynamic> selectDynamicCreatedByMeList(int userId, int pageNum, int pageSize);
+    List<DynamicIndex> selectDynamicCreatedByMeList(int userId, int pageNum, int pageSize);
     /**
      * @title 删除动态
      * @description 将所有与动态相关的都删除
@@ -91,7 +90,6 @@ public interface DynamicDao {
     @Select("SELECT * FROM t_dynamic WHERE dynamic_id=#{dynamicId}")
     DynamicDetail selectDynamicDetail(int dynamicId);
 
-
     @Select("select * from t_dynamic")
-    List<Dynamic> selectAllDynamic();
+    List<DynamicIndex> selectAllDynamic();
 }
