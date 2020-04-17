@@ -49,4 +49,6 @@ public interface NoticeDao {
      */
     @Select("SELECT t.follower_id AS user_id,t.publish_time FROM `t_follow` t WHERE user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<FollowNotice> selectFollowNotice(int userId, int pageNum, int pageSize);
+
+
 }

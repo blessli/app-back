@@ -12,9 +12,10 @@ import java.util.List;
 public interface CommentDao {
 
     /**
-     * 发布评论
-     * @param request
-     * @return
+     * @title 发表评论
+     * @description 
+     * @author lidongming 
+     * @updateTime 2020/4/17 20:32 
      */
     @Insert("INSERT INTO `t_comment`(`item_id`, `user_id`, " +
             "`publish_time`, `content`, `reply_count`, `flag`) VALUES " +
@@ -70,7 +71,7 @@ public interface CommentDao {
     /**
      * @title 获取评论列表,活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
      * @description redis获取avatar.userNickname
-     * @author ggh
+     * @author lidongming
      * @updateTime 2020/4/14 19:40
      */
     @Select("SELECT * FROM t_comment WHERE item_id=#{itemId} AND flag=#{flag} " +

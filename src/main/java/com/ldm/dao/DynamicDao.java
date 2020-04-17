@@ -13,21 +13,17 @@ public interface DynamicDao {
     /**
      * @title 发表动态
      * @description 发表动态
-     * @author lidongming
+     * @author ggh
      * @updateTime 2020/4/4 4:36
      */
-    @Insert("INSERT INTO `t_dynamic`(`content`, `images`, `publish_location`, `user_id`, " +
-            "`comment_count`, `like_count`, `dynamic_score`, `publish_time`) " +
-            "VALUES (#{content}, #{images}, #{publishLocation}, #{userId}, " +
-            "0, 0, 0, NOW())")
     @Options(useGeneratedKeys = true,keyProperty = "dynamicId",keyColumn = "dynamic_id")
     int publishDynamic(PublishDynamic request);
 
 
     /**
      * @title 获取朋友圈动态
-     * @description 根据传入的dynamicIdList进行in查询,走xml
-     * @author ggh
+     * @description 根据传入的dynamicIdList进行in查询,代码在xml里
+     * @author lidongming
      * @updateTime 2020/4/14 17:54
      */
     List<DynamicIndex> selectDynamicList(List<Integer> dynamicIdList, int pageNum, int pageSize);
@@ -44,24 +40,18 @@ public interface DynamicDao {
     /**
      * @title 删除动态
      * @description 将所有与动态相关的都删除
-     * @author lidongming 
+     * @author ggh
      * @updateTime 2020/4/6 15:37 
      */
-    @Delete("DELETE from t_reply where comment_id in (SELECT t_comment.comment_id from t_comment WHERE item_id=#{dynamicId} AND flag=1);\n" +
-            "DELETE FROM t_comment WHERE item_id=#{dynamicId} AND flag=1;\n" +
-            "DELETE FROM t_dynamic_like WHERE dynamic_id=#{dynamicId};\n" +
-            "DELETE FROM t_dynamic WHERE dynamic_id=#{dynamicId};")
     int deleteDynamic(int dynamicId);
 
 
     /**
      * @title 点赞动态
      * @description 给动态点赞
-     * @author lidongming
+     * @author ggh
      * @updateTime 2020/4/8 1:48
      */
-    @Update("INSERT INTO t_dynamic_like VALUES(NULL,#{dynamicId},#{userId},NOW(),#{image});\n" +
-            "UPDATE t_dynamic SET like_count=like_count+1 WHERE dynamic_id=#{dynamicId}")
     int likeDynamic(int dynamicId,int userId,String image);
     /**
      * @title 取消点赞动态
@@ -74,14 +64,6 @@ public interface DynamicDao {
     int cancelLikeDynamic(int dynamicId,int userId);
 
     /**
-     * @title 检查是否已经点赞
-     * @description 
-     * @author lidongming 
-     * @updateTime 2020/4/9 22:28 
-     */
-    @Select("SELECT COUNT(id) FROM t_dynamic_like WHERE dynamic_id=#{dynamicId} AND user_id=#{userId}")
-    int checkLiked(int dynamicId,int userId);
-    /**
      * @title 获取某个动态详情
      * @description 只需要查t_dynamic表
      * @author ggh
@@ -92,4 +74,12 @@ public interface DynamicDao {
 
     @Select("select * from t_dynamic")
     List<DynamicIndex> selectAllDynamic();
+
+    /**
+     * @title 异步更新动态分数
+     * @description
+     * @author ggh
+     * @updateTime 2020/4/17 20:27
+     */
+    int updateDynamicScore(int dynamicId,double score);
 }

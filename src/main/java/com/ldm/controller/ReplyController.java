@@ -50,8 +50,8 @@ public class ReplyController {
     @Action(name = "发表回复")
     @PostMapping(value = "/reply/add")
     public JSONResult publishReply(@RequestBody PublishReply request){
-        log.debug("用户 {} 给 {} 回复评论", request.getFromUserId(), request.getToUserId());
-        if (cacheService.limitFrequency("reply",request.getFromUserId())){
+        log.debug("用户 {} 给 {} 回复评论", request.getUserId(), request.getToUserId());
+        if (cacheService.limitFrequency("reply",request.getUserId())){
             log.debug(frequencyReplyHit);
             return JSONResult.fail(frequencyReplyHit);
         }
