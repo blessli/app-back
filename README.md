@@ -8,6 +8,7 @@
 - SQL语句优化,如覆盖索引
 - Elasticsearch实现全文检索
 - RabbitMQ异步更新feed流
+- Spring AOP实现日志管理
 - (接入层)Nginx反向代理,负载均衡,限流
 - (存储层)MySQL读写分离,Redis Cluster集群
 ## Difficult points
