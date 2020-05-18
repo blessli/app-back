@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class ActivityMember {
-    private String userId;
+    private int activityId;// 用于activity_view初始化到redis
+    private int userId;
     private String userNickname;
-    private String joinTime;
+    private String publishTime;
     private String avatar;
 }

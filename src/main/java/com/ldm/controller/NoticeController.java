@@ -5,8 +5,12 @@ import com.ldm.service.NoticeService;
 import com.ldm.util.JSONResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 
 /**
  * @author lidongming
@@ -16,41 +20,37 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
+@Validated
 public class NoticeController {
 
     @Autowired
     private NoticeService noticeService;
+
     @Action(name = "获取申请通知")
     @GetMapping("/notice/apply")
-    public JSONResult getApplyNotice(int userId, int pageNum, int pageSize){
-        log.debug("正在获取用户 {} 的申请通知，当前页为 {}", userId, pageNum);
+    public JSONResult getApplyNotice(@Valid @Min(1) int userId, int pageNum, int pageSize){
+        log.info("获取用户 {} 的申请通知，当前页为 {}", userId, pageNum);
         return JSONResult.success(noticeService.selectApplyNotice(userId,pageNum,pageSize));
     }
 
     @Action(name = "获取点赞通知")
     @GetMapping("/notice/like")
-    public JSONResult getLikeNotice(int userId,int pageNum,int pageSize){
-        log.debug("获取用户 {} 的点赞通知，当前页为：{}", userId, pageNum);
+    public JSONResult getLikeNotice(@Valid @Min(1) int userId,int pageNum,int pageSize){
+        log.info("获取用户 {} 的点赞通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(noticeService.selectLikeNotice(userId,pageNum,pageSize));
     }
 
-    /**
-     * @title 获取回复通知
-     * @description 使用redis实现
-     * @author lidongming
-     * @updateTime 2020/4/11 14:51
-     */
-    @Action(name = "获取评论通知")
+    @Action(name = "获取回复通知")
     @GetMapping("/notice/reply")
-    public JSONResult getCommentNotice(int userId, int pageNum, int pageSize){
-        log.debug("获取用户 {} 的评论通知，当前页为：{}", userId, pageNum);
+    public JSONResult getCommentNotice(@Valid @Min(1) int userId, int pageNum, int pageSize){
+        log.info("获取用户 {} 的回复通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(noticeService.selectReplyNotice(userId, pageNum, pageSize));
     }
 
     @Action(name = "获取关注通知")
     @GetMapping("/notice/follow")
-    public JSONResult getFollowNotice(int userId, int pageNum, int pageSize){
-        log.debug("获取用户 {} 的关注通知，当前页为：{}", userId, pageNum);
+    public JSONResult getFollowNotice(@Valid @Min(1) int userId, int pageNum, int pageSize){
+        log.info("获取用户 {} 的关注通知，当前页为：{}", userId, pageNum);
         return JSONResult.success(noticeService.selectFollowNotice(userId, pageNum, pageSize));
     }
 }

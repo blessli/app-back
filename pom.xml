@@ -64,17 +64,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
         </dependency>
-        <!--接口文档-->
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger2</artifactId>
-            <version>2.6.1</version>
-        </dependency>
-        <dependency>
-            <groupId>io.springfox</groupId>
-            <artifactId>springfox-swagger-ui</artifactId>
-            <version>2.6.1</version>
-        </dependency>
         <!--全文搜索引擎-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -132,7 +121,23 @@
             <artifactId>gexin-rp-sdk-http</artifactId>
             <version>4.1.1.0</version>
         </dependency>
-<!--        <dependency>-->
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>6.0.9.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.el</groupId>
+            <artifactId>javax.el-api</artifactId>
+            <version>3.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish.web</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>2.2.6</version>
+        </dependency>
+
+        <!--        <dependency>-->
 <!--            <groupId>org.apache.shardingsphere</groupId>-->
 <!--            <artifactId>sharding-jdbc-spring-boot-starter</artifactId>-->
 <!--            <version>4.0.0-RC1</version>-->

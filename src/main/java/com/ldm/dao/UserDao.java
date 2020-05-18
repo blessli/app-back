@@ -1,8 +1,8 @@
 package com.ldm.dao;
 
 import com.ldm.entity.SimpleUserInfo;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
+import com.ldm.request.UserInfo;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -10,13 +10,16 @@ import java.util.List;
 @Mapper
 public interface UserDao {
 
-    /**
-     * @title 用户redis初始化
-     * @description 将用户基本信息保存在redis中
-     * @author lidongming
-     * @updateTime 2020/4/15 13:05
-     */
-    @Select("SELECT user_id,user_nickname,avatar FROM `t_user`")
+    // redis初始化
+    @Select("SELECT * FROM `t_user`")
     List<SimpleUserInfo> selectSimpleUserInfo();
 
+    // 首次登录,添加用户信息
+    @Options(useGeneratedKeys = true,keyProperty = "userId",keyColumn = "user_id")
+    @Insert("INSERT INTO t_user VALUES(NULL,#{nickName},#{avatarUrl},#{gender},0,0,#{openId})")
+    int addUserInfo(UserInfo userInfo);
+
+    // 非首次登录,更新用户信息
+    @Update("UPDATE t_user SET user_nickname=#{nickName},avatar=#{avatarUrl},gender=#{gender} WHERE open_id=#{openId}")
+    int updateUserInfo(UserInfo userInfo);
 }

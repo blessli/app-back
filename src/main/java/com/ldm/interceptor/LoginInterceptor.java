@@ -13,6 +13,8 @@ import javax.servlet.http.HttpServletResponse;
  * 直接获取这个静态类的get方法 如：UserHolder.getCurrentUser
  */
 public class LoginInterceptor implements HandlerInterceptor {
+
+
     //请求之前
     @Override
     public boolean preHandle(HttpServletRequest request,
@@ -22,6 +24,8 @@ public class LoginInterceptor implements HandlerInterceptor {
         System.out.println("requestUrl:"+requestUrl);
         /** 判断session是否存在用户,如果存在说明用户已经登录了,应该放行 */
         User user = (User) request.getSession().getAttribute("user");
+
+        String token=request.getHeader("token");
         if(user!=null){
             System.out.println("requestUrl:"+requestUrl+"->被放行！");
             /** 当前请求：每个请求是否都是一个线程   */

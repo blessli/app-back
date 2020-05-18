@@ -36,3 +36,8 @@ public class CacheServiceApplication {
 - 解决方法
 
 使用自定义线程池，设置好对应的参数
+
+Spring 定时任务执行原理实际使用的是 JDK 自带的 ScheduledExecutorService
+Spring 默认配置下，将会使用具有单线程的 ScheduledExecutorService
+单线程执行定时任务，如果某一个定时任务执行时间较长，将会影响其他定时任务执行
+如果存在多个定时任务，为了保证定时任务执行时间的准确性，可以修改默认配置，使其使用多线程执行定时任务

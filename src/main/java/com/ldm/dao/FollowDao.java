@@ -1,5 +1,7 @@
 package com.ldm.dao;
 
+import com.ldm.entity.FollowUserInfo;
+import com.ldm.entity.RedisUserId;
 import com.ldm.entity.SimpleUserInfo;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
@@ -11,39 +13,25 @@ import java.util.List;
 @Component
 @Mapper
 public interface FollowDao {
-    /**
-     * @title 获取关注列表
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/6 19:51
-     */
-    List<SimpleUserInfo> getMeFollowUserList(int userId, int pageNum,int pageSize);
 
-    /**
-     * @title 获取粉丝列表
-     * @description
-     * @author lidongming
-     * @updateTime 2020/4/14 19:42
-     */
-    @Select("SELECT follower_id user_id,publish_time FROM t_follow WHERE user_id=#{userId}" +
-            "LIMIT #{pageNum},#{pageSize}")
-    List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize);
+    // 获取关注列表
+    @Select("SELECT user_id FROM t_follow WHERE follower_id=#{userId} ORDER BY id DESC")
+    List<FollowUserInfo> getMeFollowUserList(int userId);
 
-    /**
-     * @title 关注
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/17 20:30
-     */
-    @Insert("")
+    // 获取粉丝列表
+    @Select("SELECT follower_id as user_id FROM t_follow WHERE user_id=#{userId}" +
+            " ORDER BY id DESC")
+    List<FollowUserInfo> getFollowMeUserList(int userId);
+
+    // 关注
+    @Insert("INSERT INTO t_follow VALUES(NULL,#{userId}, #{toUserId}, NOW());" +
+            "UPDATE t_user set focus_count=focus_count+1 WHERE user_id=#{userId};" +
+            "UPDATE t_user set fan_count=fan_count+1 WHERE user_id=#{toUserId}")
     int follow(int userId,int toUserId);
 
-    /**
-     * @title 取消关注
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/17 20:30
-     */
-    @Insert("")
+    // 取消关注
+    @Insert("DELETE FROM t_follow WHERE follower_id=#{userId} AND user_id=#{toUserId};" +
+            "UPDATE t_user set focus_count=focus_count-1 WHERE user_id=#{userId};" +
+            "UPDATE t_user set fan_count=fan_count-1 WHERE user_id=#{toUserId}")
     int cancelFollow(int userId,int toUserId);
 }

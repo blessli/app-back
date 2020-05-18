@@ -6,7 +6,7 @@ import lombok.Data;
 /**
  * @author lidongming
  * @ClassName MyActivity.java
- * @Description TODO
+ * @Description 申请加入的活动
  * @createTime 2020年04月10日 17:35:00
  */
 @Data
@@ -17,7 +17,8 @@ public class MyActivity {
     private String beginTime;// 活动开始时间
     private String endTime;// 活动结束时间
     private int memberCount;// 已加入人数
+    private String images;
     private String image;// 图片列表中的第一张图片
-    private String publishTime;// 发表时间
-    private int status;// 0：申请中，1：拒绝，2：同意
+    private String publishTime;// 申请时间
+    private int applyStatus;// 0：申请中，1：拒绝，2：同意
 }

@@ -2,12 +2,6 @@ package com.ldm.entity;
 
 import lombok.Data;
 
-/**
- * @author lidongming
- * @ClassName CommentNotice.java
- * @Description TODO
- * @createTime 2020年04月11日 13:54:00
- */
 @Data
 public class ReplyNotice {
     private int itemId;

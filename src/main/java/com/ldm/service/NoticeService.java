@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.util.List;
@@ -20,11 +21,9 @@ import java.util.List;
 @Service
 public class NoticeService {
 
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
+
     @Autowired
-    JedisPool jedisPool;
+    private JedisCluster jedis;
     
     @Autowired
     private NoticeDao noticeDao;
@@ -35,13 +34,13 @@ public class NoticeService {
      * @updateTime 2020/4/12 0:27 
      */
     public List<ApplyNotice> selectApplyNotice(int userId, int pageNum, int pageSize){
-        Jedis jedis=jedisPool.getResource();
         List<ApplyNotice> activityApplyList=noticeDao.selectApplyNotice(userId,pageNum*pageSize,pageSize);
         for (ApplyNotice activityApply:activityApplyList){
             activityApply.setAvatar(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"avatar"));
             activityApply.setUserNickname(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"userNickname"));
         }
-        CacheService.returnToPool(jedis);
+        // 点赞通知未读数清零
+        jedis.set(RedisKeys.noticeUnread(0,userId),"0");
         return activityApplyList;
     }
 
@@ -52,8 +51,7 @@ public class NoticeService {
      * @updateTime 2020/4/11 22:38
      */
     public List<LikeNotice> selectLikeNotice(int userId, int pageNum, int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        // 点赞未读数清零
+        // 点赞通知未读数清零
         jedis.set(RedisKeys.noticeUnread(1,userId),"0");
         List<LikeNotice> likeNoticeList=noticeDao.selectLikeNotice(userId,pageNum*pageSize,pageSize);
         for (LikeNotice likeNotice:likeNoticeList){
@@ -61,7 +59,6 @@ public class NoticeService {
             likeNotice.setAvatar(jedis.hget(RedisKeys.userInfo(likeNotice.getUserId()),"avatar"));
             likeNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(likeNotice.getUserId()),"userNickname"));
         }
-        CacheService.returnToPool(jedis);
         return likeNoticeList;
     }
 
@@ -72,7 +69,6 @@ public class NoticeService {
      * @updateTime 2020/4/11 14:46
      */
     public List<ReplyNotice> selectReplyNotice(int userId, int pageNum, int pageSize){
-        Jedis jedis=jedisPool.getResource();
         List<ReplyNotice> replyNoticeList=noticeDao.selectReplyNotice(userId, pageNum*pageSize, pageSize);
         for(ReplyNotice reply:replyNoticeList){
             // 还有一些赋值undo,toContent
@@ -81,7 +77,6 @@ public class NoticeService {
         }
         // 回复通知未读数清零
         jedis.set(RedisKeys.noticeUnread(2,userId),"0");
-        CacheService.returnToPool(jedis);
         return replyNoticeList;
     }
 
@@ -92,7 +87,8 @@ public class NoticeService {
      * @updateTime 2020/4/15 16:27
      */
     public List<FollowNotice> selectFollowNotice(int userId, int pageNum, int pageSize){
-        Jedis jedis=jedisPool.getResource();
+        // 关注通知未读数清零
+        jedis.set(RedisKeys.noticeUnread(3,userId),"0");
         List<FollowNotice> followNoticeList=noticeDao.selectFollowNotice(userId, pageNum*pageSize, pageSize);
         for (FollowNotice followNotice:followNoticeList){
             followNotice.setAvatar(jedis.hget(RedisKeys.userInfo(followNotice.getUserId()),"avatar"));

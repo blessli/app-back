@@ -2,6 +2,7 @@ package com.ldm.dao;
 
 import com.ldm.entity.DynamicIndex;
 import com.ldm.entity.DynamicDetail;
+import com.ldm.entity.RedisUserId;
 import com.ldm.request.PublishDynamic;
 import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Component;
@@ -10,76 +11,49 @@ import java.util.List;
 @Component
 @Mapper
 public interface DynamicDao {
-    /**
-     * @title 发表动态
-     * @description 发表动态
-     * @author ggh
-     * @updateTime 2020/4/4 4:36
-     */
-    @Options(useGeneratedKeys = true,keyProperty = "dynamicId",keyColumn = "dynamic_id")
-    int publishDynamic(PublishDynamic request);
 
-
-    /**
-     * @title 获取朋友圈动态
-     * @description 根据传入的dynamicIdList进行in查询,代码在xml里
-     * @author lidongming
-     * @updateTime 2020/4/14 17:54
-     */
-    List<DynamicIndex> selectDynamicList(List<Integer> dynamicIdList, int pageNum, int pageSize);
-
-    /**
-     * @title 获取我发表的动态列表
-     * @description 无需关联t_dynamic_like和t_user来进行查询,走redis
-     * @author ggh
-     * @updateTime 2020/4/14 17:58
-     */
-    @Select("SELECT * FROM t_dynamic WHERE user_id=#{userId} ORDER BY publish_time " +
-            "DESC LIMIT #{pageNum},#{pageSize}")
-    List<DynamicIndex> selectDynamicCreatedByMeList(int userId, int pageNum, int pageSize);
-    /**
-     * @title 删除动态
-     * @description 将所有与动态相关的都删除
-     * @author ggh
-     * @updateTime 2020/4/6 15:37 
-     */
-    int deleteDynamic(int dynamicId);
-
-
-    /**
-     * @title 点赞动态
-     * @description 给动态点赞
-     * @author ggh
-     * @updateTime 2020/4/8 1:48
-     */
-    int likeDynamic(int dynamicId,int userId,String image);
-    /**
-     * @title 取消点赞动态
-     * @description 取消给动态点赞
-     * @author lidongming
-     * @updateTime 2020/4/8 1:48
-     */
-    @Update("DELETE FROM t_dynamic_like WHERE dynamic_id=#{dynamicId} AND user_id=#{userId};" +
-            "UPDATE t_dynamic SET like_count=like_count-1 WHERE dynamic_id=#{dynamicId}")
-    int cancelLikeDynamic(int dynamicId,int userId);
-
-    /**
-     * @title 获取某个动态详情
-     * @description 只需要查t_dynamic表
-     * @author ggh
-     * @updateTime 2020/4/10 20:24
-     */
-    @Select("SELECT * FROM t_dynamic WHERE dynamic_id=#{dynamicId}")
-    DynamicDetail selectDynamicDetail(int dynamicId);
-
+    // 用户redis初始化
     @Select("select * from t_dynamic")
     List<DynamicIndex> selectAllDynamic();
 
-    /**
-     * @title 异步更新动态分数
-     * @description
-     * @author ggh
-     * @updateTime 2020/4/17 20:27
-     */
-    int updateDynamicScore(int dynamicId,double score);
+    // 用于同步redis,保证数据一致性(注意索引顺序)
+    @Select("SELECT user_id FROM t_like WHERE user_id=#{userId} AND dynamic_id=#{dynamicId}")
+    RedisUserId isLikeDynamic(int userId, int dynamicId);
+
+    @Select("SELECT user_id FROM t_like WHERE dynamic_id=#{dynamicId}")
+    RedisUserId isExistDynamic(int dynamicId);
+
+    // 获取朋友圈动态(代码在xml里)
+    List<DynamicIndex> selectDynamicList(@Param("idList") List<Integer> dynamicIdList, int pageNum, int pageSize);
+
+    // 获取我发表的动态列表
+    @Select("SELECT * FROM t_dynamic WHERE user_id=#{userId} ORDER BY dynamic_id " +
+            "DESC LIMIT #{pageNum},#{pageSize}")
+    List<DynamicIndex> selectDynamicCreatedByMeList(int userId, int pageNum, int pageSize);
+
+    // 获取动态详情
+    @Select("SELECT * FROM t_dynamic WHERE dynamic_id=#{dynamicId}")
+    DynamicDetail selectDynamicDetail(int dynamicId);
+
+    // 发表动态
+    @Insert("INSERT INTO t_dynamic VALUES(NULL,#{content}, #{images}, #{publishLocation}, #{userId},0, 0, NOW())")
+    @Options(useGeneratedKeys = true,keyProperty = "dynamicId",keyColumn = "dynamic_id")
+    int publishDynamic(PublishDynamic request);
+
+    // 将所有与动态相关的都删除
+    @Delete({"DELETE FROM t_dynamic WHERE dynamic_id=#{dynamicId};",
+            "DELETE FROM t_comment WHERE item_id=#{dynamicId} AND flag=1;",
+            "DELETE FROM t_reply WHERE comment_id IN (SELECT comment_id FROM t_comment WHERE item_id=#{dynamicId} and flag=1);",
+            "DELETE FROM t_like WHERE dynamic_id=#{dynamicId};"})
+    int deleteDynamic(int dynamicId);
+
+    // 点赞动态
+    @Insert("INSERT INTO t_like VALUES (NULL,#{dynamicId}, #{userId}, #{toUserId}, NOW());" +
+            "UPDATE t_dynamic SET like_count=like_count+1 WHERE dynamic_id=#{dynamicId}")
+    int likeDynamic(int dynamicId,int userId,int toUserId);
+
+    // 取消点赞动态
+    @Update("DELETE FROM t_like WHERE dynamic_id=#{dynamicId} AND user_id=#{userId};" +
+            "UPDATE t_dynamic SET like_count=like_count-1 WHERE dynamic_id=#{dynamicId}")
+    int cancelLikeDynamic(int dynamicId,int userId);
 }

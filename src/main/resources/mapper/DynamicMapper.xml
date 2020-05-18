@@ -4,9 +4,9 @@
     <select id="selectDynamicList" resultType="com.ldm.entity.DynamicIndex">
 
         SELECT  * FROM t_dynamic WHERE dynamic_id IN
-        <foreach collection="list" item="dynamicId" open="(" separator="," close=")">
+        <foreach collection="idList" item="dynamicId" open="(" separator="," close=")">
             #{dynamicId}
         </foreach>
-        ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize};
+        ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}
     </select>
 </mapper>

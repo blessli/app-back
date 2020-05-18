@@ -1,14 +1,11 @@
-package com.ldm.search;
+package com.ldm.service;
 
-import com.github.pagehelper.PageHelper;
-import com.github.pagehelper.PageInfo;
 import com.ldm.config.EsConfig;
-import com.ldm.search.SearchActivityDao;
+import com.ldm.dao.ActivityDao;
+import com.ldm.dao.SearchActivityDao;
 import com.ldm.entity.ActivityIndex;
-import com.ldm.search.SearchDomain;
+import com.ldm.entity.SearchDomain;
 import com.ldm.request.PublishActivity;
-import com.ldm.service.ActivityService;
-import com.ldm.service.CacheService;
 import com.ldm.util.RedisKeys;
 import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.action.search.SearchResponse;
@@ -21,8 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.*;
 
@@ -37,11 +33,8 @@ public class SearchService {
     @Autowired
     private EsConfig esConfig;
 
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
     @Autowired
-    JedisPool jedisPool;
+    private JedisCluster jedis;
 
     /**
      * @title 在es中搜索活动
@@ -49,8 +42,7 @@ public class SearchService {
      * @author lidongming
      * @updateTime 2020/4/6 16:25
      */
-    public List<ActivityIndex> searchActivity(int userId,String key, int pageNum, int pageSize) {
-        PageHelper.startPage(pageNum, pageSize);
+    public List<ActivityIndex> searchActivity(int userId,String key) {
         Client client = esConfig.esTemplate();
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
         boolQueryBuilder.filter(QueryBuilders.multiMatchQuery(key, "activityName", "locationName", "activityType","userNickname"));
@@ -61,18 +53,9 @@ public class SearchService {
                 .execute().actionGet();
         SearchHits searchHits = response.getHits();
         System.out.println(searchHits.getTotalHits());
-        int ans=0;
         List<Integer> activityIdList=new ArrayList<>();
         for (SearchHit hit : searchHits) {
-            ans++;
-            if(ans<=(pageNum-1)*pageSize) {
-                continue;
-            }
-            if(ans>pageNum*pageSize){
-                break;
-            }
             Map<String, Object> entityMap = hit.getSourceAsMap();
-
             //map to object
             if (!CollectionUtils.isEmpty(entityMap)) {
                 if (!StringUtils.isEmpty(entityMap.get("activityId"))) {
@@ -81,7 +64,9 @@ public class SearchService {
 
             }
         }
-        Jedis jedis=jedisPool.getResource();
+        if (activityIdList.size()==0){
+            return new ArrayList<>();
+        }
         List<ActivityIndex> activityList=activityService.selectActivityListByEs(activityIdList);
         for (ActivityIndex activity:activityList){
             List<String> imageList= Arrays.asList(activity.getImages().split(","));
@@ -91,7 +76,6 @@ public class SearchService {
             // 当前用户是否浏览过该活动
             activity.setIsViewed(jedis.sismember(RedisKeys.activityViewed(activity.getActivityId()),""+userId));
         }
-        CacheService.returnToPool(jedis);
         return activityList;
     }
 
@@ -106,6 +90,8 @@ public class SearchService {
         searchDomain.setActivityId(request.getActivityId());
         searchDomain.setActivityType(request.getActivityType());
         searchDomain.setActivityName(request.getActivityName());
+        searchDomain.setLocationName(request.getLocationName());
+        searchDomain.setUserNickname(jedis.hget(RedisKeys.userInfo(request.getUserId()),"userNickname"));
         searchActivityDao.save(searchDomain);
     }
 
@@ -119,23 +105,5 @@ public class SearchService {
         searchActivityDao.deleteByActivityIdEquals(activityId);
     }
 
-    public void init(List<ActivityIndex> activityList) {
-        Iterable<SearchDomain> iterable = searchActivityDao.findAll();
-        Iterator it = iterable.iterator();
-        while (it.hasNext()) {
-            searchActivityDao.delete((SearchDomain) it.next());
-        }
-        for (ActivityIndex activity : activityList) {
-            SearchDomain searchDomain = new SearchDomain();
-            searchDomain.setActivityName(activity.getActivityName());
-            searchDomain.setActivityType(activity.getActivityType());
-            searchDomain.setActivityId(activity.getActivityId());
-            searchDomain.setUserNickname(activity.getUserNickname());
-            searchDomain.setLocationName(activity.getLocationName());
-            searchActivityDao.save(searchDomain);
-        }
-        log.info("elasticsearch初始化完成");
-
-    }
 }
 

@@ -2,15 +2,17 @@ package com.ldm.controller;
 
 import com.ldm.aop.Action;
 import com.ldm.request.PublishComment;
-import com.ldm.request.PublishReply;
 import com.ldm.service.CacheService;
 import com.ldm.service.CommentService;
 import com.ldm.util.JSONResult;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.text.ParseException;
 
 /**
@@ -21,30 +23,23 @@ import java.text.ParseException;
  */
 @Slf4j
 @RestController
+@Validated
 public class CommentController {
     @Autowired
     private CommentService commentService;
     @Autowired
     private CacheService cacheService;
 
-    /**
-     * @title 获取评论列表
-     * @description 活动/动态详情页中展示评论列表，flag为0则活动，flag为1则动态
-     * @author lidongming
-     * @updateTime 2020/3/29 0:09
-     */
     @Action(name = "获取评论列表")
-    @ApiOperation(value = "获取评论列表")
     @GetMapping("/comments")
-    public JSONResult getCommentList(int itemId, int flag, int pageNum, int pageSize) {
+    public JSONResult getCommentList(@Valid @Min(1) int itemId, @Valid @Max(1) @Min(0) int flag, int pageNum, int pageSize) {
         if (flag == 0) {
-            log.debug("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
+            log.info("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
         } else {
-            log.debug("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
+            log.info("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
         }
         return JSONResult.success(commentService.getCommentList(itemId, flag, pageNum, pageSize));
     }
-
 
     /**
      * @title 发表评论
@@ -54,10 +49,10 @@ public class CommentController {
      */
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
-    public JSONResult publishComment(@RequestBody PublishComment request) throws ParseException {
-        log.debug("用户 {} 发表评论", request.getUserId());
+    public JSONResult publishComment(@RequestBody @Valid PublishComment request) throws ParseException {
+        log.info("用户 {} 发表评论", request.getUserId());
         if (cacheService.limitFrequency("comment", request.getUserId())) {
-            log.debug(frequencyCommentHit);
+            log.info(frequencyCommentHit);
             return JSONResult.fail(frequencyCommentHit);
         }
         return commentService.publishComment(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
@@ -71,11 +66,11 @@ public class CommentController {
      */
     @Action(name = "删除评论")
     @PostMapping("/comment/delete")
-    public JSONResult deleteComment(int itemId, int flag, int commentId) {
+    public JSONResult deleteComment(@Valid @RequestParam @Min(1) int itemId,@Valid @RequestParam @Max(1) @Min(0) int flag, @Valid@RequestParam @Min(1) int commentId) throws ParseException {
         if(flag == 0){
-            log.debug("删除活动 {} 的评论 {}", itemId, commentId);
+            log.info("删除活动 {} 的评论 {}", itemId, commentId);
         }else {
-            log.debug("删除动态 {} 的评论 {}", itemId, commentId);
+            log.info("删除动态 {} 的评论 {}", itemId, commentId);
         }
         return commentService.deleteComment(itemId, flag, commentId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }

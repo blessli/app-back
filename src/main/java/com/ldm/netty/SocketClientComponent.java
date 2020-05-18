@@ -2,7 +2,10 @@ package com.ldm.netty;
 
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
+import com.ldm.util.JsonUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import redis.clients.jedis.JedisCluster;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,14 +17,18 @@ import java.util.Map;
 @Component
 public class SocketClientComponent {
 
-    private Map<String, SocketIOClient> clients = new HashMap();
+    @Autowired
+    private JedisCluster jedis;
+
+    private Map<String,SocketIOClient> clients=new HashMap<>();
 
     /**
      * 保存socketio client 客户端
      * @param client
      */
     public void storeClientId(SocketIOClient client) {
-        clients.put(getKeyFromClient(client), client);
+        clients.put(getKeyFromClient(client),client);
+        jedis.set(getKeyFromClient(client), JsonUtil.beanToString(client));
     }
 
     /**
@@ -29,6 +36,7 @@ public class SocketClientComponent {
      */
     public void delClientId(SocketIOClient client) {
         clients.remove(getKeyFromClient(client));
+        jedis.del(getKeyFromClient(client));
     }
 
     /**
@@ -36,19 +44,9 @@ public class SocketClientComponent {
      * @param businessName
      * @param data
      */
-    public void send(String userId, String pageSign, String businessName, Map<String, Object> data) {
-        SocketIOClient client = clients.get(getKey(userId, pageSign));
-        if(client != null) {
-            client.sendEvent(businessName, data);
-        }
-    }
-    /**
-     * 给指定client发送指定事件的数据
-     * @param businessName
-     * @param data
-     */
-    public void sendList(String userId, String pageSign, String businessName, Object data) {
-        SocketIOClient client = clients.get(getKey(userId, pageSign));
+    public void send(String userId, String pageSign, String businessName, Object data) {
+        SocketIOClient client=clients.get(getKey(userId, pageSign));
+        System.out.println(client.toString());
         if(client != null) {
             client.sendEvent(businessName, data);
         }
@@ -62,6 +60,6 @@ public class SocketClientComponent {
     }
 
     private String getKey(String userId, String pageSign) {
-        return "userId:" + userId + ":pageSign:" + pageSign;
+        return "online:userId:" + userId + ":pageSign:" + pageSign;
     }
 }

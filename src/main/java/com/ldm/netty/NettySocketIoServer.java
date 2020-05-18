@@ -6,17 +6,24 @@ import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.annotation.OnConnect;
 import com.corundumstudio.socketio.annotation.OnDisconnect;
 import com.corundumstudio.socketio.annotation.OnEvent;
-import com.ldm.aop.Action;
 import com.ldm.dao.ChatDao;
 import com.ldm.entity.ChatHistory;
 import com.ldm.entity.ChatMsg;
+import com.ldm.request.ChatHistoryRequest;
 import com.ldm.service.CacheService;
 import com.ldm.util.DateHandle;
+import com.ldm.util.RedisKeys;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestBody;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.JedisPool;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,14 +36,17 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
     private SocketIOServer socketIOServer;
 
     @Autowired
-    private SocketClientComponent socketClientComponent;
+    private SocketClientComponent socketClient;
 
     @Autowired
     private ChatDao chatDao;
 
+    @Autowired
+    private JedisCluster jedis;
+
     @OnConnect
     public void onConnect(SocketIOClient client) {
-        this.socketClientComponent.storeClientId(client);
+        this.socketClient.storeClientId(client);
         System.out.println("客户端连接:" + getParamsFromClient(client));
         HandshakeData data = client.getHandshakeData();
         String userId = data.getSingleUrlParam("userId");
@@ -44,21 +54,26 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
         if (pageSign.equals("msgPage")){
             List<ChatMsg> chatMsgList=chatDao.selectChatList(Integer.valueOf(userId));
             System.out.println(chatMsgList);
-            socketClientComponent.sendList(userId,pageSign,"latestMsgList",
+            socketClient.send(userId,pageSign,"latestMsgList",
                     chatMsgList);
+            Map<String,Object> map=new HashMap<>();
+            map.put("applyCount",jedis.get(RedisKeys.noticeUnread(0,Integer.valueOf(userId))));
+            map.put("agreeCount",jedis.get(RedisKeys.noticeUnread(1,Integer.valueOf(userId))));
+            map.put("replyCount",jedis.get(RedisKeys.noticeUnread(2,Integer.valueOf(userId))));
+            map.put("followCount",jedis.get(RedisKeys.noticeUnread(3,Integer.valueOf(userId))));
+            socketClient.send(userId,pageSign,"notice",map);
         }
-
-
     }
 
     @OnDisconnect
     public void onDisconnect(SocketIOClient client) {
-        this.socketClientComponent.delClientId(client);
+        this.socketClient.delClientId(client);
         System.out.println("客户端断开:" + getParamsFromClient(client));
+
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    public void afterPropertiesSet() {
         start();
     }
 
@@ -80,7 +95,7 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
      * 关闭netty socketio 服务
      */
     @Override
-    public void destroy() throws Exception {
+    public void destroy() {
         if(socketIOServer != null) {
             socketIOServer.stop();
         }
@@ -97,10 +112,10 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
         return "userId:" + userId + ",pageSign:" + pageSign + ",token: " + token;
     }
 
-    @Action(name = "发送聊天消息")
 	@OnEvent(value="chat")
 	public void chatEvent(SocketIOClient client, Map<String, Object> chatData) {
 
+        log.info("发送聊天消息");
 		String userId = (String) chatData.get("userId");
 		String msg = (String) chatData.get("msg");
 		String toUserId= (String) chatData.get("toUserId");
@@ -115,29 +130,29 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
         }
 		int ans=chatDao.sendMsg(Integer.valueOf(userId),msg,Integer.valueOf(toUserId),publishTime,msgFlag);
 		if(ans>0){
-		    log.debug(userId+"给"+toUserId+"发送聊天信息成功");
+		    log.info(userId+"给"+toUserId+"发送聊天信息成功");
             Map<String,Object> map=new HashMap<>();
             map.put("userId",userId);
             map.put("msg",msg);
             map.put("publishTime",publishTime);
-            socketClientComponent.send(toUserId,"chatPage","receiveMsg",map);
-            log.debug("发送成功");
+            socketClient.send(toUserId,"chatPage","receiveMsg",map);
+            log.info("发送成功");
         }else {
 		    log.error(userId+"给"+toUserId+"发送聊天信息失败");
         }
-		//this.socketClientComponent.storeClient(userId, pageId, client);
+		//this.socketClient.storeClient(userId, pageId, client);
 	}
-    @Action(name = "获取双方历史聊天记录")
     @OnEvent(value="history")
-    public void historyEvent(SocketIOClient client, Map<String, Object> chatData) {
-
-        String msgFlag = (String) chatData.get("msgFlag");
-        String userId= (String) chatData.get("userId");
-        String pageSign= (String) chatData.get("pageSign");
+    public void historyEvent(SocketIOClient client, @RequestBody ChatHistoryRequest request) {
+        log.info("获取双方历史聊天记录");
+        log.info(request.toString());
+        String msgFlag = request.getMsgFlag();
+        int userId= request.getUserId();
+        String pageSign= request.getPageSign();
         // 实际上这里是一个"2:3",而不是"3:2"
         List<ChatHistory> chatHistoryList=chatDao.selectChatHistory(msgFlag);
-        System.out.println(chatHistoryList);
-        socketClientComponent.sendList(userId,pageSign,"historyMsgList",chatHistoryList);
-        //this.socketClientComponent.storeClient(userId, pageId, client);
+        log.info(chatHistoryList.toString());
+        socketClient.send(String.valueOf(userId),pageSign,"historyMsgList",chatHistoryList);
+        //this.socketClient.storeClient(userId, pageId, client);
     }
 }

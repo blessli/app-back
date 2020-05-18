@@ -20,6 +20,7 @@ public class ActivityDetail {
     private int viewCount;// 浏览量
     private int commentCount;// 评论量
     private int memberCount;// 已加入人数
+    private int shareCount;//分享量
     private String images;// 图片列表，数据库中以逗号分开
     private String publishTime;// 发表时间
     private String userNickname;// 用户昵称

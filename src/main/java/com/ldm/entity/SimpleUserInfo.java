@@ -10,8 +10,8 @@ import lombok.Data;
  */
 @Data
 public class SimpleUserInfo {
+    private String openId;
     private int userId;
     private String avatar;
     private String userNickname;
-    private String publishTime;// 用于获取关注通知
 }

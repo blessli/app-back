@@ -10,7 +10,9 @@ import com.ldm.util.JsonUtil;
 import com.ldm.util.RedisKeys;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.util.HashMap;
@@ -25,11 +27,9 @@ import java.util.Map;
  */
 @Service
 public class ReplyService {
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
+
     @Autowired
-    JedisPool jedisPool;
+    private JedisCluster jedis;
 
     @Autowired
     private SocketClientComponent socketClient;
@@ -44,42 +44,42 @@ public class ReplyService {
      * @updateTime 2020/4/6 19:28
      */
     public List<Reply> getReplyList(int commentId, int pageNum, int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        List<Reply> replyList=replyDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
+        List<Reply> replyList=replyDao.selectReplyList(commentId, pageNum*pageSize, pageSize);
         for (Reply reply:replyList){
             reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"avatar"));
             reply.setFromNickname(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"userNickname"));
             reply.setToNickname(jedis.hget(RedisKeys.userInfo(reply.getToUserId()),"userNickname"));
         }
-        CacheService.returnToPool(jedis);
         return replyList;
     }
 
     /**
      * @title 发表回复
-     * @description redis存储这个回复信息,用于通知
+     * @description 发送通知
      * @author lidongming
      * @updateTime 2020/4/4 5:12
      */
+    @Transactional
     public int publishReply(PublishReply request){
-        Jedis jedis=jedisPool.getResource();
         int ans=replyDao.publishReply(request);
         if(ans<=0){
             return ans;
         }
-        int toUserId=0;
+        int toUserId,itemId=request.getItemId();
         if (request.getFlag()==0){
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(request.getItemId()),"userId"));
+            toUserId= Integer.parseInt(jedis.hget(RedisKeys.activityInfo(itemId),"userId"));
         }else {
-            toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(request.getItemId()),"userId"));
+            toUserId= Integer.parseInt(jedis.hget(RedisKeys.dynamicInfo(itemId),"userId"));
         }
         jedis.incr(RedisKeys.noticeUnread(2,toUserId));
-        Map<String,Object> map=new HashMap<>();
-        map.put("applyCount",jedis.get(RedisKeys.noticeUnread(0,toUserId)));
-        map.put("agreeCount",jedis.get(RedisKeys.noticeUnread(1,toUserId)));
-        map.put("replyCount",jedis.get(RedisKeys.noticeUnread(2,toUserId)));
-        map.put("followCount",jedis.get(RedisKeys.noticeUnread(3,toUserId)));
-        socketClient.send(String.valueOf(toUserId),"msgPage","notice",map);
+        if (jedis.exists(RedisKeys.online(toUserId,"msgPage"))){
+            Map<String,Object> map=new HashMap<>();
+            map.put("applyCount",jedis.get(RedisKeys.noticeUnread(0,toUserId)));
+            map.put("likeCount",jedis.get(RedisKeys.noticeUnread(1,toUserId)));
+            map.put("replyCount",jedis.get(RedisKeys.noticeUnread(2,toUserId)));
+            map.put("followCount",jedis.get(RedisKeys.noticeUnread(3,toUserId)));
+            socketClient.send(String.valueOf(toUserId),"msgPage","notice",map);
+        }
         return ans;
     }
     /**

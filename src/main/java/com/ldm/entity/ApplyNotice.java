@@ -10,6 +10,7 @@ import lombok.Data;
  */
 @Data
 public class ApplyNotice {
+    private int activityId;
     private int userId;
     private String avatar;// redis中get
     private String userNickname;// redis中get

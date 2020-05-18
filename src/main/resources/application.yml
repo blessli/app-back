@@ -30,14 +30,8 @@ spring:
       pool-prepared-statements: false
       max-pool-prepared-statement-per-connection-size: 20
   redis:
-    database: 0
-    host: 127.0.0.1
-    password: zxc++123
-    port: 6379
-    timeout: 1000
-    poolMaxTotal: 1000
-    poolMaxIdle: 500
-    poolMaxWait: 500
+    cache.clusterNodes: 8.129.63.242:7000,8.129.63.242:7001,8.129.63.242:7002,47.115.53.27:7003,47.115.53.27:7004,47.115.53.27:7005
+    cache.commandTimeout: 5000
   main:
     allow-bean-definition-overriding: true
   data:
@@ -49,10 +43,10 @@ spring:
         # 仓库中数据存储
         enabled: true
   rabbitmq:
-    host: 127.0.0.1
+    host: 8.129.63.242
     port: 5672
-    username: guest
-    password: guest
+    username: lidongming
+    password: lidongming
     virtual-host: /
     publisher-confirms: true
     publisher-returns: true
@@ -71,7 +65,7 @@ spring:
   mail:
     host: smtp.163.com
     username: ldm112358@163.com
-    password: 258692bb
+    password: 12345678
     from: ldm112358@163.com
     properties:
       mail:
@@ -90,3 +84,28 @@ mybatis:
 #    io:
 #      host: 8.129.63.242
 #      port: 9999
+#  spring.shardingsphere.datasource.names=master,slave
+#
+#  # 主数据源
+#  spring.shardingsphere.datasource.master.type=com.alibaba.druid.pool.DruidDataSource
+#  spring.shardingsphere.datasource.master.driver-class-name=com.mysql.cj.jdbc.Driver
+#  spring.shardingsphere.datasource.master.url=jdbc:mysql://192.168.164.134:3306/test?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT&useSSL=false
+#  spring.shardingsphere.datasource.master.username=root
+#  spring.shardingsphere.datasource.master.password=123456
+#
+#  # 从数据源
+#  spring.shardingsphere.datasource.slave.type=com.alibaba.druid.pool.DruidDataSource
+#  spring.shardingsphere.datasource.slave.driver-class-name=com.mysql.cj.jdbc.Driver
+#  spring.shardingsphere.datasource.slave.url=jdbc:mysql://192.168.164.129:3306/test?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT&useSSL=false
+#  spring.shardingsphere.datasource.slave.username=root
+#  spring.shardingsphere.datasource.slave.password=123456
+#
+#  # 读写分离配置
+#  spring.shardingsphere.masterslave.load-balance-algorithm-type=round_robin
+#  spring.shardingsphere.masterslave.name=dataSource
+#  spring.shardingsphere.masterslave.master-data-source-name=master
+#  spring.shardingsphere.masterslave.slave-data-source-names=slave
+#
+#  # 显示SQL
+#  spring.shardingsphere.props.sql.show=true
+#  spring.main.allow-bean-definition-overriding=true

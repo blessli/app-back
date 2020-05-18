@@ -22,9 +22,6 @@ import java.net.InetAddress;
 @Component
 public class EsConfig {
 
-    @Value("${spring.data.elasticsearch.cluster-name}")
-    private String clusterName;
-
     private Client esClient;
 
     @Bean
@@ -33,9 +30,9 @@ public class EsConfig {
         try {
             final Settings elasticsearchSettings = Settings.builder()
                     .put("client.transport.sniff", true)
-                    .put("cluster.name", clusterName).build();
+                    .put("cluster.name", "my-application").build();
             client = new PreBuiltTransportClient(elasticsearchSettings);
-            client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
+            client.addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
         } catch (Exception e) {
             e.printStackTrace();
         }

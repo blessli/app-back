@@ -1,8 +1,5 @@
 package com.ldm.async;
-
-import com.alibaba.fastjson.JSONObject;
 import com.ldm.service.CacheService;
-import com.ldm.util.RedisKeyUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

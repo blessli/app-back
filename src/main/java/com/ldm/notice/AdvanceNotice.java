@@ -1,5 +1,7 @@
 package com.ldm.notice;
 
+import com.ldm.async.AsyncService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -8,6 +10,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AdvanceNotice {
+
+    @Autowired
+    private AsyncService asyncService;
     /**
      * 启动时执行一次，之后每隔一个小时秒执行一次
      * 向相关用户发送短信或者推送
@@ -25,8 +30,9 @@ public class AdvanceNotice {
      * @author lidongming 
      * @updateTime 2020/4/9 2:01 
      */
-    @Scheduled(cron = "30 10 1 * * ?")
-    public void trans(){
-
+    // 每天凌晨4点同步es
+    @Scheduled(cron = "0 0 4 * * ?")
+    public void crontabAndSyncEs(){
+        asyncService.crontabAndSyncEs();
     }
 }

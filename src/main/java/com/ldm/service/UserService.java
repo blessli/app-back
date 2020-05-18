@@ -6,25 +6,23 @@ import com.ldm.dao.UserDao;
 import com.ldm.pojo.AccessToken;
 import com.ldm.pojo.LoginCredential;
 import com.ldm.entity.SimpleUserInfo;
-import com.ldm.rabbitmq.MQSender;
 import com.ldm.request.UserInfo;
-import com.ldm.pojo.FollowOrNot;
-import com.ldm.response.FollowUserInfo;
+import com.ldm.response.AuthResponseData;
 import com.ldm.response.UserProfile;
-import com.ldm.util.JsonUtil;
+import com.ldm.util.MD5Util;
 import com.ldm.util.RedisKeys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author lidongming
@@ -32,25 +30,21 @@ import java.util.Set;
  * @Description 用户服务
  * @createTime 2020年04月04日 05:05:00
  */
+@Slf4j
 @Service
 public class UserService{
     @Autowired
     private UserDao userDao;
 
-
-
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
     @Autowired
-    JedisPool jedisPool;
+    private JedisCluster jedis;
     /**
      * @title 登录凭证校验
      * @description 通过 wx.login 接口获得临时登录凭证 code 后传到开发者服务器调用此接口完成登录流程
      * @author lidongming
      * @updateTime 2020/4/8 22:57 
      */
-    public LoginCredential loginCredentialVerification(String code) throws Exception {
+    public AuthResponseData loginCredentialVerification(String code) throws Exception {
 
         String url = "https://api.weixin.qq.com/sns/jscode2session?" +
                 "appid=wxa2456aa6cbac869c&secret=6626b587b45f7a6d3e93988f89979fb8&js_code=" +code+
@@ -75,10 +69,26 @@ public class UserService{
             response.append(inputLine);
         }
         in.close();
-
         LoginCredential loginCredential=JSON.parseObject(response.toString(),LoginCredential.class);
+        String openId=loginCredential.getOpenId();
+        log.info(loginCredential.toString());
+        jedis.del(RedisKeys.token(openId));
+        String token=MD5Util.MD5(loginCredential.getSessionKey());
+        if (token.length()>0){
+            jedis.set(RedisKeys.token(openId),token,"NX","EX",7200);
 
-        return loginCredential;
+        }
+        AuthResponseData responseData=new AuthResponseData();
+        responseData.setOpenId(openId);
+        responseData.setToken(token);
+        if (jedis.exists(RedisKeys.firstToken(openId))){
+            int userId=Integer.valueOf(jedis.get(RedisKeys.firstToken(openId)));
+            responseData.setUserId(userId);
+            responseData.setAvatarUrl(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
+            responseData.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
+        }
+        log.info(responseData.toString());
+        return responseData;
     }
     /**
      * @title 获取接口调用凭证
@@ -112,10 +122,6 @@ public class UserService{
         System.out.println(accessToken);
         return accessToken;
     }
-    public int addUserInfo(UserInfo userInfo){
-        return 0;
-    }
-
 
     /**
      * @title 个人主页
@@ -123,15 +129,38 @@ public class UserService{
      * @author lidongming 
      * @updateTime 2020/4/14 22:34 
      */
-    public UserProfile getUserProfile(int userId){
-        Jedis jedis=jedisPool.getResource();
+    public UserProfile getUserProfile(int userId,int myUserId){
         UserProfile userProfile=new UserProfile();
         userProfile.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
         userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
         userProfile.setFanCount(jedis.scard(RedisKeys.followMe(userId)));
         userProfile.setFocusCount(jedis.scard(RedisKeys.meFollow(userId)));
-        CacheService.returnToPool(jedis);
+        userProfile.setIsFollow(jedis.sismember(RedisKeys.followMe(userId),""+myUserId));
         return userProfile;
+    }
+    /**
+     * @title 添加/更新用户信息
+     * @description 
+     * @author lidongming
+     * @updateTime 2020/4/19 16:25
+     */
+    public int addUserInfo(UserInfo userInfo){
+        int ans,userId=0;
+        String openId=userInfo.getOpenId();
+        if (jedis.exists(RedisKeys.firstToken(openId))){
+            ans=userDao.updateUserInfo(userInfo);
+            if (ans>0){
+                userId=Integer.valueOf(jedis.get(RedisKeys.firstToken(userInfo.getOpenId())));
+            }
+        }else {
+            ans=userDao.addUserInfo(userInfo);
+            if (ans>0){
+                userId=userInfo.getUserId();
+                jedis.set(RedisKeys.firstToken(openId),""+userId);
+            }
+
+        }
+        return userId;
     }
     public List<SimpleUserInfo> selectSimpleUserInfo(){
         return userDao.selectSimpleUserInfo();

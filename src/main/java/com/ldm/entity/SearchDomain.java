@@ -1,4 +1,4 @@
-package com.ldm.search;
+package com.ldm.entity;
 
 import lombok.Data;
 import org.springframework.data.annotation.Id;

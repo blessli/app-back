@@ -2,6 +2,7 @@ package com.ldm.service;
 
 import com.alibaba.fastjson.JSON;
 import com.ldm.dao.ActivityDao;
+import com.ldm.dao.DynamicDao;
 import com.ldm.pojo.MsgSecCheck;
 import com.ldm.util.DateHandle;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,11 +71,6 @@ public class CommonService {
         return msgSecCheck;
     }
 
-    @Async("asyncServiceExecutor")
-    public void updateActivityScore(int activityId,String publishTime,int viewCount,int commentCount,int shareCount) throws ParseException {
-        long ts= DateHandle.changeDate(publishTime);
-        double z=shareCount*3+commentCount*1+viewCount*0.8f;
-        double score=Math.log10(z)+ts/45000;
-        activityDao.updateActivityScore(activityId,score);
-    }
+
+
 }

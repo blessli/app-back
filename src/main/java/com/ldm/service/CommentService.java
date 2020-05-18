@@ -1,9 +1,12 @@
 package com.ldm.service;
 
+import com.ldm.async.AsyncService;
+import com.ldm.dao.ActivityDao;
 import com.ldm.dao.CommentDao;
 import com.ldm.entity.Comment;
 import com.ldm.entity.ReplyNotice;
 import com.ldm.entity.Reply;
+import com.ldm.entity.ScoreParameter;
 import com.ldm.netty.SocketClientComponent;
 import com.ldm.request.PublishComment;
 import com.ldm.request.PublishReply;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 
 import java.text.ParseException;
@@ -30,17 +34,17 @@ import java.util.Map;
  */
 @Service
 public class CommentService {
+
+    @Autowired
+    private ActivityDao activityDao;
     @Autowired
     private CommentDao commentDao;
 
     @Autowired
-    private CommonService commonService;
+    private AsyncService asyncService;
 
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
     @Autowired
-    JedisPool jedisPool;
+    private JedisCluster jedis;
 
     /**
      * @title 获取评论列表
@@ -49,13 +53,11 @@ public class CommentService {
      * @updateTime 2020/4/6 19:29
      */
     public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
-        Jedis jedis=jedisPool.getResource();
-        List<Comment> commentList=commentDao.selectCommentList(itemId, flag, pageSize*pageSize, pageSize);
+        List<Comment> commentList=commentDao.selectCommentList(itemId, flag, pageNum*pageSize, pageSize);
         for (Comment comment:commentList){
             comment.setAvatar(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"avatar"));
             comment.setUserNickname(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"userNickname"));
         }
-        CacheService.returnToPool(jedis);
         return commentList;
     }
     /**
@@ -64,21 +66,25 @@ public class CommentService {
      * @author lidongming
      * @updateTime 2020/4/4 5:12
      */
+    @Transactional
     public int publishComment(PublishComment request) throws ParseException {
-        Jedis jedis=jedisPool.getResource();
+        Jedis jedis=null;
         if (request.getFlag()==0){
             int activityId=request.getItemId();
-            commentDao.addActivityCommentCount(activityId);
-            Integer commentCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"commentCount"));
-            commentCount++;
+            ScoreParameter scoreParameter=getScoreParameter(activityId);
+            if (scoreParameter==null){
+                return 0;
+            }
+            int commentCount=scoreParameter.getCommentCount()+1;
             jedis.hset(RedisKeys.activityInfo(activityId),"commentCount",""+commentCount);
-            String publishTime=jedis.hget(RedisKeys.activityInfo(activityId),"publishTime");
-            Integer viewCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"viewCount"));
-            Integer shareCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"shareCount"));
+            if (commentDao.addActivityCommentCount(activityId)==0){
+                return 0;
+            }
             // 异步更新score
-            commonService.updateActivityScore(activityId,publishTime,viewCount,commentCount,shareCount);
+            asyncService.updateActivityScore(activityId,scoreParameter.getPublishTime(),scoreParameter.getViewCount(),commentCount,scoreParameter.getShareCount());
         }else {
-            commentDao.addDynamicCommentCount(request.getItemId());
+            int dynamicId=request.getItemId();
+            commentDao.addDynamicCommentCount(dynamicId);
         }
         return commentDao.publishComment(request);
     }
@@ -90,13 +96,46 @@ public class CommentService {
      * @updateTime 2020/4/4 5:12
      */
     @Transactional
-    public int deleteComment(int itemId,int flag,int commentId){
+    public int deleteComment(int itemId,int flag,int commentId) throws ParseException {
+        int activityId,dynamicId;
         if (flag==0){
-            commentDao.reduceActivityCommentCount(itemId);
+            activityId=itemId;
+            ScoreParameter scoreParameter=getScoreParameter(activityId);
+            if (scoreParameter==null){
+                return 0;
+            }
+            int commentCount= scoreParameter.getCommentCount()-1;
+            jedis.hset(RedisKeys.activityInfo(activityId),"commentCount",""+commentCount);
+            // 异步更新score
+            asyncService.updateActivityScore(activityId,scoreParameter.getPublishTime(),scoreParameter.getViewCount(),commentCount,scoreParameter.getShareCount());
+            commentDao.reduceActivityCommentCount(activityId);
         }else {
-            commentDao.reduceDynamicCommentCount(itemId);
+            dynamicId=itemId;
+            commentDao.reduceDynamicCommentCount(dynamicId);
         }
         return commentDao.deleteComment(commentId);
     }
 
+    public ScoreParameter getScoreParameter(int activityId){
+        ScoreParameter scoreParameter;
+        if (jedis.exists(RedisKeys.activityInfo(activityId))){
+            scoreParameter=new ScoreParameter();
+            Integer commentCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"commentCount"));
+            String publishTime=jedis.hget(RedisKeys.activityInfo(activityId),"publishTime");
+            Integer viewCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"viewCount"));
+            Integer shareCount= Integer.valueOf(jedis.hget(RedisKeys.activityInfo(activityId),"shareCount"));
+            scoreParameter.setCommentCount(commentCount);
+            scoreParameter.setPublishTime(publishTime);
+            scoreParameter.setShareCount(shareCount);
+            scoreParameter.setViewCount(viewCount);
+            return scoreParameter;
+        }else if((scoreParameter=activityDao.selectScoreParameter(activityId))!=null){
+            jedis.hset(RedisKeys.activityInfo(activityId),"commentCount",""+scoreParameter.getCommentCount());
+            jedis.hset(RedisKeys.activityInfo(activityId),"publishTime",scoreParameter.getPublishTime());
+            jedis.hset(RedisKeys.activityInfo(activityId),"viewCount",""+scoreParameter.getViewCount());
+            jedis.hset(RedisKeys.activityInfo(activityId),"shareCount",""+scoreParameter.getShareCount());
+            return scoreParameter;
+        }
+        return null;
+    }
 }

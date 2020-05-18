@@ -1,4 +1,4 @@
-package com.ldm.response;
+package com.ldm.entity;
 
 import lombok.Data;
 

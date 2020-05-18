@@ -3,6 +3,8 @@ package com.ldm.service;
 import com.ldm.dao.DynamicDao;
 import com.ldm.entity.DynamicIndex;
 import com.ldm.entity.DynamicDetail;
+import com.ldm.entity.RedisUserId;
+import com.ldm.netty.SocketClientComponent;
 import com.ldm.rabbitmq.MQSender;
 import com.ldm.request.PublishDynamic;
 import com.ldm.util.JsonUtil;
@@ -11,13 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisCluster;
+import redis.clients.jedis.Pipeline;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
+import java.text.ParseException;
+import java.util.*;
 
 /**
  * @author lidongming
@@ -33,31 +33,13 @@ public class DynamicService {
     private DynamicDao dynamicDao;
 
     @Autowired
-    private MQSender mqSender;
-    /**
-     * 通过连接池对象可以获得对redis的连接
-     */
+    private SocketClientComponent socketClient;
+
     @Autowired
-    JedisPool jedisPool;
-    /**
-     * @title 发表动态
-     * @description RabbitMQ异步处理feed流
-     * @author lidongming
-     * @updateTime 2020/4/7 13:44
-     */
-    public int publish(PublishDynamic request) {
-        int ans = dynamicDao.publishDynamic(request);
-        if (ans <= 0) {
-            return ans;
-        }
-        Jedis jedis=jedisPool.getResource();
-        // RabbitMQ异步处理
-        mqSender.feedDynamicPublish(JsonUtil.beanToString(request));
-        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"image",Arrays.asList(request.getImages().split(",")).get(0));
-        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"userId",String.valueOf(request.getUserId()));
-        CacheService.returnToPool(jedis);
-        return ans;
-    }
+    private MQSender mqSender;
+
+    @Autowired
+    private JedisCluster jedis;
 
     /**
      * @title 获取好友动态
@@ -66,7 +48,6 @@ public class DynamicService {
      * @updateTime 2020/4/7 2:44
      */
     public List<DynamicIndex> selectDynamicList(int userId, int pageNum, int pageSize) {
-        Jedis jedis=jedisPool.getResource();
         Set<String> meFollowSet=jedis.smembers(RedisKeys.meFollow(userId));
         // 判断我关注的用户中是否存在大V,如果有则拉取大V的发feed合并到我的收feed中
         for (String string:meFollowSet){
@@ -81,12 +62,19 @@ public class DynamicService {
         for(String string:set){
             dynamicIdList.add(Integer.valueOf(string));
         }
+        if (dynamicIdList.size()==0){
+            return new ArrayList<>();
+        }
         List<DynamicIndex> dynamicIndexList = dynamicDao.selectDynamicList(dynamicIdList,pageNum*pageSize, pageSize);
         for (DynamicIndex dynamicIndex : dynamicIndexList) {
-            List<String> list = Arrays.asList(dynamicIndex.getImages().split(","));
-            dynamicIndex.setImageList(list);
-            // 用户是否点赞,从redis中读取,true为已赞,false为未赞
-            dynamicIndex.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicIndex.getDynamicId()),""+userId));
+            dynamicIndex.setAvatar(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"avatar"));
+            dynamicIndex.setUserNickname(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"userNickname"));
+            dynamicIndex.setImageList(Arrays.asList(dynamicIndex.getImages().split(",")));
+            /**
+             * 查询我是否点赞过该动态
+             * 先从redis中查,redis没有再从mysql里查,mysql有的话,就同步到redis中
+             */
+            dynamicIndex.setIsLike(isLikeDynamic(dynamicIndex.getDynamicId(),userId));
         }
         return dynamicIndexList;
     }
@@ -98,72 +86,127 @@ public class DynamicService {
      * @updateTime 2020/4/10 16:49
      */
     public List<DynamicIndex> selectMyDynamicList(int userId, int pageNum, int pageSize) {
-        Jedis jedis=jedisPool.getResource();
         List<DynamicIndex> dynamicIndexList = dynamicDao.selectDynamicCreatedByMeList(userId, pageNum*pageSize, pageSize);
         for (DynamicIndex dynamicIndex : dynamicIndexList) {
             dynamicIndex.setImageList(Arrays.asList(dynamicIndex.getImages().split(",")));
             dynamicIndex.setAvatar(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"avatar"));
             dynamicIndex.setUserNickname(jedis.hget(RedisKeys.userInfo(dynamicIndex.getUserId()),"userNickname"));
-            dynamicIndex.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicIndex.getUserId()),""+userId));
+            /**
+             * 查询我是否点赞过该动态
+             * 先从redis中查,redis没有再从mysql里查,mysql有的话,就同步到redis中
+             */
+            dynamicIndex.setIsLike(isLikeDynamic(dynamicIndex.getDynamicId(),userId));
         }
-        CacheService.returnToPool(jedis);
         return dynamicIndexList;
     }
 
     /**
-     * @title 获取某个动态详情
+     * @title 获取动态详情
      * @description
      * @author lidongming
      * @updateTime 2020/4/10 20:57
      */
     public DynamicDetail selectDynamicDetail(int dynamicId, int userId) {
-        Jedis jedis=jedisPool.getResource();
         DynamicDetail dynamicDetail = dynamicDao.selectDynamicDetail(dynamicId);
-        dynamicDetail.setIsLike(jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId));
+        /**
+         * 查询当前用户是否点赞过该动态
+         * 先从redis中查,redis没有再从mysql里查,mysql有的话,就同步到redis中
+         */
+        dynamicDetail.setIsLike(isLikeDynamic(dynamicId, userId));
         dynamicDetail.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
         dynamicDetail.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
         dynamicDetail.setImageList(Arrays.asList(dynamicDetail.getImages().split(",")));
-        CacheService.returnToPool(jedis);
         return dynamicDetail;
     }
 
     /**
+     * @title 发表动态
+     * @description RabbitMQ异步处理feed流
+     * @author lidongming
+     * @updateTime 2020/4/7 13:44
+     */
+    public int publish(PublishDynamic request) throws ParseException {
+        int ans = dynamicDao.publishDynamic(request);
+        if (ans <= 0) {
+            return ans;
+        }
+        // RabbitMQ异步处理
+        mqSender.feedDynamicPublish(JsonUtil.beanToString(request));
+        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"image",Arrays.asList(request.getImages().split(",")).get(0));
+        jedis.hset(RedisKeys.dynamicInfo(request.getDynamicId()),"userId",String.valueOf(request.getUserId()));
+        return ans;
+    }
+
+    /**
      * @title 删除动态
-     * @description 使用分布式锁和事务,redis保存被删除的动态ID
+     * @description 先删redis,再删db,redis保存被删除的动态ID
      * @author lidongming
      * @updateTime 2020/4/7 13:45
      */
     @Transactional
     public int deleteDynamic(int dynamicId) {
-        int ans = dynamicDao.deleteDynamic(dynamicId);
-        if (ans <= 0) {
-            return ans;
-        }
-        Jedis jedis=jedisPool.getResource();
+        // 使用管道进行批量删除
+//        Pipeline pipeline=jedis.pipelined();
+        jedis.del(RedisKeys.likeDynamic(dynamicId));
         jedis.del(RedisKeys.dynamicInfo(dynamicId));
-        Set<String> set=jedis.smembers(RedisKeys.allDynamic(dynamicId));
-        jedis.del(set.toArray(new String[set.size()]));
-        jedis.sadd(RedisKeys.deletedDynamic(),String.valueOf(dynamicId));// 保存被删除的动态
-        CacheService.returnToPool(jedis);
-        return ans;
+//        pipeline.sync();
+        return dynamicDao.deleteDynamic(dynamicId);
     }
 
     /**
      * @title 取消/点赞动态
-     * @description
+     * @description 更新dynamic_score
      * @author lidongming
      * @updateTime 2020/4/8 1:48
      */
     public int likeDynamic(int dynamicId, int userId) {
-        Jedis jedis=jedisPool.getResource();
-        if (jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId)){
-            log.debug("用户 {} 取消给动态 {} 点赞", userId, dynamicId);
-            jedis.srem(RedisKeys.likeDynamic(dynamicId),""+userId);
-        }else{
-            log.debug("用户 {} 给动态 {} 点赞", userId, dynamicId);
-            jedis.sadd(RedisKeys.likeDynamic(dynamicId),""+userId);
+        int toUserId=getDynamicUserId(dynamicId);
+        if (toUserId==0) {
+            return 0;
         }
-        CacheService.returnToPool(jedis);
-        return 1;
+        if (isLikeDynamic(dynamicId, userId)){
+            log.info("用户 {} 取消给动态 {} 点赞", userId, dynamicId);
+            jedis.srem(RedisKeys.likeDynamic(dynamicId),""+userId);
+            return dynamicDao.cancelLikeDynamic(dynamicId, userId);
+        }
+        log.info("用户 {} 给动态 {} 点赞", userId, dynamicId);
+        jedis.incr(RedisKeys.noticeUnread(1,toUserId));
+        // 当用户给动态点赞,动态发布者在线的话就会收到这个通知
+        if (jedis.exists(RedisKeys.online(toUserId,"msgFlag"))){
+            Map<String,Object> map=new HashMap<>();
+            map.put("applyCount",jedis.get(RedisKeys.noticeUnread(0,toUserId)));
+            map.put("likeCount",jedis.get(RedisKeys.noticeUnread(1,toUserId)));
+            map.put("replyCount",jedis.get(RedisKeys.noticeUnread(2,toUserId)));
+            map.put("followCount",jedis.get(RedisKeys.noticeUnread(3,toUserId)));
+            socketClient.send(String.valueOf(toUserId),"msgPage","notice",map);
+        }
+        return dynamicDao.likeDynamic(dynamicId,userId,toUserId);
+    }
+    /**
+     * 为了保证mysql与redis的数据一致性
+     * 先查redis,redis没有的话查mysql,然后同步redis
+     * @param dynamicId
+     * @param userId
+     * @return
+     */
+    public boolean isLikeDynamic(int dynamicId,int userId){
+        if (jedis.sismember(RedisKeys.likeDynamic(dynamicId),""+userId)){
+            return true;
+        }
+        if (dynamicDao.isLikeDynamic(userId,dynamicId)!=null){
+            jedis.sadd(RedisKeys.likeDynamic(dynamicId),""+userId);
+            return true;
+        }
+        return false;
+    }
+    public int getDynamicUserId(int dynamicId){
+        RedisUserId redisUserId;
+        if (jedis.hexists(RedisKeys.dynamicInfo(dynamicId),"userId")){
+            return Integer.valueOf(jedis.hget(RedisKeys.dynamicInfo(dynamicId),"userId"));
+        }else if ((redisUserId=dynamicDao.isExistDynamic(dynamicId))!=null){
+            jedis.hset(RedisKeys.dynamicInfo(dynamicId),"userId",""+redisUserId.getUserId());
+            return redisUserId.getUserId();
+        }
+        return 0;
     }
 }

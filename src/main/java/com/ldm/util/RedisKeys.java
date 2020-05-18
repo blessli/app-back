@@ -1,8 +1,13 @@
 package com.ldm.util;
 
 public class RedisKeys {
+
+    // online socket
+    public static String online(int userId, String pageSign) {
+        return "online:userId:" + userId + ":pageSign:" + pageSign;
+    }
     /**
-     * @title 获取用户个人信息:avatar,userNickname
+     * @title 获取用户个人信息:avatar,userNickname,openId
      * @description 
      * @author lidongming 
      * @updateTime 2020/4/10 1:51 
@@ -17,13 +22,17 @@ public class RedisKeys {
      * @author lidongming
      * @updateTime 2020/4/15 14:00
      */
-    public static String token(int userId){
-        return "token:"+userId;
+    public static String token(String openId){
+        return "token:"+openId;
+    }
+
+    public static String firstToken(String openId){
+        return "token:first:"+openId;
     }
 
     /**
      * @title 获取活动基本信息
-     * @description redis存储userId,viewCount,commentCount,shareCount,publishTime
+     * @description redis存储userId,image,viewCount,commentCount,shareCount,publishTime
      * @author lidongming 
      * @updateTime 2020/4/11 17:12 
      */
@@ -38,17 +47,7 @@ public class RedisKeys {
      * @updateTime 2020/4/11 17:16
      */
     public static String dynamicInfo(int dynamicId){
-        return "dynamInfo:"+dynamicId;
-    }
-
-    /**
-     * @title 评论通知
-     * @description 使用list存储
-     * @author lidongming
-     * @updateTime 2020/4/15 13:58
-     */
-    public static String replyNotice(int userId){
-        return "reply:notice:"+userId;
+        return "dynamicInfo:"+dynamicId;
     }
 
     /**
@@ -107,46 +106,26 @@ public class RedisKeys {
      * @updateTime 2020/4/13 23:50
      */
     public static String dynamicFeedReceive(int userId){
-        return "feed:dynamic:receive:"+userId;
+        return "dynamic:feed:receive:"+userId;
     }
     /**
      * @title 用户的收Feed
-     * @description 使用zset存储dynamicId
+     * @description 使用set存储dynamicId
      * @author lidongming
      * @updateTime 2020/4/14 0:37
      */
     public static String dynamicFeedSend(int userId){
-        return "feed:dynamic:send:"+userId;
-    }
-
-    /**
-     * @title 所有的动态相关的key集合
-     * @description 使用set存储,方便用于数据清理
-     * @author lidongming 
-     * @updateTime 2020/4/14 19:42 
-     */
-    public static String allDynamic(int dynamicId){
-        return "dynamic:"+dynamicId;
-    }
-
-    /**
-     * @title 所有的活动相关的key集合
-     * @description 使用set存储,方便用于数据清理
-     * @author lidongming
-     * @updateTime 2020/4/14 19:42
-     */
-    public static String allActivity(int activityId){
-        return "activity:"+activityId;
+        return "dynamic:feed:send:"+userId;
     }
 
     /**
      * @title 删除了的动态集合
-     * @description 使用set存储
+     * @description 使用set存储,用于feed流
      * @author lidongming
      * @updateTime 2020/4/14 21:45
      */
     public static String deletedDynamic(){
-        return "deleted:dynamic:";
+        return "dynamic:deleted";
     }
     /**
      * @title 判断某用户是否浏览过该活动
@@ -168,15 +147,6 @@ public class RedisKeys {
         return "activity:joined:"+activityId;
     }
 
-    /**
-     * @title 某用户加入的活动列表
-     * @description 使用set存储activityId
-     * @author lidongming
-     * @updateTime 2020/4/14 21:53
-     */
-    public static String activityByUserJoined(int userId){
-        return "activity:user:joined:"+userId;
-    }
 
     /**
      * @title 大V集合
@@ -185,6 +155,6 @@ public class RedisKeys {
      * @updateTime 2020/4/16 16:58
      */
     public static String bigV(){
-        return "dynamic:big:v";
+        return "dynamic:bigV";
     }
 }

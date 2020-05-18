@@ -14,4 +14,5 @@ public class UserProfile {
     private String userNickname;
     private long fanCount;
     private long focusCount;
+    private Boolean isFollow;// 是否已关注
 }
