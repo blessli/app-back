@@ -38,9 +38,12 @@ public class NoticeService {
         Jedis jedis=jedisPool.getResource();
         List<ApplyNotice> activityApplyList=noticeDao.selectApplyNotice(userId,pageNum*pageSize,pageSize);
         for (ApplyNotice activityApply:activityApplyList){
+
             activityApply.setAvatar(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"avatar"));
             activityApply.setUserNickname(jedis.hget(RedisKeys.userInfo(activityApply.getUserId()),"userNickname"));
         }
+        // 申请未读数清零
+        jedis.set(RedisKeys.noticeUnread(0,userId),"0");
         CacheService.returnToPool(jedis);
         return activityApplyList;
     }
@@ -76,8 +79,8 @@ public class NoticeService {
         List<ReplyNotice> replyNoticeList=noticeDao.selectReplyNotice(userId, pageNum*pageSize, pageSize);
         for(ReplyNotice reply:replyNoticeList){
             // 还有一些赋值undo,toContent
-            reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getUserId()),"avatar"));
-            reply.setUserNickname(jedis.hget(RedisKeys.userInfo(reply.getUserId()),"userNickname"));
+            reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"avatar"));
+            reply.setUserNickname(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"userNickname"));
         }
         // 回复通知未读数清零
         jedis.set(RedisKeys.noticeUnread(2,userId),"0");
@@ -97,7 +100,11 @@ public class NoticeService {
         for (FollowNotice followNotice:followNoticeList){
             followNotice.setAvatar(jedis.hget(RedisKeys.userInfo(followNotice.getUserId()),"avatar"));
             followNotice.setUserNickname(jedis.hget(RedisKeys.userInfo(followNotice.getUserId()),"userNickname"));
-            followNotice.setIsMutualFollow(jedis.sismember(RedisKeys.meFollow(userId),""+followNotice.getUserId()));
+            if (jedis.zrank(RedisKeys.meFollow(userId),""+followNotice.getUserId())!=null) {
+                followNotice.setIsMutualFollow(true);
+            }else {
+                followNotice.setIsMutualFollow(false);
+            }
         }
         return followNoticeList;
     }

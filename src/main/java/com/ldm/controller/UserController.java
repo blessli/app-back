@@ -34,15 +34,15 @@ public class UserController {
     @Action(name = "获取用户信息")
     @PostMapping(value = "/user/info")
     public JSONResult addUserInfo(@RequestBody UserInfo userInfo) throws Exception {
-        log.debug("获取用户信息");
+        log.info("获取用户信息");
         return JSONResult.success();
     }
 
     @Action(name = "用户个人中心")
     @GetMapping("/user/profile")
-    public JSONResult getUserProfile(int userId) {
-        log.debug("获取用户 {} 的个人主页", userId);
-        return JSONResult.success(userService.getUserProfile(userId));
+    public JSONResult getUserProfile(int userId,int myUserId) {
+        log.info("{} 获取用户 {} 的个人主页", myUserId,userId);
+        return JSONResult.success(userService.getUserProfile(userId,myUserId));
     }
 
     /**

@@ -50,7 +50,7 @@ public class CommentService {
      */
     public List<Comment> getCommentList(int itemId, int flag,int pageNum,int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<Comment> commentList=commentDao.selectCommentList(itemId, flag, pageSize*pageSize, pageSize);
+        List<Comment> commentList=commentDao.selectCommentList(itemId, flag, pageNum*pageSize, pageSize);
         for (Comment comment:commentList){
             comment.setAvatar(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"avatar"));
             comment.setUserNickname(jedis.hget(RedisKeys.userInfo(comment.getUserId()),"userNickname"));

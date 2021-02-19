@@ -17,7 +17,7 @@ public interface CommentDao {
      * @return
      */
     @Insert("INSERT INTO `t_comment`(`item_id`, `user_id`, " +
-            "`publish_time`, `content`, `reply_count`, `flag`) VALUES " +
+            "`publish_time`, `content`, `reply_count`, `flag`) VALUES" +
             "(#{itemId}, #{userId}, NOW(), #{content}, 0, #{flag})")
     int publishComment(PublishComment request);
 

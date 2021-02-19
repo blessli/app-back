@@ -21,6 +21,6 @@ public class DynamicIndex {
     private List<String> imageList;// 返回给前端的图片列表是一个list
     private String publishLocation;// 发表地点
     private Boolean isLike;// 是否已经点赞
-    private int likeCount;// 点赞量
+    private Long likeCount;// 点赞量
     private int commentCount;// 评论量
 }

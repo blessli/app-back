@@ -123,15 +123,28 @@ public class UserService{
      * @author lidongming 
      * @updateTime 2020/4/14 22:34 
      */
-    public UserProfile getUserProfile(int userId){
-        Jedis jedis=jedisPool.getResource();
-        UserProfile userProfile=new UserProfile();
-        userProfile.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
-        userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
-        userProfile.setFanCount(jedis.scard(RedisKeys.followMe(userId)));
-        userProfile.setFocusCount(jedis.scard(RedisKeys.meFollow(userId)));
-        CacheService.returnToPool(jedis);
-        return userProfile;
+    public UserProfile getUserProfile(int userId,int myUserId){
+
+        Jedis jedis=null;
+        try {
+            jedis=jedisPool.getResource();
+            UserProfile userProfile=new UserProfile();
+            userProfile.setAvatar(jedis.hget(RedisKeys.userInfo(userId),"avatar"));
+            userProfile.setUserNickname(jedis.hget(RedisKeys.userInfo(userId),"userNickname"));
+            userProfile.setBackImage(jedis.hget(RedisKeys.userInfo(userId),"backImage"));
+            userProfile.setFanCount(jedis.zcard(RedisKeys.followMe(userId)));
+            userProfile.setFocusCount(jedis.zcard(RedisKeys.meFollow(userId)));
+            if (userId==myUserId||jedis.zrank(RedisKeys.meFollow(myUserId),String.valueOf(userId))!=null) {
+                userProfile.setFollowStatus(true);
+            }else {
+                userProfile.setFollowStatus(false);
+            }
+            return userProfile;
+        }finally {
+            if (jedis!=null) {
+                jedis.close();
+            }
+        }
     }
     public List<SimpleUserInfo> selectSimpleUserInfo(){
         return userDao.selectSimpleUserInfo();

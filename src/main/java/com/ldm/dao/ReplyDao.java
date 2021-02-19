@@ -20,8 +20,8 @@ public interface ReplyDao {
      * @updateTime 2020/4/9 23:45
      */
     @Insert("INSERT INTO `t_reply`(`comment_id`, `from_user_id`, `to_user_id`," +
-            " `content`, `publish_time`) " +
-            "VALUES (#{commentId}, #{fromUserId}, #{toUserId}, #{content}, NOW());" +
+            " `content`, `publish_time`,item_id,flag,to_content) " +
+            "VALUES(#{commentId}, #{userId}, #{toUserId}, #{content}, NOW(),#{itemId},#{flag},#{toContent});" +
             "UPDATE t_comment SET reply_count=reply_count+1 WHERE comment_id=#{commentId}")
     int publishReply(PublishReply request);
 

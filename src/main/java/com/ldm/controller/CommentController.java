@@ -38,9 +38,9 @@ public class CommentController {
     @GetMapping("/comments")
     public JSONResult getCommentList(int itemId, int flag, int pageNum, int pageSize) {
         if (flag == 0) {
-            log.debug("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
+            log.info("获取活动 {} 的详情，当前页为：{}", itemId, pageNum);
         } else {
-            log.debug("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
+            log.info("获取动态 {} 的详情，当前页为：{}", itemId, pageNum);
         }
         return JSONResult.success(commentService.getCommentList(itemId, flag, pageNum, pageSize));
     }
@@ -55,9 +55,10 @@ public class CommentController {
     @Action(name = "发表评论")
     @PostMapping(value = "/comment/add")
     public JSONResult publishComment(@RequestBody PublishComment request) throws ParseException {
-        log.debug("用户 {} 发表评论", request.getUserId());
+        log.info("用户 {} 发表评论内容 {}，flag {}, itemId {}", request.getUserId(),
+                request.getContent(),request.getFlag(),request.getItemId());
         if (cacheService.limitFrequency("comment", request.getUserId())) {
-            log.debug(frequencyCommentHit);
+            log.info(frequencyCommentHit);
             return JSONResult.fail(frequencyCommentHit);
         }
         return commentService.publishComment(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
@@ -73,9 +74,9 @@ public class CommentController {
     @PostMapping("/comment/delete")
     public JSONResult deleteComment(int itemId, int flag, int commentId) {
         if(flag == 0){
-            log.debug("删除活动 {} 的评论 {}", itemId, commentId);
+            log.info("删除活动 {} 的评论 {}", itemId, commentId);
         }else {
-            log.debug("删除动态 {} 的评论 {}", itemId, commentId);
+            log.info("删除动态 {} 的评论 {}", itemId, commentId);
         }
         return commentService.deleteComment(itemId, flag, commentId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }

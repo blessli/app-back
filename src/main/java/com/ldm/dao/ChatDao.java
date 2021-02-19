@@ -36,12 +36,12 @@ public interface ChatDao {
      * @updateTime 2020/4/7 23:35
      */
     @Select("SELECT t.uid to_user_id,t.msg,t.publish_time,u.user_nickname as to_user_nickname,u.avatar as to_avatar,IFNULL(un_read_count,0) AS un_read_count from (\n" +
-            "SELECT id,uid,msg,publish_time FROM (\n" +
-            "(SELECT id,to_user_id as uid,msg,publish_time FROM t_chat WHERE user_id = #{userId})\n" +
-            "UNION\n" +
-            "(SELECT id,user_id as uid,msg,publish_time FROM t_chat WHERE to_user_id = #{userId})\n" +
-            "ORDER BY publish_time DESC) as tmp GROUP BY tmp.uid ORDER BY publish_time DESC limit 20\n" +
-            ") as t LEFT JOIN t_user as u on t.uid = u.user_id\n" +
+            "SELECT id,uid,msg,publish_time FROM (" +
+            "(SELECT id,to_user_id as uid,msg,publish_time FROM t_chat WHERE user_id = #{userId}) " +
+            "UNION " +
+            "(SELECT id,user_id as uid,msg,publish_time FROM t_chat WHERE to_user_id = #{userId}) " +
+            "ORDER BY publish_time DESC) as tmp GROUP BY tmp.uid ORDER BY publish_time DESC limit 20)" +
+            " as t LEFT JOIN t_user as u on t.uid = u.user_id " +
             "LEFT JOIN t_chat_unread ON t_chat_unread.to_user_id=t.uid")
     List<ChatMsg> selectChatList(int userId);
     @Update("")

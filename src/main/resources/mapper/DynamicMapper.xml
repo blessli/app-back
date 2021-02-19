@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.ldm.dao.DynamicDao">
-    <select id="selectDynamicList" resultType="com.ldm.entity.DynamicIndex">
+    <select id="selectDynamicList" parameterType="java.util.List" resultType="com.ldm.entity.DynamicIndex">
 
         SELECT  * FROM t_dynamic WHERE dynamic_id IN
-        <foreach collection="list" item="dynamicId" open="(" separator="," close=")">
+        <foreach collection="dynamicIdList" item="dynamicId" open="(" separator="," close=")">
             #{dynamicId}
-        </foreach>
-        ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize};
+        </foreach> OR (user_id=#{userId}) and status=1 ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize};
     </select>
 </mapper>

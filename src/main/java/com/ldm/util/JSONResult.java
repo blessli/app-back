@@ -54,4 +54,8 @@ public class JSONResult {
         return result;
     }
 
+    public static JSONResult deleted() {
+        return new JSONResult(1314,null, true);
+    }
+
 }

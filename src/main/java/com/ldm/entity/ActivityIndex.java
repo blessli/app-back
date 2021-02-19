@@ -27,4 +27,5 @@ public class ActivityIndex {
     private List<String> imageList;// 返回给前端的图片列表是一个list
     private int activityStatus;
     private Boolean isViewed;// 用户是否浏览过该活动
+    private String image;// 图片列表中的第一张图片
 }

@@ -31,7 +31,7 @@ public class FollowController {
     @Action(name = "获取关注列表")
     @GetMapping("/follow/meFollow")
     public JSONResult getMeFollowUserList(int userId){
-        log.debug("获取用户 {} 关注的用户列表", userId);
+        log.info("获取用户 {} 关注的用户列表", userId);
         return JSONResult.success(followService.getMeFollowUserList(userId));
     }
 
@@ -44,21 +44,21 @@ public class FollowController {
     @Action(name = "获取粉丝列表")
     @GetMapping("/follow/followMe")
     public JSONResult getFollowMeUserList(int userId){
-        log.debug("获取关注了用户 {} 的用户列表");
+        log.info("获取关注了用户 {} 的用户列表",userId);
         return JSONResult.success(followService.getFollowMeUserList(userId));
     }
 
     @Action(name = "关注用户")
     @PostMapping(value = "/follow")
     public JSONResult followUser(int userId,int toUserId){
-        log.debug("用户 {} 关注用户 {}", userId, toUserId);
+        log.info("用户 {} 关注用户 {}", userId, toUserId);
         return JSONResult.success(followService.followUser(userId, toUserId));
     }
 
     @Action(name = "取消关注用户")
     @PostMapping(value = "/cancelFollow")
     public JSONResult cancelFollowUser(int userId,int toUserId){
-        log.debug("用户 {} 取关用户 {}", userId, toUserId);
+        log.info("用户 {} 取关用户 {}", userId, toUserId);
         return JSONResult.success(followService.cancelFollowUser(userId, toUserId));
     }
 }

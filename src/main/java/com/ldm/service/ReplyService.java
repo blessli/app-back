@@ -45,7 +45,7 @@ public class ReplyService {
      */
     public List<Reply> getReplyList(int commentId, int pageNum, int pageSize){
         Jedis jedis=jedisPool.getResource();
-        List<Reply> replyList=replyDao.selectReplyList(commentId, pageSize*pageSize, pageSize);
+        List<Reply> replyList=replyDao.selectReplyList(commentId, pageNum*pageSize, pageSize);
         for (Reply reply:replyList){
             reply.setAvatar(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"avatar"));
             reply.setFromNickname(jedis.hget(RedisKeys.userInfo(reply.getFromUserId()),"userNickname"));

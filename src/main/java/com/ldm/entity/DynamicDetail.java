@@ -22,7 +22,8 @@ public class DynamicDetail {
     private List<String> imageList;// 返回给前端的图片列表是一个list
     private String publishLocation;// 发表地点
     private Boolean isLike;
-    private int likeCount;// 点赞量
+    private Long likeCount;// 点赞量
     private int commentCount;// 评论量
     List<Comment> commentList;
+    private int status;
 }

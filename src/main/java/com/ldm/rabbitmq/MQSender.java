@@ -10,14 +10,6 @@ public class MQSender {
     private AmqpTemplate amqpTemplate;
 
     /**
-     * 阿里云发送短信验证码
-     * @param phone
-     */
-    public void sendSMS(String phone){
-        amqpTemplate.convertAndSend(MQConfig.SMS_QUEUE,phone);
-    }
-
-    /**
      * feed流之动态发布处理
      * @param message
      */

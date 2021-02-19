@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class ActivityMember {
-    private String userId;
+    private int userId;
     private String userNickname;
     private String joinTime;
     private String avatar;

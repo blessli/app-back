@@ -9,9 +9,9 @@ spring:
       #监控统计拦截的filters
       filters: stat
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://127.0.0.1:3306/app?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT&useSSL=false
-      username: root
-      password: 123456root
+      url: jdbc:mysql://rm-wz9b75yo746sc35so6o.mysql.rds.aliyuncs.com:3306/app?useUnicode=true&characterEncoding=UTF-8&allowMultiQueries=true&serverTimezone=GMT&useSSL=false
+      username: mytest
+      password: zxc++123
       #配置初始化大小/最小/最大
       initial-size: 1
       min-idle: 1
@@ -32,7 +32,7 @@ spring:
   redis:
     database: 0
     host: 127.0.0.1
-    password: foobared
+    password: zxc++123
     port: 6379
     timeout: 1000
     poolMaxTotal: 1000
@@ -42,9 +42,9 @@ spring:
     allow-bean-definition-overriding: true
   data:
     elasticsearch:
-      cluster-name: elasticsearch_brew
+      cluster-name: my-application
 #      # 连接节点,注意在集群中通信都是9300端口，否则会报错无法连接上！
-      cluster-nodes: 127.0.0.1:9300
+      cluster-nodes: localhost:9300
       repositories:
         # 仓库中数据存储
         enabled: true
@@ -67,6 +67,19 @@ spring:
         enabled: true
         initial-interval: 2s
       mandatory: true
+  # mail
+  mail:
+    host: smtp.163.com
+    username: ldm112358@163.com
+    password: 258692bb
+    from: ldm112358@163.com
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 mybatis:
   mapper-locations: classpath:mapper/*.xml  #注意：一定要对应mapper映射xml文件的所在路径
   type-aliases-package: com.ldm.entity  # 注意：对应实体类的路径

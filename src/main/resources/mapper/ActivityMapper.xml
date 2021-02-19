@@ -3,7 +3,7 @@
 <mapper namespace="com.ldm.dao.ActivityDao">
 
 
-    <select id="selectActivityListByEs" resultType="com.ldm.entity.Activity">
+    <select id="selectActivityListByEs" resultType="com.ldm.entity.ActivityIndex">
         SELECT * FROM t_activity WHERE activity_id IN
         <foreach collection="list" item="activityId" open="(" separator="," close=")">
             #{activityId}

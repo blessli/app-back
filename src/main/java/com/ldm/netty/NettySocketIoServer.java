@@ -33,19 +33,24 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
 
     @Autowired
     private ChatDao chatDao;
+    
+    @Autowired
+    private CacheService cacheService;
 
     @OnConnect
     public void onConnect(SocketIOClient client) {
         this.socketClientComponent.storeClientId(client);
-        System.out.println("客户端连接:" + getParamsFromClient(client));
+        log.info("客户端连接:" + getParamsFromClient(client));
         HandshakeData data = client.getHandshakeData();
         String userId = data.getSingleUrlParam("userId");
         String pageSign = data.getSingleUrlParam("pageSign");
         if (pageSign.equals("msgPage")){
-            List<ChatMsg> chatMsgList=chatDao.selectChatList(Integer.valueOf(userId));
-            System.out.println(chatMsgList);
+            List<ChatMsg> chatMsgList=cacheService.getLatestChatList(Integer.valueOf(userId));
+            log.info(chatMsgList.toString());
             socketClientComponent.sendList(userId,pageSign,"latestMsgList",
                     chatMsgList);
+            socketClientComponent.sendList(userId,pageSign,"notice",
+                    cacheService.getNotice(Integer.valueOf(userId)));
         }
 
 
@@ -54,7 +59,7 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
     @OnDisconnect
     public void onDisconnect(SocketIOClient client) {
         this.socketClientComponent.delClientId(client);
-        System.out.println("客户端断开:" + getParamsFromClient(client));
+        log.info("客户端断开:" + getParamsFromClient(client));
     }
 
     @Override
@@ -106,22 +111,19 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
 		String toUserId= (String) chatData.get("toUserId");
 		String publishTime= DateHandle.currentDate();
 		log.info(userId+" "+msg+" "+toUserId+" "+publishTime);
-		String msgFlag;
-		if (userId.compareTo(toUserId)<0) {
-		    msgFlag=userId+":"+toUserId;
+		String msgFlag=userId+":"+toUserId;
+		if (userId.compareTo(toUserId)>0) {
+            msgFlag=toUserId+":"+userId;
         }
-		else {
-		    msgFlag=toUserId+":"+userId;
-        }
-		int ans=chatDao.sendMsg(Integer.valueOf(userId),msg,Integer.valueOf(toUserId),publishTime,msgFlag);
-		if(ans>0){
-		    log.debug(userId+"给"+toUserId+"发送聊天信息成功");
+		boolean ans=cacheService.sendMsg(Integer.valueOf(userId),msg,Integer.valueOf(toUserId),publishTime,msgFlag);
+		if(ans){
+		    log.info(userId+"给"+toUserId+"发送聊天信息成功");
             Map<String,Object> map=new HashMap<>();
             map.put("userId",userId);
             map.put("msg",msg);
             map.put("publishTime",publishTime);
             socketClientComponent.send(toUserId,"chatPage","receiveMsg",map);
-            log.debug("发送成功");
+            log.info("发送成功");
         }else {
 		    log.error(userId+"给"+toUserId+"发送聊天信息失败");
         }
@@ -132,10 +134,10 @@ public class NettySocketIoServer implements InitializingBean, DisposableBean {
     public void historyEvent(SocketIOClient client, Map<String, Object> chatData) {
 
         String msgFlag = (String) chatData.get("msgFlag");
-        String userId= (String) chatData.get("userId");
+        String userId= String.valueOf(chatData.get("userId"));
         String pageSign= (String) chatData.get("pageSign");
         // 实际上这里是一个"2:3",而不是"3:2"
-        List<ChatHistory> chatHistoryList=chatDao.selectChatHistory(msgFlag);
+        List<ChatHistory> chatHistoryList=cacheService.getChatHistory(msgFlag,0,10000);
         System.out.println(chatHistoryList);
         socketClientComponent.sendList(userId,pageSign,"historyMsgList",chatHistoryList);
         //this.socketClientComponent.storeClient(userId, pageId, client);

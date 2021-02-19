@@ -14,4 +14,6 @@ public class UserProfile {
     private String userNickname;
     private long fanCount;
     private long focusCount;
+    private boolean followStatus;
+    private String backImage;
 }

@@ -17,7 +17,7 @@ public interface FollowDao {
      * @author lidongming
      * @updateTime 2020/4/6 19:51
      */
-    @Select("SELECT t_follow.user_id,user_nickname,avatar FROM t_follow \n" +
+    @Select("SELECT t_follow.user_id,user_nickname,avatar FROM t_follow " +
             "LEFT JOIN t_user ON t_user.user_id=t_follow.user_id WHERE follower_id=#{userId}")
     List<SimpleUserInfo> getMeFollowUserList(int userId);
 
@@ -31,8 +31,8 @@ public interface FollowDao {
             "LIMIT #{pageNum},#{pageSize}")
     List<SimpleUserInfo> getFollowMeUserList(int userId, int pageNum,int pageSize);
 
-    @Insert("")
+    @Insert("INSERT INTO t_follow VALUES(NULL,#{userId},#{toUserId},NOW())")
     int follow(int userId,int toUserId);
-    @Insert("")
+    @Insert("delete from t_follow where follower_id=#{userId} and user_id=#{toUserId}")
     int cancelFollow(int userId,int toUserId);
 }

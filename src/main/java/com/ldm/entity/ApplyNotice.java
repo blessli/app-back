@@ -15,5 +15,6 @@ public class ApplyNotice {
     private String userNickname;// redis中get
     private String publishTime;
     private String activityName;
-    private int applyStatus;// 0：申请中，1：拒绝，2：同意
+    private int activityId;
+    private int status;// 0：申请中，1：拒绝，2：同意
 }

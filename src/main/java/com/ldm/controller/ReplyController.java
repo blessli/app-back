@@ -36,7 +36,7 @@ public class ReplyController {
     @Action(name = "获取回复列表")
     @GetMapping("/replies")
     public JSONResult getReplyList(int commentId, int pageNum, int pageSize) {
-        log.debug("获取评论 {} 的回复列表，当前页为：{}", commentId, pageNum);
+        log.info("获取评论 {} 的回复列表，当前页为：{}", commentId, pageNum);
         return JSONResult.success(replyService.getReplyList(commentId, pageNum, pageSize));
     }
 
@@ -50,9 +50,10 @@ public class ReplyController {
     @Action(name = "发表回复")
     @PostMapping(value = "/reply/add")
     public JSONResult publishReply(@RequestBody PublishReply request){
-        log.debug("用户 {} 给 {} 回复评论", request.getFromUserId(), request.getToUserId());
+        log.info("用户 {} 给 {} 发表回复内容 {}，itemId {} flag {}", request.getUserId(),
+                request.getToUserId(),request.getContent(),request.getItemId(),request.getFlag());
         if (cacheService.limitFrequency("reply",request.getFromUserId())){
-            log.debug(frequencyReplyHit);
+            log.info(frequencyReplyHit);
             return JSONResult.fail(frequencyReplyHit);
         }
         return replyService.publishReply(request) > 0 ? JSONResult.success() : JSONResult.fail("error");
@@ -67,7 +68,7 @@ public class ReplyController {
     @Action(name = "删除回复")
     @PostMapping("/reply/delete")
     public JSONResult deleteReply(int commentId, int replyId) {
-        log.debug("删除评论 {} 的回复 {}", commentId, replyId);
+        log.info("删除评论 {} 的回复 {}", commentId, replyId);
         return replyService.deleteReply(commentId, replyId) > 0 ? JSONResult.success() : JSONResult.fail("error");
     }
     private static final String frequencyReplyHit="发表回复过于频繁，请稍后再试！！！";

@@ -17,5 +17,6 @@ public class ReplyNotice {
     private String userNickname;
     private String avatar;
     private int userId;
+    private int fromUserId;
     private String publishTime;
 }

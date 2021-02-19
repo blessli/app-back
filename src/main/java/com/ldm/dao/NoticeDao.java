@@ -20,7 +20,8 @@ public interface NoticeDao {
      * @author lidongming 
      * @updateTime 2020/4/16 16:30 
      */
-    @Select("SELECT * FROM `t_apply` WHERE to_user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
+    @Select("SELECT t1.*,activity_name FROM t_join t1 LEFT JOIN t_activity t2 ON t1.activity_id=t2.activity_id WHERE " +
+            "to_user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<ApplyNotice> selectApplyNotice(int userId, int pageNum, int pageSize);
 
     /**
@@ -38,7 +39,7 @@ public interface NoticeDao {
      * @author lidongming
      * @updateTime 2020/4/16 15:39
      */
-    @Select("SELECT * FROM `t_reply_notice` WHERE to_user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
+    @Select("SELECT * FROM `t_reply` WHERE to_user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<ReplyNotice> selectReplyNotice(int userId, int pageNum, int pageSize);
 
     /**

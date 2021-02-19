@@ -2,6 +2,7 @@ package com.ldm.dao;
 
 import com.ldm.entity.ActivityIndex;
 import com.ldm.entity.ActivityDetail;
+import com.ldm.entity.ActivityMember;
 import com.ldm.entity.MyActivity;
 import com.ldm.request.PublishActivity;
 import org.apache.ibatis.annotations.*;
@@ -14,7 +15,7 @@ public interface ActivityDao {
     /**
      * @title 发表活动
      * @description 返回activityId,注意新增了share_count字段
-     * @author lidongming
+     * @author lidongmingƒ
      * @updateTime 2020/4/4 4:29
      */
     @Insert("INSERT INTO `t_activity`(`activity_name`, `user_id`, `activity_type`, " +
@@ -22,22 +23,11 @@ public interface ActivityDao {
             " `remark`, `view_count`, `comment_count`, `member_count`, `publish_time`, `images`, " +
             "`status`) VALUES (#{activityName}, #{userId}, #{activityType}, #{locationName}," +
             " #{longitude}, #{latitude}, #{beginTime}, #{endTime}, #{require}, #{remark}," +
-            " 0, 0, 0, NOW(), #{images}, 0)")
+            " 0, 0, 0, NOW(), #{images}, 1)")
     @Options(useGeneratedKeys = true,keyProperty = "activityId",keyColumn = "activity_id")
     int publishActivity(PublishActivity request);
 
-    /**
-     * @title 删除活动
-     * @description 将所有与活动相关的都删除
-     * @author lidongming
-     * @updateTime 2020/4/4 4:30
-     */
-    @Delete("DELETE from t_reply where comment_id in (SELECT t_comment.comment_id from t_comment WHERE item_id=#{activityId} AND flag=0);\n" +
-            "DELETE FROM t_comment WHERE item_id=#{activityId} AND flag=0;\n" +
-            "DELETE FROM t_activity_member WHERE activity_id=#{activityId};\n" +
-            "DELETE FROM t_activity_join_request WHERE activity_id=#{activityId};\n" +
-            "DELETE FROM t_activity_view WHERE activity_id=#{activityId};\n" +
-            "DELETE FROM t_activity WHERE activity_id=#{activityId};")
+    @Delete("UPDATE t_activity SET status=0 where activity_id=#{activityId}")
     int deleteActivity(int activityId);
 
     /**
@@ -46,9 +36,14 @@ public interface ActivityDao {
      * @author ggh
      * @updateTime 2020/4/14 19:34
      */
-    @Select("SELECT * FROM t_activity ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize};")
+    @Select("SELECT * FROM t_activity where status=1 ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize};")
     List<ActivityIndex> selectActivityListByTime(int pageNum,int pageSize);
 
+    @Select("SELECT * FROM t_activity where status=1 ORDER BY score DESC LIMIT #{pageNum},#{pageSize};")
+    List<ActivityIndex> selectActivityListByHot(int pageNum,int pageSize);
+
+    @Select("SELECT * FROM t_activity where activity_type=#{activityType} and status=1 ORDER BY score DESC LIMIT #{pageNum},#{pageSize};")
+    List<ActivityIndex> selectActivityListBySort(String activityType,int pageNum,int pageSize);
 
 
     /**
@@ -57,27 +52,10 @@ public interface ActivityDao {
      * @author ggh
      * @updateTime 2020/4/14 19:36
      */
-    @Select("SELECT\n" +
-            "t2.activity_id,\n" +
-            "t2.activity_name,\n" +
-            "t2.location_name,\n" +
-            "t2.begin_time,\n" +
-            "t2.end_time,\n" +
-            "t2.member_count,\n" +
-            "t2.images image,\n" +
-            "t2.publish_time,\n" +
-            "t1.status\n" +
-            "FROM \n" +
-            "(\n" +
-            "SELECT\n" +
-            "user_id,\n" +
-            "activity_id,\n" +
-            "status \n" +
-            "FROM t_activity_join_request \n" +
-            "WHERE user_id=#{userId}\n" +
-            ") t1\n" +
-            "LEFT JOIN t_activity t2 \n" +
-            "ON t1.activity_id=t2.activity_id ORDER BY publish_time DESC LIMIT #{pageNum}, #{pageSize}")
+    @Select("SELECT t2.activity_id,t2.activity_name,t2.location_name,t2.begin_time," +
+            "t2.end_time,t2.member_count,t2.images image,t2.publish_time,t1.status FROM " +
+            "t_join t1 LEFT JOIN t_activity t2 ON t1.activity_id=t2.activity_id WHERE " +
+            "t1.user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<MyActivity> selectMyActivityList(int userId,int pageNum,int pageSize);
 
 
@@ -87,7 +65,7 @@ public interface ActivityDao {
      * @author ggh
      * @updateTime 2020/4/14 19:37
      */
-    @Select("SELECT * FROM t_activity WHERE user_id=#{userId} ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
+    @Select("SELECT * FROM t_activity WHERE user_id=#{userId} and status=1 ORDER BY publish_time DESC LIMIT #{pageNum},#{pageSize}")
     List<ActivityIndex> selectActivityCreatedByMe(int userId,int pageNum,int pageSize);
 
     /**
@@ -105,8 +83,7 @@ public interface ActivityDao {
      * @author lidongming 
      * @updateTime 2020/4/6 14:40 
      */
-    @Insert("INSERT INTO t_activity_view VALUES(NULL,#{activityId},#{userId});" +
-            "UPDATE t_activity SET view_count=view_count+1 WHERE activity_id=#{activityId}")
+    @Update("UPDATE t_activity SET view_count=view_count+1 WHERE activity_id=#{activityId}")
     int addViewCount(int activityId,int userId);
     /**
      * @title 用户申请加入活动
@@ -114,8 +91,8 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/10 19:51
      */
-    @Insert("INSERT INTO t_activity_join_request VALUES(NULL,#{userId},#{activityId},0,NOW())")
-    int tryJoinActivity(int activityId,int userId);
+    @Insert("INSERT INTO t_join VALUES(NULL,#{userId},#{toUserId},#{activityId},0,NOW())")
+    int tryJoinActivity(int activityId,int userId,int toUserId);
 
     /**
      * @title 用户取消加入活动
@@ -123,7 +100,7 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/10 19:55
      */
-    @Delete("DELETE FROM t_activity_join_request WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    @Delete("DELETE FROM t_join WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int cancelJoinActivity(int activityId,int userId);
 
     /**
@@ -132,7 +109,7 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/10 19:55
      */
-    @Update("UPDATE t_activity_join_request SET `status`=2 WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    @Update("UPDATE t_join SET `status`=2 WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int agreeJoinActivity(int activityId,int userId);
 
     /**
@@ -141,7 +118,7 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/10 19:54
      */
-    @Update("UPDATE t_activity_join_request SET `status`=1 WHERE activity_id=#{activityId} AND user_id=#{userId}")
+    @Update("UPDATE t_join SET `status`=1 WHERE activity_id=#{activityId} AND user_id=#{userId}")
     int disagreeJoinActivity(int activityId,int userId);
 
     /**
@@ -158,5 +135,9 @@ public interface ActivityDao {
      * @author lidongming
      * @updateTime 2020/4/16 14:40
      */
+    @Update("update t_activity set score=#{score} where activity_id=#{activityId}")
     int updateActivityScore(int activityId,double score);
+
+    @Select("select * from t_join where activity_id=#{activityId} and status=2")
+    List<ActivityMember> getActivityMemberList(int activityId);
 }

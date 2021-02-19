@@ -83,7 +83,7 @@ public class RedisKeys {
 
     /**
      * @title 关注我的用户列表
-     * @description 使用set存储userId
+     * @description 使用zset存储userId
      * @author lidongming
      * @updateTime 2020/4/13 23:47
      */
@@ -92,7 +92,7 @@ public class RedisKeys {
     }
     /**
      * @title 我关注的用户列表
-     * @description 使用set存储userId
+     * @description 使用zset存储userId
      * @author lidongming
      * @updateTime 2020/4/13 23:46
      */
@@ -186,5 +186,18 @@ public class RedisKeys {
      */
     public static String bigV(){
         return "dynamic:big:v";
+    }
+
+    // zset
+    public static String chatHistory(String msgFlag) {
+        return "chat:history:"+msgFlag;
+    }
+    // zset
+    public static String latestChat(int userId) {
+        return "latest:chat:"+userId;
+    }
+    // hash
+    public static String latestMsg(int userId,int toUserId) {
+        return "latest:msg:"+userId+":"+toUserId;
     }
 }
