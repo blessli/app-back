@@ -45,8 +45,8 @@
 - [ ] CDN加速
 - [ ] 网关层
 # 成员情况
-- 前端：[宁美霞](https://github.com/KWskrrrr)
-- 后端：[李东明](https://github.com/blessli)
+- 前端：[**霞](https://github.com/KWskrrrr)
+- 后端：[**明](https://github.com/blessli)
 
 # 声明
 > 由于该小程序涉及个人小程序未开放类目，一直无法完成上线
